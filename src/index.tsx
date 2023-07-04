@@ -1,9 +1,4 @@
-import {
-  requireNativeComponent,
-  UIManager,
-  Platform,
-  ViewStyle,
-} from 'react-native';
+import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
 
 const LINKING_ERROR =
   `The package '@frontegg/react-native' doesn't seem to be linked. Make sure: \n\n` +
@@ -11,16 +6,30 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-type ReactNativeProps = {
-  color: string;
-  style: ViewStyle;
-};
+console.log('NativeModules', NativeModules);
+console.log('FronteggRN', NativeModules.FronteggRN);
 
-const ComponentName = 'ReactNativeView';
+const CounterEvents = new NativeEventEmitter(NativeModules.FronteggRN);
+// subscribe to event
+CounterEvents.addListener('onFronteggAuthEvent', (res) =>
+  console.log('onFronteggAuthEvent event', res)
+);
 
-export const ReactNativeView =
-  UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<ReactNativeProps>(ComponentName)
-    : () => {
-        throw new Error(LINKING_ERROR);
-      };
+const FronteggRN = NativeModules.FronteggRN
+  ? NativeModules.FronteggRN
+  : new Proxy(
+      {},
+      {
+        get() {
+          throw new Error(LINKING_ERROR);
+        },
+      }
+    );
+
+export function login() {
+  return FronteggRN.login();
+}
+
+export function listener() {
+  return FronteggRN.exampleFunc();
+}

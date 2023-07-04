@@ -1,25 +1,41 @@
 import * as React from 'react';
 
-import { StyleSheet, View } from 'react-native';
-import FronteggWrapper from '../../src/FronteggWrapper';
-import MyApp from './MyApp';
+import { StyleSheet, View, Text, Button } from 'react-native';
+import { login, listener } from '@frontegg/react-native';
 
 export default function App() {
+  const [result, setResult] = React.useState<number | undefined>();
+
+  React.useEffect(() => {
+    // multiply(3, 7);
+  }, []);
+
   return (
     <View style={styles.container}>
-      <FronteggWrapper
-        contextOptions={{
-          baseUrl: 'https://auth.davidantoon.me',
-          clientId: 'b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca',
+      <Text
+        onPress={() => {
+          login();
         }}
       >
-        <MyApp />
-      </FronteggWrapper>
+        Login: {result}
+      </Text>
+
+      <View style={styles.listenerButton}>
+        <Button
+          title={'Listen'}
+          onPress={() => {
+            listener();
+          }}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  listenerButton: {
+    marginVertical: 20,
+  },
   container: {
     flex: 1,
     alignItems: 'center',

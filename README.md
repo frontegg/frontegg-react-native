@@ -1,6 +1,6 @@
 # @frontegg/react-native
 
-Frontegg is an end-to-end user management platform for B2B SaaS, powering strategies from PLG to enterprise readiness. Easy migration
+Frontegg React-Native SDK
 
 ## Installation
 
@@ -11,11 +11,11 @@ npm install @frontegg/react-native
 ## Usage
 
 ```js
-import { ReactNativeView } from "@frontegg/react-native";
+import { multiply } from '@frontegg/react-native';
 
 // ...
 
-<ReactNativeView color="tomato" />
+const result = await multiply(3, 7);
 ```
 
 ## Contributing
