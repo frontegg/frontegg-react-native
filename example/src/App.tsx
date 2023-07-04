@@ -1,30 +1,29 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { login, listener } from '@frontegg/react-native';
+import { login, listener, logout } from '@frontegg/react-native';
 
 export default function App() {
   const [result, setResult] = React.useState<number | undefined>();
 
   React.useEffect(() => {
-    // multiply(3, 7);
+    let subs = listener(setResult);
+
+    return () => {
+      subs.remove();
+    };
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text
-        onPress={() => {
-          login();
-        }}
-      >
-        Login: {result}
-      </Text>
+      <Text>Status: {result || 'Not Logged In'}</Text>
 
       <View style={styles.listenerButton}>
         <Button
-          title={'Listen'}
+          color={result ? '#FF0000' : '#000000'}
+          title={result ? 'Logout' : 'Login'}
           onPress={() => {
-            listener();
+            result ? logout() : login();
           }}
         />
       </View>

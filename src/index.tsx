@@ -6,15 +6,6 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-console.log('NativeModules', NativeModules);
-console.log('FronteggRN', NativeModules.FronteggRN);
-
-const CounterEvents = new NativeEventEmitter(NativeModules.FronteggRN);
-// subscribe to event
-CounterEvents.addListener('onFronteggAuthEvent', (res) =>
-  console.log('onFronteggAuthEvent event', res)
-);
-
 const FronteggRN = NativeModules.FronteggRN
   ? NativeModules.FronteggRN
   : new Proxy(
@@ -30,6 +21,21 @@ export function login() {
   return FronteggRN.login();
 }
 
-export function listener() {
-  return FronteggRN.exampleFunc();
+export function logout() {
+  return FronteggRN.logout();
+}
+
+export function listener(callback: any) {
+  const CounterEvents = new NativeEventEmitter(FronteggRN);
+  const subs = CounterEvents.addListener('onFronteggAuthEvent', (res) => {
+    console.log(
+      'onFronteggAuthEvent event',
+      res === 'Not Logged In' ? null : res
+    );
+    callback(res === 'Not Logged In' ? null : res);
+  });
+
+  FronteggRN.exampleFunc();
+
+  return subs;
 }

@@ -5,7 +5,7 @@
 @interface RCT_EXTERN_MODULE(FronteggRN, RCTEventEmitter)
 
   RCT_EXTERN_METHOD(exampleFunc)
-//  RCT_EXTERN_METHOD(logout)
+ RCT_EXTERN_METHOD(logout)
   RCT_EXTERN_METHOD(
     login: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject

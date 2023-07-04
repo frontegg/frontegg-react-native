@@ -41,10 +41,16 @@ class FronteggRN: RCTEventEmitter {
       fronteggApp.auth.$user
             .sink { newValue in
                 print("myString changed to: \(newValue)")
-                self.sendEvent(withName: "onFronteggAuthEvent", body: newValue?.email ?? " No value")
+                self.sendEvent(withName: "onFronteggAuthEvent", body: newValue?.email ?? "Not Logged In")
             }
             .store(in: &cancellables)
-      return ["ok": 222]
+      return ["status": "OK"]
+    }
+
+    @objc
+    func logout() -> [AnyHashable : Any]! {
+      fronteggApp.auth.logout()
+      return ["status": "OK"]
     }
 
     @objc
