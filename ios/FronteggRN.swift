@@ -6,7 +6,6 @@ import Combine
 @objc(FronteggRN)
 class FronteggRN: RCTEventEmitter {
 
-
     public let fronteggApp = FronteggApp.shared
     var cancellables = Set<AnyCancellable>()
 
@@ -18,33 +17,46 @@ class FronteggRN: RCTEventEmitter {
       ]
     }
 
-//     @objc
-//     func login(resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
-//       fronteggApp.auth.login(completion: { res in
-//         switch res {
-//           case .success(user):
-//             resolver(user)
-//           case .failure(error):
-//             rejecter(error)
-//         }
-//       })
-//     }
-
-//    @objc
-//    func logout() -> [AnyHashable : Any]! {
-//      fronteggApp.auth.logout()
-//      return ["sss": 222]
-//    }
-
     @objc
-    func exampleFunc() -> [AnyHashable : Any]! {
-      fronteggApp.auth.$user
-            .sink { newValue in
-                print("myString changed to: \(newValue)")
-                self.sendEvent(withName: "onFronteggAuthEvent", body: newValue?.email ?? "Not Logged In")
-            }
-            .store(in: &cancellables)
-      return ["status": "OK"]
+    func subscribe() -> [AnyHashable : Any]! {
+
+        let auth = fronteggApp.auth
+        var anyChange: AnyPublisher<Void, Never> {
+            return Publishers.Merge8 (
+                auth.$accessToken.map { _ in },
+                auth.$refreshToken.map {_ in },
+                auth.$user.map {_ in },
+                auth.$isAuthenticated.map {_ in },
+                auth.$isLoading.map {_ in },
+                auth.$initializing.map {_ in },
+                auth.$showLoader.map {_ in },
+                auth.$appLink.map {_ in }
+            )
+            .eraseToAnyPublisher()
+        }
+
+        anyChange.sink(receiveValue: { () in
+            print("fronteggAuth changes")
+
+        var jsonUser: [String: Any]? = nil
+        if let userData = try? JSONEncoder().encode(auth.user) {
+            jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
+        }
+
+            let body: [String: Any?] = [
+                "accessToken": auth.accessToken,
+                "refreshToken": auth.refreshToken,
+                "user": jsonUser,
+                "isAuthenticated": auth.isAuthenticated,
+                "isLoading": auth.isLoading,
+                "initializing": auth.initializing,
+                "showLoader": auth.showLoader,
+                "appLink": auth.appLink
+            ]
+                self.sendEvent(withName: "onFronteggAuthEvent", body: body)
+        }).store(in: &cancellables)
+
+        return ["status": "OK"]
     }
 
     @objc

@@ -2,12 +2,37 @@ import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
 import { login, listener, logout } from '@frontegg/react-native';
+import type { IUserProfile } from '@frontegg/rest-api';
+
+interface FronteggRNState {
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: IUserProfile | null;
+  initializing: boolean;
+  showLoader: boolean;
+}
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+  const [result, setResult] = React.useState<FronteggRNState>({
+    accessToken: null,
+    refreshToken: null,
+    isAuthenticated: false,
+    isLoading: true,
+    user: null,
+    initializing: true,
+    showLoader: true,
+  });
 
   React.useEffect(() => {
-    let subs = listener(setResult);
+    let subs = listener((s: any) => {
+      try {
+        setResult(s);
+      } catch (e) {
+        console.error('error', e);
+      }
+    });
 
     return () => {
       subs.remove();
@@ -16,14 +41,23 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Status: {result || 'Not Logged In'}</Text>
+      <Text>showLoader: {result.showLoader ? 'true' : 'false'}</Text>
+      <Text>initializing: {result.initializing ? 'true' : 'false'}</Text>
+      <Text>isLoading: {result.isLoading ? 'true' : 'false'}</Text>
+      <Text>isAuthenticated: {result.isAuthenticated ? 'true' : 'false'}</Text>
+      <Text>refreshToken: {result.refreshToken}</Text>
+      <Text>
+        accessToken:{' '}
+        {result.accessToken ? result.accessToken.substring(0, 30) : ''}
+      </Text>
+      <Text>user: {result.user ? result.user.email : 'Not Logged in'}</Text>
 
       <View style={styles.listenerButton}>
         <Button
-          color={result ? '#FF0000' : '#000000'}
-          title={result ? 'Logout' : 'Login'}
+          color={result.isAuthenticated ? '#FF0000' : '#000000'}
+          title={result.isAuthenticated ? 'Logout' : 'Login'}
           onPress={() => {
-            result ? logout() : login();
+            result.isAuthenticated ? logout() : login();
           }}
         />
       </View>

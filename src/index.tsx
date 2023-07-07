@@ -28,14 +28,11 @@ export function logout() {
 export function listener(callback: any) {
   const CounterEvents = new NativeEventEmitter(FronteggRN);
   const subs = CounterEvents.addListener('onFronteggAuthEvent', (res) => {
-    console.log(
-      'onFronteggAuthEvent event',
-      res === 'Not Logged In' ? null : res
-    );
-    callback(res === 'Not Logged In' ? null : res);
+    console.log('onFronteggAuthEvent event', res);
+    callback(res);
   });
 
-  FronteggRN.exampleFunc();
+  FronteggRN.subscribe();
 
   return subs;
 }
