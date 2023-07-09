@@ -74,6 +74,8 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "androidx.browser:browser:1.5.0"
+  implementation 'com.frontegg.sdk:android:1.0.3'
 }
 
 if (isNewArchitectureEnabled()) {
