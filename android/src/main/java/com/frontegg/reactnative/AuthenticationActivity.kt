@@ -1,81 +1,85 @@
 package com.frontegg.reactnative
 
-import com.frontegg.reactnative.FronteggRNModule.Companion.FRONTEGG_OAUTH_LOGIN_REQUEST
-import com.frontegg.reactnative.FronteggRNModule.Companion.NO_BROWSER_FOUND_RESULT_CODE
-import com.frontegg.reactnative.FronteggRNModule.Companion.UNKNOWN_ERROR_RESULT_CODE
+import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
+import com.frontegg.android.FronteggAuth
 import com.frontegg.android.utils.AuthorizeUrlGenerator
 
 class AuthenticationActivity : Activity() {
-  private var intentLaunched = false
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    if (savedInstanceState != null) {
-      intentLaunched = savedInstanceState.getBoolean(EXTRA_INTENT_LAUNCHED, false)
-    }
+  private fun startAuth(url: String) {
+    val builder = CustomTabsIntent.Builder()
+    builder.setShowTitle(true)
+    val customTabsIntent = builder.build()
+    customTabsIntent.launchUrl(this, Uri.parse(url))
   }
 
   override fun onResume() {
     super.onResume()
-    val authenticationIntent: Intent = getIntent()
-    if (!intentLaunched && authenticationIntent.getExtras() == null) {
-      finish() // Activity was launched in an unexpected way
-      return
-    } else if (!intentLaunched) {
-      intentLaunched = true
-      launchAuthenticationIntent()
-      return
+
+    val intentLaunched = intent.extras?.getBoolean(AUTH_LAUNCHED, false) ?: false
+    Log.d("TEST", "onResume | intentLaunched: $intentLaunched")
+
+    if (intentLaunched) {
+      // check for intent url
+      val url = intent.extras!!.getString(AUTHORIZE_URI)
+      if (url != null) {
+        startAuth(url)
+      } else {
+        setResult(RESULT_CANCELED)
+        finish()
+      }
+    } else {
+      Log.d("TEST", "Got intent with data, ${intent.data.toString()}")
+      val code = intent.data?.getQueryParameter("code")
+      if(code != null) {
+        FronteggAuth.instance.handleHostedLoginCallback(code)
+        setResult(RESULT_OK)
+      }else {
+        setResult(RESULT_CANCELED)
+      }
+      finish()
     }
-    val resultMissing = authenticationIntent.getData() == null
-    if (resultMissing) setResult(RESULT_CANCELED) else setResult(RESULT_OK, authenticationIntent)
-    finish()
   }
 
-  override fun onSaveInstanceState(outState: Bundle) {
-    super.onSaveInstanceState(outState)
-    outState.putBoolean(EXTRA_INTENT_LAUNCHED, intentLaunched)
-  }
 
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
     setIntent(intent)
   }
 
-  private fun launchAuthenticationIntent() {
-    try {
-      val extras: Bundle = getIntent().getExtras()!!
-      val authorizeUri: Uri = extras.getParcelable(EXTRA_AUTHORIZE_URI)!!
-      val builder = CustomTabsIntent.Builder()
-      val customTabsIntent: CustomTabsIntent = builder.build()
-      customTabsIntent.launchUrl(this, authorizeUri)
-    } catch (e: Exception) {
-      if (e is ActivityNotFoundException) {
-        setResult(NO_BROWSER_FOUND_RESULT_CODE)
-      } else {
-        setResult(UNKNOWN_ERROR_RESULT_CODE)
-      }
-      finish()
+  @SuppressLint("QueryPermissionsNeeded")
+  @Suppress("DEPRECATION")
+  fun getMainActivity() {
+    val pm: PackageManager = packageManager
+    val mainIntent = Intent(Intent.ACTION_MAIN, null)
+    mainIntent.addCategory(Intent.CATEGORY_LAUNCHER)
+    mainIntent.setPackage(applicationContext.packageName)
+    val appList = pm.queryIntentActivities(mainIntent, 0)
+    for (resolveInfo in appList) {
+      val packageName = resolveInfo.activityInfo.packageName
+      val activityName = resolveInfo.activityInfo.name
+      Log.d("ActivityNames", "Package Name: $packageName Activity Name: $activityName")
     }
   }
 
   companion object {
-    const val EXTRA_AUTHORIZE_URI = "com.auth0.android.EXTRA_AUTHORIZE_URI"
-    private const val EXTRA_INTENT_LAUNCHED = "com.auth0.android.EXTRA_INTENT_LAUNCHED"
+    const val OAUTH_LOGIN_REQUEST = 100001
+    const val AUTHORIZE_URI = "com.frontegg.android.AUTHORIZE_URI"
+    private const val AUTH_LAUNCHED = "com.frontegg.android.AUTH_LAUNCHED"
 
     fun authenticateUsingBrowser(activity: Activity) {
       val intent = Intent(activity, AuthenticationActivity::class.java)
-
-      // val authorizeUri = Uri.parse(AuthorizeUrlGenerator().generate().first)
-      val authorizeUri = Uri.parse("https://google.com")
-      intent.putExtra(EXTRA_AUTHORIZE_URI, authorizeUri)
+      val authorizeUri = AuthorizeUrlGenerator().generate()
+      intent.putExtra(AUTH_LAUNCHED, true)
+      intent.putExtra(AUTHORIZE_URI, authorizeUri.first)
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-      activity.startActivityForResult(intent, FRONTEGG_OAUTH_LOGIN_REQUEST)
+      activity.startActivityForResult(intent, OAUTH_LOGIN_REQUEST)
     }
   }
 }

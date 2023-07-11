@@ -18,7 +18,14 @@ const FronteggRN = NativeModules.FronteggRN
     );
 
 export function login() {
-  return FronteggRN.login();
+  console.log('login');
+  FronteggRN.login()
+    .then((data: any) => {
+      console.log(data);
+    })
+    .catch((e: any) => {
+      console.log(e);
+    });
 }
 
 export function logout() {

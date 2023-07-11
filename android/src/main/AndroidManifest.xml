@@ -6,6 +6,7 @@
     <activity
       android:name="com.frontegg.reactnative.AuthenticationActivity"
       android:exported="true">
+
       <intent-filter android:autoVerify="true" tools:targetApi="m">
         <action android:name="android.intent.action.VIEW"/>
 
