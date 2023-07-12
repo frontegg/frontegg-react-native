@@ -14,6 +14,7 @@ import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.frontegg.android.FronteggApp
 import com.frontegg.android.FronteggAuth
+import com.frontegg.android.AuthenticationActivity
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 

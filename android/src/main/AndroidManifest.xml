@@ -1,24 +1,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools"
           package="com.frontegg.reactnative">
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <application>
-    <activity
-      android:name="com.frontegg.reactnative.AuthenticationActivity"
-      android:exported="true">
+    <uses-permission android:name="android.permission.INTERNET"/>
 
-      <intent-filter android:autoVerify="true" tools:targetApi="m">
-        <action android:name="android.intent.action.VIEW"/>
+    <application>
+        <activity
+                android:name="com.frontegg.android.AuthenticationActivity"
+                android:exported="true">
+            <intent-filter android:autoVerify="true"
+                           tools:targetApi="m">
+                <action android:name="android.intent.action.VIEW"/>
 
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
 
-        <data
-          android:host="auth.davidantoon.me"
-          android:pathPrefix="/android/com.reactnativeexample/callback"
-          android:scheme="https"/>
-      </intent-filter>
-    </activity>
-  </application>
+                <data
+                        android:host="${frontegg_domain}"
+                        android:pathPrefix="/android/${package_name}/callback"
+                        android:scheme="https"/>
+            </intent-filter>
+        </activity>
+    </application>
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="https"/>
+        </intent>
+    </queries>
 
 </manifest>
