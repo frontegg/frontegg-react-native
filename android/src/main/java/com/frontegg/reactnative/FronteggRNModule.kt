@@ -94,29 +94,33 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       FronteggAuth.instance.showLoader.observable,
     ).subscribe {
 
-      if (reactContext.lifecycleState == LifecycleState.RESUMED) {
-        val accessToken = FronteggAuth.instance.accessToken.value
-        val refreshToken = FronteggAuth.instance.refreshToken.value
-        val user = FronteggAuth.instance.user.value
-        val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
-        val isLoading = FronteggAuth.instance.isLoading.value
-        val initializing = FronteggAuth.instance.initializing.value
-        val showLoader = FronteggAuth.instance.showLoader.value
-
-        val params = Arguments.createMap().apply {
-          putString("accessToken", accessToken)
-          putString("refreshToken", refreshToken)
-          putMap("user", user?.toReadableMap())
-          putBoolean("isAuthenticated", isAuthenticated)
-          putBoolean("isLoading", isLoading)
-          putBoolean("initializing", initializing)
-          putBoolean("showLoader", showLoader)
-        }
-
-        sendEvent(reactContext, "onFronteggAuthEvent", params)
-      }
+      notifyChanges()
     }
+    notifyChanges()
+  }
 
+  private fun notifyChanges(){
+    if (reactContext.lifecycleState == LifecycleState.RESUMED) {
+      val accessToken = FronteggAuth.instance.accessToken.value
+      val refreshToken = FronteggAuth.instance.refreshToken.value
+      val user = FronteggAuth.instance.user.value
+      val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
+      val isLoading = FronteggAuth.instance.isLoading.value
+      val initializing = FronteggAuth.instance.initializing.value
+      val showLoader = FronteggAuth.instance.showLoader.value
+
+      val params = Arguments.createMap().apply {
+        putString("accessToken", accessToken)
+        putString("refreshToken", refreshToken)
+        putMap("user", user?.toReadableMap())
+        putBoolean("isAuthenticated", isAuthenticated)
+        putBoolean("isLoading", isLoading)
+        putBoolean("initializing", initializing)
+        putBoolean("showLoader", showLoader)
+      }
+
+      sendEvent(reactContext, "onFronteggAuthEvent", params)
+    }
   }
 
   @ReactMethod
@@ -126,7 +130,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun addListener(eventName: String?) {
-    if (eventName === "onFronteggAuthEvent") {
+    if (eventName == "onFronteggAuthEvent") {
       subscribe()
     }
   }

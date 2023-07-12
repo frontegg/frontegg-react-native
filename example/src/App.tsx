@@ -48,7 +48,9 @@ export default function App() {
       <Text>refreshToken: {result.refreshToken}</Text>
       <Text>
         accessToken:{' '}
-        {result.accessToken ? result.accessToken.substring(0, 30) : ''}
+        {result.accessToken
+          ? result.accessToken.substring(result.accessToken.length - 40)
+          : ''}
       </Text>
       <Text>user: {result.user ? result.user.email : 'Not Logged in'}</Text>
 

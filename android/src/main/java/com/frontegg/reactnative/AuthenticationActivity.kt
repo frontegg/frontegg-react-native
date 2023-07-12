@@ -6,17 +6,32 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import androidx.browser.customtabs.CustomTabsIntent
 import com.frontegg.android.FronteggAuth
 import com.frontegg.android.utils.AuthorizeUrlGenerator
 
 class AuthenticationActivity : Activity() {
+
+  var customTabLaunched = false
   private fun startAuth(url: String) {
     val builder = CustomTabsIntent.Builder()
     builder.setShowTitle(true)
     val customTabsIntent = builder.build()
     customTabsIntent.launchUrl(this, Uri.parse(url))
+    customTabLaunched = true
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    customTabLaunched = savedInstanceState?.getBoolean(CUSTOM_TAB_LAUNCHED, false) ?: false
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    outState.putBoolean(CUSTOM_TAB_LAUNCHED, customTabLaunched)
+    super.onSaveInstanceState(outState)
+
   }
 
   override fun onResume() {
@@ -25,7 +40,7 @@ class AuthenticationActivity : Activity() {
     val intentLaunched = intent.extras?.getBoolean(AUTH_LAUNCHED, false) ?: false
     Log.d("TEST", "onResume | intentLaunched: $intentLaunched")
 
-    if (intentLaunched) {
+    if (intentLaunched && !customTabLaunched) {
       // check for intent url
       val url = intent.extras!!.getString(AUTHORIZE_URI)
       if (url != null) {
@@ -37,10 +52,10 @@ class AuthenticationActivity : Activity() {
     } else {
       Log.d("TEST", "Got intent with data, ${intent.data.toString()}")
       val code = intent.data?.getQueryParameter("code")
-      if(code != null) {
+      if (code != null) {
         FronteggAuth.instance.handleHostedLoginCallback(code)
         setResult(RESULT_OK)
-      }else {
+      } else {
         setResult(RESULT_CANCELED)
       }
       finish()
@@ -72,6 +87,7 @@ class AuthenticationActivity : Activity() {
     const val OAUTH_LOGIN_REQUEST = 100001
     const val AUTHORIZE_URI = "com.frontegg.android.AUTHORIZE_URI"
     private const val AUTH_LAUNCHED = "com.frontegg.android.AUTH_LAUNCHED"
+    private const val CUSTOM_TAB_LAUNCHED = "com.frontegg.android.CUSTOM_TAB_LAUNCHED"
 
     fun authenticateUsingBrowser(activity: Activity) {
       val intent = Intent(activity, AuthenticationActivity::class.java)
