@@ -43,3 +43,5 @@ export function listener(callback: any) {
 
   return subs;
 }
+
+export { FronteggWrapper } from './FronteggWrapper';

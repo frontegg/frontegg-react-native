@@ -81,7 +81,9 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "@react-navigation/native": "*",
+    "@react-navigation/native-stack": "*"
   },
   "engines": {
     "node": ">= 16.0.0"
