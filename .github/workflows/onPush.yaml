@@ -39,5 +39,5 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Lint files
+      - name: Pre-Pack Packages
         run: yarn prepack
