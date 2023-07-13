@@ -1,7 +1,7 @@
 {
   "name": "@frontegg/react-native",
-  "version": "0.1.0",
-  "description": "test",
+  "version": "1.0.0",
+  "description": "Frontegg React-Native SDK",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -42,7 +42,7 @@
     "android"
   ],
   "repository": "https://github.com/frontegg/frontegg-react-native",
-  "author": "Frontegg LTD <hello@frontegg.com> (https://github.com/frontegg)",
+  "author": "Frontegg LTD <hello@frontegg.com> (https://frontegg.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/frontegg/frontegg-react-native/issues"
@@ -51,9 +51,12 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "dependencies": {
+    "@frontegg/react-hooks": "^6.116.0"
+  },
   "devDependencies": {
-    "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.2.2",
+    "@commitlint/config-conventional": "^17.0.2",
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
@@ -68,17 +71,19 @@
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
     "react": "18.2.0",
-    "react-native": "0.71.7",
-    "react-native-builder-bob": "^0.20.4",
+    "react-native": "0.72.1",
+    "react-native-builder-bob": "^0.20.0",
     "release-it": "^15.0.0",
-    "typescript": "^4.5.2"
+    "typescript": "^5.0.2"
   },
   "resolutions": {
     "@types/react": "17.0.21"
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "@react-navigation/native": "*",
+    "@react-navigation/native-stack": "*"
   },
   "engines": {
     "node": ">= 16.0.0"
@@ -156,9 +161,5 @@
         }
       ]
     ]
-  },
-  "dependencies": {
-    "@frontegg/react-hooks": "^6.98.0",
-    "react-native-url-polyfill": "1.3.0"
   }
 }

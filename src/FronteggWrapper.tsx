@@ -49,12 +49,18 @@ export const StoreListener: FC = () => {
   global.store = store;
   return null;
 };
-export const FronteggWrapper: FC<FronteggAppOptions> = (props) => {
+export const FronteggWrapper: FC<Omit<FronteggAppOptions, 'contextOptions'>> = (
+  props
+) => {
   const onRedirectTo = useCallback((url: string) => {
     console.log('onRedirectTo', url);
   }, []);
 
   app.options = {
+    contextOptions: {
+      // get from native modules
+      baseUrl: 'http://localhost:8080',
+    },
     ...props,
     onRedirectTo,
     framework: 'nextjs',
