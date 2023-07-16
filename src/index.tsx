@@ -32,16 +32,27 @@ export function logout() {
   return FronteggRN.logout();
 }
 
-export function listener(callback: any) {
-  const CounterEvents = new NativeEventEmitter(FronteggRN);
-  const subs = CounterEvents.addListener('onFronteggAuthEvent', (res) => {
-    console.log('onFronteggAuthEvent event', res);
-    callback(res);
-  });
+function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
+  let timeout: any;
 
-  FronteggRN.subscribe();
-
-  return subs;
+  return function (
+    this: ThisParameterType<T>,
+    ...args: Parameters<T>
+  ): Promise<ReturnType<T>> {
+    clearTimeout(timeout);
+    return new Promise(
+      (resolve: any) =>
+        (timeout = setTimeout(() => resolve(func.apply(this, args)), waitFor))
+    );
+  };
 }
 
-export { FronteggWrapper } from './FronteggWrapper';
+export function listener(callback: (res: any) => any) {
+  const CounterEvents = new NativeEventEmitter(FronteggRN);
+  const debouncedFunc = debounce((res: any) => callback(res), 200);
+  const subs = CounterEvents.addListener('onFronteggAuthEvent', (res) => {
+    debouncedFunc(res);
+  });
+  FronteggRN.subscribe();
+  return subs;
+}

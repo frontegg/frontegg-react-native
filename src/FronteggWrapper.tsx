@@ -7,7 +7,6 @@ import {
 import type { FronteggAppOptions, FronteggAppInstance } from '@frontegg/types';
 import type { FC } from 'react';
 import { ContextHolder } from '@frontegg/rest-api';
-import 'react-native-url-polyfill/auto';
 
 class App {
   public name: string = 'default';

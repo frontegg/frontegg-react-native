@@ -2,7 +2,6 @@ package com.frontegg.reactnative
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.BaseActivityEventListener
 import com.facebook.react.bridge.Promise
@@ -60,10 +59,11 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   init {
     reactContext.addActivityEventListener(activityEventListener)
+
     FronteggApp.init(
-      "auth.davidantoon.me",
-      "b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca",
-      reactContext
+      constants.getValue("baseUrl") as String,
+      constants.getValue("clientId") as String,
+      reactContext.applicationContext
     )
   }
 
@@ -100,7 +100,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     notifyChanges()
   }
 
-  private fun notifyChanges(){
+  private fun notifyChanges() {
     if (reactContext.lifecycleState == LifecycleState.RESUMED) {
       val accessToken = FronteggAuth.instance.accessToken.value
       val refreshToken = FronteggAuth.instance.refreshToken.value
@@ -111,6 +111,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       val showLoader = FronteggAuth.instance.showLoader.value
 
       val params = Arguments.createMap().apply {
+
         putString("accessToken", accessToken)
         putString("refreshToken", refreshToken)
         putMap("user", user?.toReadableMap())
@@ -119,6 +120,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
         putBoolean("initializing", initializing)
         putBoolean("showLoader", showLoader)
       }
+
 
       sendEvent(reactContext, "onFronteggAuthEvent", params)
     }
@@ -154,9 +156,45 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
 
-  override fun getConstants(): MutableMap<String, Any> =
-    hashMapOf("DEFAULT_EVENT_NAME" to "New Event")
+  override fun getConstants(): MutableMap<String, Any> {
+    val packageName = reactContext.packageName
+    val className = "$packageName.BuildConfig"
+    try {
+      val buildConfigClass = Class.forName(className)
 
+      // Get the field from BuildConfig class
+      val baseUrlField = buildConfigClass.getField("FRONTEGG_DOMAIN")
+      val clientIdField = buildConfigClass.getField("FRONTEGG_CLIENT_ID")
+      val baseUrl = baseUrlField.get(null) as String // Assuming it's a String
+      val clientId = clientIdField.get(null) as String // Assuming it's a String
+
+
+      return hashMapOf(
+        "baseUrl" to baseUrl,
+        "clientId" to clientId,
+        "bundleId" to reactContext.packageName
+      )
+    } catch (e: ClassNotFoundException) {
+      println("Class not found: $className")
+      throw e
+    } catch (e: NoSuchFieldException) {
+      println(
+        "Field not found in BuildConfig: " +
+          "buildConfigField \"String\", 'FRONTEGG_DOMAIN', \"\\\"\$fronteggDomain\\\"\"\n" +
+          "buildConfigField \"String\", 'FRONTEGG_CLIENT_ID', \"\\\"\$fronteggClientId\\\"\""
+      )
+      throw e
+
+    } catch (e: IllegalAccessException) {
+      println(
+        "Access problem with field in BuildConfig: " +
+          "buildConfigField \"String\", 'FRONTEGG_DOMAIN', \"\\\"\$fronteggDomain\\\"\"\n" +
+          "buildConfigField \"String\", 'FRONTEGG_CLIENT_ID', \"\\\"\$fronteggClientId\\\"\""
+      )
+      throw e
+    }
+
+  }
   companion object {
     const val NAME = "FronteggRN"
 
