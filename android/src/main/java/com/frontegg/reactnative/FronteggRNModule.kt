@@ -133,16 +133,12 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun addListener(eventName: String?) {
-    if (eventName == "onFronteggAuthEvent") {
-      subscribe()
-    }
+
   }
 
   @ReactMethod
   fun removeListeners(count: Int) {
-    if (this.disposable != null) {
-      this.disposable!!.dispose()
-    }
+
   }
 
 

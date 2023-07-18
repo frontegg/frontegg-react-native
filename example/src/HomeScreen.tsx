@@ -1,65 +1,40 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { login, listener, logout } from '@frontegg/react-native';
-import type { IUserProfile } from '@frontegg/rest-api';
-
-interface FronteggRNState {
-  accessToken: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: IUserProfile | null;
-  initializing: boolean;
-  showLoader: boolean;
-}
+import { useAuth } from '@frontegg/react-native';
 
 export default function HomeScreen() {
-  const [result, setResult] = React.useState<FronteggRNState>({
-    accessToken: null,
-    refreshToken: null,
-    isAuthenticated: false,
-    isLoading: true,
-    user: null,
-    initializing: true,
-    showLoader: true,
-  });
-
-  React.useEffect(() => {
-    let subs = listener((s: any) => {
-      try {
-        setResult(s);
-      } catch (e) {
-        console.error('error', e);
-      }
-    });
-
-    return () => {
-      subs.remove();
-    };
-  }, []);
+  const {
+    showLoader,
+    initializing,
+    isLoading,
+    isAuthenticated,
+    refreshToken,
+    accessToken,
+    user,
+    logout,
+    login,
+  } = useAuth();
 
   return (
     <View style={styles.container}>
-      <Text>showLoader: {result.showLoader ? 'true' : 'false'}</Text>
-      <Text>initializing: {result.initializing ? 'true' : 'false'}</Text>
-      <Text>isLoading: {result.isLoading ? 'true' : 'false'}</Text>
-      <Text>isAuthenticated: {result.isAuthenticated ? 'true' : 'false'}</Text>
-      <Text>refreshToken: {result.refreshToken}</Text>
+      <Text>showLoader: {showLoader ? 'true' : 'false'}</Text>
+      <Text>initializing: {initializing ? 'true' : 'false'}</Text>
+      <Text>isLoading: {isLoading ? 'true' : 'false'}</Text>
+      <Text>isAuthenticated: {isAuthenticated ? 'true' : 'false'}</Text>
+      <Text>refreshToken: {refreshToken}</Text>
       <Text>
         accessToken:{' '}
-        {result.accessToken
-          ? result.accessToken.substring(result.accessToken.length - 40)
-          : ''}
+        {accessToken ? accessToken.substring(accessToken.length - 40) : ''}
       </Text>
-      <Text>user: {result.user ? result.user.email : 'Not Logged in'}</Text>
+      <Text>user: {user ? user.email : 'Not Logged in'}</Text>
 
       <View style={styles.listenerButton}>
         <Button
-          color={result.isAuthenticated ? '#FF0000' : '#000000'}
-          title={result.isAuthenticated ? 'Logout' : 'Login'}
+          color={isAuthenticated ? '#FF0000' : '#000000'}
+          title={isAuthenticated ? 'Logout' : 'Login'}
           onPress={() => {
-            result.isAuthenticated ? logout() : login();
+            isAuthenticated ? logout() : login();
           }}
         />
       </View>
