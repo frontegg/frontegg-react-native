@@ -70,9 +70,7 @@ class FronteggRN: RCTEventEmitter {
       _ resolve: RCTPromiseResolveBlock,
       rejecter reject: RCTPromiseRejectBlock
     ) -> Void {
-        fronteggApp.auth.login(completion:  { res in
-            print("logged in finished")
-        })
+        fronteggApp.auth.login()
         resolve("ok")
     }
 

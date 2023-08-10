@@ -36,21 +36,11 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       if (requestCode == AuthenticationActivity.OAUTH_LOGIN_REQUEST) {
         when (resultCode) {
           Activity.RESULT_CANCELED -> {
-            val params = Arguments.createMap().apply {
-              putString("eventProperty", "someValue")
-            }
-            sendEvent(reactContext, "test", params)
-
             loginPromise?.reject("Canceled")
           }
 
           Activity.RESULT_OK -> {
-            val params = Arguments.createMap().apply {
-              putString("eventProperty", "someValue")
-            }
-            sendEvent(reactContext, "test", params)
-            loginPromise?.resolve(params)
-
+            loginPromise?.resolve("OK")
           }
         }
       }

@@ -41,3 +41,9 @@ jobs:
 
       - name: Pre-Pack Packages
         run: yarn prepack
+
+      - name: Publish @frontegg/react-native version to NPM
+        run: npm publish --tag latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
