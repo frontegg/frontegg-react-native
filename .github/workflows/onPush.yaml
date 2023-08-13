@@ -39,30 +39,5 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-#      - name: Pre-Pack Packages
-#        run: yarn prepack
-
-      - name: Authenticate with Registry
-        run: |
-          yarn logout
-          echo "init-author-name=Frontegg LTD" > .npmrc
-          echo "init-author-email=hello@frontegg.com" >> .npmrc
-          echo "init-author-url=https://frontegg.com" >> .npmrc
-          echo "init-license=MIT" >> .npmrc
-          echo "always-auth=true" >> .npmrc
-          echo "registry=https://registry.npmjs.org" >> .npmrc
-          echo "_authToken=$NPM_TOKEN" >> .npmrc
-          echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
-          npm whoami
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-
-      - name: Pack Package
-        run: |
-          yarn pack
-      - name: Publish @frontegg/react-native version to NPM
-        run: npm publish --tag latest
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: Pre-Pack Packages
+        run: yarn prepack
