@@ -1,6 +1,6 @@
 {
   "name": "@frontegg/react-native",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Frontegg React-Native SDK",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -52,7 +52,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@frontegg/react-hooks": "^6.116.0"
+    "@frontegg/types": "^6.116.0",
+    "@react-native-async-storage/async-storage": "^1.19.0"
   },
   "devDependencies": {
     "@evilmartians/lefthook": "^1.2.2",

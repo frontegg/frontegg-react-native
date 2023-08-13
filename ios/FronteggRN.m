@@ -10,10 +10,6 @@
     login: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject
   )
-//   RCT_EXPORT_METHOD(login:resolver:(RCTPromiseResolveBlock)resolve
-//                    rejecter:(RCTPromiseRejectBlock)reject){}
-
-//   RCT_EXPORT_METHOD(logout:(NSString *)test)
 @end
 
 //

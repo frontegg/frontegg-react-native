@@ -68,8 +68,8 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-def fronteggDomain = "FRONTEGG_DOMAIN"
-def fronteggClientId = "FRONTEGG_CLIENT_ID"
+def fronteggDomain = "auth.davidantoon.me"
+def fronteggClientId = "b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca"
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -100,6 +100,9 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+    }
+    buildFeatures {
+      buildConfig = true
     }
     buildTypes {
         debug {

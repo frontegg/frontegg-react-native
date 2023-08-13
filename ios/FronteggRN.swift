@@ -70,18 +70,8 @@ class FronteggRN: RCTEventEmitter {
       _ resolve: RCTPromiseResolveBlock,
       rejecter reject: RCTPromiseRejectBlock
     ) -> Void {
-        fronteggApp.auth.login(completion:  { res in
-            print("logged in finished")
-        })
+        fronteggApp.auth.login()
         resolve("ok")
-
-//       if (count == 0) {
-//         let error = NSError(domain: "", code: 200, userInfo: nil)
-//         reject("E_COUNT", "count cannot be negative", error)
-//       } else {
-//         count -= 1
-
-//       }
     }
 
     // we need to override this method and
