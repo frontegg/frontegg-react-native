@@ -19,6 +19,7 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
     - [Register authentication activity](#register-authentication-activity)
     - [Config Android AssetLinks](#config-ios-associated-domain)
 - [Usages](#usages)
+  - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
 ## Project Requirements
 
 - Minimum iOS deployment version **=> 14**
@@ -47,7 +48,7 @@ Use a package manager npm/yarn to install frontegg React Native library.
 
 **NPM:**
 ```bash
-npm install @frontegg/react-native
+npm install -s @frontegg/react-native
 ```
 
 **Yarn:**
@@ -211,3 +212,105 @@ In order to use our API’s, follow [this guide](https://docs.frontegg.com/refer
 
 ## Usages
 
+### Wrap your app with FronteggProvider
+
+NOTE: we recommend to use `FronteggWrapper` component along with  the `NavigationContainer` from `@react-navigation/native`:
+to install `@react-navigation/native` and `@react-navigation/native-stack` run the following command:
+
+**NPM:**
+```bash
+npm install -s @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
+```
+**Yarn:**
+```bash
+yarn add @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
+```
+
+Modify your `App.tsx` file and wrap your app with FronteggProvider and pass your Frontegg configuration:
+
+```tsx
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from './HomeScreen';
+import ProfileScreen from './ProfileScreen';
+import { FronteggWrapper } from '@frontegg/react-native';
+
+const Stack = createNativeStackNavigator();
+
+export default () => {
+  return (
+    <FronteggWrapper>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </FronteggWrapper>
+  );
+};
+
+```
+
+### Login with frontegg
+
+To log in with frontegg you can use the `useAuth` hook:
+
+```tsx
+import { View, Button } from 'react-native';
+import { useAuth } from '@frontegg/react-native';
+
+
+export function MyScreen() {
+  const { isAuthenticated, login, logout } = useAuth();
+  
+  return <View>
+    <Button title={'Login'} onPress={login} />
+  </View>
+} 
+
+```
+
+
+### Check if user is authenticated
+
+To check if user is authenticated before display your app you can use the `useAuth` hook
+along with the isLoading property:
+
+```tsx
+
+import { StyleSheet, View, Text, Button } from 'react-native';
+import { useAuth } from '@frontegg/react-native';
+
+export default function HomeScreen() {
+  const {
+    showLoader,
+    isLoading,
+    isAuthenticated,
+    user,
+  } = useAuth();
+
+  // showLoader when the SDK is initializing the app / authenticate the user
+  if(showLoader || isLoading) {
+    return <View>
+      <Text>Loading...</Text>
+    </View>
+  }
+
+  
+  return <View>
+    <Text>{isAuthenticated ? 'Authenticated' : 'Not authenticated'}</Text>
+    
+    {isAuthenticated && <Text>{user?.email}</Text>}
+
+    <Button
+        color={isAuthenticated ? '#FF0000' : '#000000'}
+        title={isAuthenticated ? 'Logout' : 'Login'}
+        onPress={() => {
+          isAuthenticated ? logout() : login();
+        }}
+    />
+  </View>
+}
+```
