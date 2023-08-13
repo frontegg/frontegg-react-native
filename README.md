@@ -20,6 +20,10 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
     - [Config Android AssetLinks](#config-ios-associated-domain)
 - [Usages](#usages)
   - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
+  - [Login with frontegg](#login-with-frontegg)
+  - [Check if user is authenticated](#check-if-user-is-authenticated)
+
+
 ## Project Requirements
 
 - Minimum iOS deployment version **=> 14**
@@ -39,6 +43,7 @@ Copy FronteggDomain to future steps from [Frontegg Portal Domain](https://portal
 - Navigate to [Login Method Settings](https://portal.frontegg.com/development/authentication/hosted)
 - Toggle Hosted login method
 - Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
+- Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
 
