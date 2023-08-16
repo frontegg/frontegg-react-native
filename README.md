@@ -16,7 +16,6 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
 - [Setup Android Project](#setup-android-project)
     - [Set minimum SDK version](#set-minimum-sdk-version)
     - [Configure build config fields](#configure-build-config-fields)
-    - [Register authentication activity](#register-authentication-activity)
     - [Config Android AssetLinks](#config-ios-associated-domain)
 - [Usages](#usages)
   - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
@@ -63,7 +62,6 @@ yarn add @frontegg/react-native
 ```
 
 ## Setup iOS Project
-
 
 ### Create Frontegg plist file
 
