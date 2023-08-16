@@ -36,12 +36,11 @@ class FronteggRN: RCTEventEmitter {
         }
 
         anyChange.sink(receiveValue: { () in
-            print("fronteggAuth changes")
 
-        var jsonUser: [String: Any]? = nil
-        if let userData = try? JSONEncoder().encode(auth.user) {
-            jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
-        }
+            var jsonUser: [String: Any]? = nil
+            if let userData = try? JSONEncoder().encode(auth.user) {
+                jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
+            }
 
             let body: [String: Any?] = [
                 "accessToken": auth.accessToken,
@@ -72,6 +71,17 @@ class FronteggRN: RCTEventEmitter {
     ) -> Void {
         fronteggApp.auth.login()
         resolve("ok")
+    }
+
+    @objc
+    func switchTenant(
+      _ tenantId: String,
+      resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
+    ) -> Void {
+        print("switchTenant to \(tenantId)")
+        fronteggApp.auth.switchTenant(tenantId: tenantId) { _ in
+            resolver(tenantId)
+        }
     }
 
     // we need to override this method and
