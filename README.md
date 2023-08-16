@@ -46,7 +46,8 @@ Copy FronteggDomain to future steps from [Frontegg Portal Domain](https://portal
 - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
-
+- Replace `ANDROID_PACKAGE_NAME` with your android package name
+- 
 ### Add frontegg package to the project
 
 Use a package manager npm/yarn to install frontegg React Native library.
