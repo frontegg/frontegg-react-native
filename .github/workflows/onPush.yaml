@@ -49,7 +49,6 @@ jobs:
       - name: "Authenticate with Registry"
         run: |
           yarn logout
-          rm -rf ".yarnrc"
           echo "init-author-name=Frontegg LTD" > .npmrc
           echo "init-author-email=hello@frontegg.com" >> .npmrc
           echo "init-author-url=https://frontegg.com" >> .npmrc
@@ -59,8 +58,6 @@ jobs:
           echo "_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
           echo "@frontegg:registry=https://registry.npmjs.org" >> .npmrc
           echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" >> .npmrc
-          echo "npmrc initialized"
-          npm config ls -l | grep config
           npm whoami
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
