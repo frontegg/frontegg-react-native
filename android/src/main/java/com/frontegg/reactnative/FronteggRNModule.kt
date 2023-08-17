@@ -141,6 +141,13 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     AuthenticationActivity.authenticateUsingBrowser(activity!!)
   }
 
+  @ReactMethod
+  fun switchTenant(tenantId: String, promise: Promise) {
+    FronteggAuth.instance.switchTenant(tenantId) {
+        promise.resolve(tenantId)
+    }
+  }
+
 
   override fun getConstants(): MutableMap<String, Any> {
     val packageName = reactContext.packageName

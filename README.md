@@ -16,10 +16,13 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
 - [Setup Android Project](#setup-android-project)
     - [Set minimum SDK version](#set-minimum-sdk-version)
     - [Configure build config fields](#configure-build-config-fields)
-    - [Register authentication activity](#register-authentication-activity)
     - [Config Android AssetLinks](#config-ios-associated-domain)
 - [Usages](#usages)
   - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
+  - [Login with frontegg](#login-with-frontegg)
+  - [Check if user is authenticated](#check-if-user-is-authenticated)
+
+
 ## Project Requirements
 
 - Minimum iOS deployment version **=> 14**
@@ -39,9 +42,11 @@ Copy FronteggDomain to future steps from [Frontegg Portal Domain](https://portal
 - Navigate to [Login Method Settings](https://portal.frontegg.com/development/authentication/hosted)
 - Toggle Hosted login method
 - Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
+- Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
-
+- Replace `ANDROID_PACKAGE_NAME` with your android package name
+- 
 ### Add frontegg package to the project
 
 Use a package manager npm/yarn to install frontegg React Native library.
@@ -57,7 +62,6 @@ yarn add @frontegg/react-native
 ```
 
 ## Setup iOS Project
-
 
 ### Create Frontegg plist file
 
@@ -114,16 +118,16 @@ This property will store frontegg hostname (without https) and client id from pr
 
 ```groovy
 
-def fronteggDomain = "DOMAIN_HOST.com"
-def fronteggClientId = "CLIENT_ID"
+def fronteggDomain = "FRONTEGG_DOMAIN_HOST.com" // without protocol https://
+def fronteggClientId = "FRONTEGG_CLIENT_ID"
 
 android {
     defaultConfig {
-        
+
         manifestPlaceholders = [
-                package_name : applicationId,
-                frontegg_domain : fronteggDomain,
-                frontegg_client_id: fronteggClientId
+                "package_name" : applicationId,
+                "frontegg_domain" : fronteggDomain,
+                "frontegg_client_id": fronteggClientId
         ]
 
         buildConfigField "String", 'FRONTEGG_DOMAIN', "\"$fronteggDomain\""
@@ -145,34 +149,26 @@ android {
 ```
 
 
-### Register authentication activity
+### Add permissions to AndroidManifest.xml
 
-Open the app/src/main/AndroidManifest.xml file and add the following line to the before manifest section:
+Add `INTERNET` permission to the app's manifest file.
 
 ```xml
-<activity android:name="com.frontegg.android.AuthenticationActivity" android:exported="true">
-   <intent-filter android:autoVerify="true">
-       <action android:name="android.intent.action.VIEW" />
 
-       <category android:name="android.intent.category.DEFAULT" />
-       <category android:name="android.intent.category.BROWSABLE" />
-
-       <data
-           android:host="${frontegg_domain}"
-           android:pathPrefix="/android/${package_name}/callback"
-           android:scheme="https"
-       />
-   </intent-filter>
-</activity>
-
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 ```
 
 
 ### Config Android AssetLinks
 
-Configuring your Android `AssetLinks` is required for Magic Link authentication / Reset Password / Activate Account / login with IdPs.
+Configuring your Android `AssetLinks` is required for Magic Link authentication / Reset Password / Activate Account /
+login with IdPs.
 
-To add your `AssetLinks` to your Frontegg application, you will need to update in each of your integrated Frontegg Environments the `AssetLinks` that you would like to use with that Environment. Send a POST request to `https://api.frontegg.com/vendors/resources/associated-domains/v1/android` with the following payload:
+To add your `AssetLinks` to your Frontegg application, you will need to update in each of your integrated Frontegg
+Environments the `AssetLinks` that you would like to use with that Environment. Send a POST request
+to `https://api.frontegg.com/vendors/resources/associated-domains/v1/android` with the following payload:
+
 ```
 {
     "packageName": "YOUR_APPLICATION_PACKAGE_NAME",
@@ -180,9 +176,13 @@ To add your `AssetLinks` to your Frontegg application, you will need to update i
 }
 ```
 
-Each Android app has multiple certificate fingerprint, to get your `DEBUG` sha256CertFingerprint you have to run the following command:
+Each Android app has multiple certificate fingerprint, to get your `DEBUG` sha256CertFingerprint you have to run the
+following command:
 
 For Debug mode, run the following command and copy the `SHA-256` value
+
+NOTE: make sure to choose the Variant and Config equals to `debug`
+
 ```bash
 ./gradlew signingReport
 
@@ -190,7 +190,7 @@ For Debug mode, run the following command and copy the `SHA-256` value
 #  Example Output:
 ###################
 
-#  Variant: debugAndroidTest
+#  Variant: debug
 #  Config: debug
 #  Store: /Users/davidfrontegg/.android/debug.keystore
 #  Alias: AndroidDebugKey
@@ -201,13 +201,14 @@ For Debug mode, run the following command and copy the `SHA-256` value
 
 ```
 
-
 For Release mode, Extract the SHA256 using keytool from your `Release` keystore file:
+
 ```bash
 keytool -list -v -keystore /PATH/file.jks -alias YourAlias -storepass *** -keypass ***
 ```
 
-In order to use our API’s, follow [this guide](https://docs.frontegg.com/reference/getting-started-with-your-api) to generate a vendor token.
+In order to use our API’s, follow [this guide](https://docs.frontegg.com/reference/getting-started-with-your-api) to
+generate a vendor token.
 
 
 ## Usages
@@ -272,6 +273,39 @@ export function MyScreen() {
 
 ```
 
+### Switch tenant frontegg
+
+To switch tenant, get switchTenant from the `useAuth` hook:
+
+```tsx
+import { useCallback } from 'react';
+import { View, Button } from 'react-native';
+import { useAuth } from '@frontegg/react-native';
+
+
+export function MyScreen() {
+  const { switchTenant, user } = useAuth();
+  
+  // user avaiable tenants from user.tenants
+  console.log("user tenants", user?.tenants)
+
+  const handleSwitchTenant = useCallback(() => {
+    const tenantId = 'TENANT_ID'; // get tenant id from your app state
+    
+
+    switchTenant(tenantId).then(() => {
+      console.log('Tenant switched successfully');
+    }).catch((error) => {
+      console.log('Failed to switch tenant', error);
+    });
+  }, [ switchTenant ]);
+
+  return <View>
+    <Button title={'Switch Tenant'} onPress={handleSwitchTenant} />
+  </View>;
+}
+
+```
 
 ### Check if user is authenticated
 

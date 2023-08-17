@@ -21,7 +21,6 @@ export function getConstants() {
   return FronteggRN.getConstants();
 }
 export function login() {
-  console.log('login');
   FronteggRN.login()
     .then((data: any) => {
       console.log(data);
@@ -33,6 +32,10 @@ export function login() {
 
 export function logout() {
   return FronteggRN.logout();
+}
+
+export async function switchTenant(teanntId: string) {
+  return FronteggRN.switchTenant(teanntId);
 }
 
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {

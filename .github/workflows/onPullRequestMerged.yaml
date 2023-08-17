@@ -67,14 +67,6 @@ jobs:
       - name: Pack Package
         run: |
           yarn pack
-      - name: "Set Generated changelog"
-        uses: actions/github-script@v6
-        id: 'generated-changelog'
-        with:
-          result-encoding: string
-          script: |
-            const { generateChangeLog } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/index.js`);
-            return generateChangeLog({context, github, core})
       - name: "Set incremented version"
         uses: actions/github-script@v6
         id: 'incremented-version'
@@ -100,8 +92,6 @@ jobs:
           title: 'v${{ steps.incremented-version.outputs.result }}'
           body: |
             # v${{ steps.incremented-version.outputs.result }}
-
-            ${{steps.generated-changelog.outputs.result}}
 
           labels: "Type: Release"
           branch: "release/next"
