@@ -1,52 +1,58 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { useAuth } from '@frontegg/react-native';
-import { switchTenant } from '../../src/FronteggNative';
+import {
+  switchTenant,
+  login,
+  logout,
+  refreshToken,
+  useAuth,
+} from '@frontegg/react-native';
 import { useState } from 'react';
 import type { ITenantsResponse } from '@frontegg/rest-api';
 
 export default function HomeScreen() {
   const [switching, setSwitching] = useState<string>('');
-  const {
-    showLoader,
-    initializing,
-    isLoading,
-    isAuthenticated,
-    refreshToken,
-    accessToken,
-    user,
-    logout,
-    login,
-  } = useAuth();
+  const state = useAuth();
 
   return (
     <View style={styles.container}>
-      <Text>showLoader: {showLoader ? 'true' : 'false'}</Text>
-      <Text>initializing: {initializing ? 'true' : 'false'}</Text>
-      <Text>isLoading: {isLoading ? 'true' : 'false'}</Text>
-      <Text>isAuthenticated: {isAuthenticated ? 'true' : 'false'}</Text>
-      <Text>Active Tenant: {user?.activeTenant.name}</Text>
-      <Text>refreshToken: {refreshToken}</Text>
+      <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
+      <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
+      <Text>isLoading: {state.isLoading ? 'true' : 'false'}</Text>
+      <Text>isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}</Text>
+      <Text>Active Tenant: {state.user?.activeTenant.name}</Text>
+      <Text>refreshToken: {state.refreshToken}</Text>
       <Text>
         accessToken:{' '}
-        {accessToken ? accessToken.substring(accessToken.length - 40) : ''}
+        {state.accessToken
+          ? state.accessToken.substring(state.accessToken.length - 40)
+          : ''}
       </Text>
-      <Text>user: {user ? user.email : 'Not Logged in'}</Text>
+      <Text>user: {state.user ? state.user.email : 'Not Logged in'}</Text>
 
       <View style={styles.listenerButton}>
         <Button
-          color={isAuthenticated ? '#FF0000' : '#000000'}
-          title={isAuthenticated ? 'Logout' : 'Login'}
+          color={state.isAuthenticated ? '#FF0000' : '#000000'}
+          title={state.isAuthenticated ? 'Logout' : 'Login'}
           onPress={() => {
-            isAuthenticated ? logout() : login();
+            state.isAuthenticated ? logout() : login();
+          }}
+        />
+      </View>
+
+      <View style={styles.listenerButton}>
+        <Button
+          title={'Refresh Token'}
+          onPress={() => {
+            refreshToken();
           }}
         />
       </View>
 
       <Text style={styles.tenantsTitle}>Tenants</Text>
 
-      {(user?.tenants ?? [])
+      {(state.user?.tenants ?? [])
         .sort((a: any, b: any) => a.name.localeCompare(b.name))
         .map((tenant: ITenantsResponse) => (
           <View key={tenant.tenantId} style={styles.tenantRow}>
@@ -54,12 +60,12 @@ export default function HomeScreen() {
               title={`${tenant.name} ${
                 tenant.tenantId === switching
                   ? ' (switching...)'
-                  : tenant.tenantId === user?.activeTenant.tenantId
+                  : tenant.tenantId === state.user?.activeTenant.tenantId
                   ? ' (active)'
                   : ''
               }`.trim()}
               onPress={() => {
-                console.log(tenant.tenantId, user?.activeTenant.tenantId);
+                console.log(tenant.tenantId, state.user?.activeTenant.tenantId);
                 setSwitching(tenant.tenantId);
                 switchTenant(tenant.tenantId).then(() => {
                   setSwitching('');
