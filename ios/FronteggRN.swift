@@ -60,7 +60,9 @@ class FronteggRN: RCTEventEmitter {
 
     @objc
     func logout() -> [AnyHashable : Any]! {
-      fronteggApp.auth.logout()
+      DispatchQueue.main.sync {
+        fronteggApp.auth.logout()
+      }
       return ["status": "OK"]
     }
 
@@ -69,19 +71,32 @@ class FronteggRN: RCTEventEmitter {
       _ resolve: RCTPromiseResolveBlock,
       rejecter reject: RCTPromiseRejectBlock
     ) -> Void {
-        fronteggApp.auth.login()
+        DispatchQueue.main.sync {
+            fronteggApp.auth.login()
+        }
         resolve("ok")
     }
 
+    
     @objc
     func switchTenant(
       _ tenantId: String,
       resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
     ) -> Void {
-        print("switchTenant to \(tenantId)")
         fronteggApp.auth.switchTenant(tenantId: tenantId) { _ in
             resolver(tenantId)
         }
+    }
+    
+    @objc
+    func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
+        
+        DispatchQueue.global(qos: .userInteractive).async {
+           Task {
+               await self.fronteggApp.auth.refreshTokenIfNeeded()
+               resolve("ok")
+           }
+       }
     }
 
     // we need to override this method and

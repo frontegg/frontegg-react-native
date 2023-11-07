@@ -148,6 +148,12 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     }
   }
 
+  @ReactMethod
+  fun refreshToken(promise: Promise) {
+    FronteggAuth.instance.refreshToken() {
+        promise.resolve()
+    }
+  }
 
   override fun getConstants(): MutableMap<String, Any> {
     val packageName = reactContext.packageName
