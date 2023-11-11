@@ -11,8 +11,12 @@
     rejecter: (RCTPromiseRejectBlock)reject
   )
   RCT_EXTERN_METHOD(
-      switchTenant: (NSString *)tenantId
-      resolver: (RCTPromiseResolveBlock)resolve
-      rejecter: (RCTPromiseRejectBlock)reject
-    )
+    switchTenant: (NSString *)tenantId
+    resolver: (RCTPromiseResolveBlock)resolve
+    rejecter: (RCTPromiseRejectBlock)reject
+  )
+  RCT_EXTERN_METHOD(
+    refreshToken: (RCTPromiseResolveBlock)resolve
+    rejecter: (RCTPromiseRejectBlock)reject
+  )
 @end

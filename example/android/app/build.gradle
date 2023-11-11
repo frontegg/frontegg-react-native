@@ -76,9 +76,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.reactnativeexample"
+    namespace "com.frontegg.demo"
     defaultConfig {
-        applicationId "com.reactnativeexample"
+        applicationId "com.frontegg.demo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

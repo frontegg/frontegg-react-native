@@ -3,7 +3,7 @@ import type { FronteggAppOptions } from '@frontegg/types';
 import type { FC } from 'react';
 import type { FronteggState } from './FronteggContext';
 import FronteggContext, { defaultFronteggState } from './FronteggContext';
-import { listener, login, logout, switchTenant } from './FronteggNative';
+import { listener } from './FronteggNative';
 
 export const FronteggWrapper: FC<Omit<FronteggAppOptions, 'contextOptions'>> = (
   props
@@ -24,7 +24,7 @@ export const FronteggWrapper: FC<Omit<FronteggAppOptions, 'contextOptions'>> = (
     };
   }, []);
   return (
-    <FronteggContext.Provider value={{ ...state, login, logout, switchTenant }}>
+    <FronteggContext.Provider value={{ ...state }}>
       {props.children}
     </FronteggContext.Provider>
   );

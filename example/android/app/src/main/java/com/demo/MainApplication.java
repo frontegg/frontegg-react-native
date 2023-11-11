@@ -1,4 +1,4 @@
-package com.reactnativeexample;
+package com.frontegg.demo;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
