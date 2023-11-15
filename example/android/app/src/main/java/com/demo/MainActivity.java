@@ -1,4 +1,4 @@
-package com.reactnativeexample;
+package com.frontegg.demo;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
