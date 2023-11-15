@@ -1,68 +1,79 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { login, listener, logout } from '@frontegg/react-native';
-import type { IUserProfile } from '@frontegg/rest-api';
-
-interface FronteggRNState {
-  accessToken: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: IUserProfile | null;
-  initializing: boolean;
-  showLoader: boolean;
-}
+import {
+  switchTenant,
+  login,
+  logout,
+  refreshToken,
+  useAuth,
+} from '@frontegg/react-native';
+import { useState } from 'react';
+import type { ITenantsResponse } from '@frontegg/rest-api';
 
 export default function HomeScreen() {
-  const [result, setResult] = React.useState<FronteggRNState>({
-    accessToken: null,
-    refreshToken: null,
-    isAuthenticated: false,
-    isLoading: true,
-    user: null,
-    initializing: true,
-    showLoader: true,
-  });
-
-  React.useEffect(() => {
-    let subs = listener((s: any) => {
-      try {
-        setResult(s);
-      } catch (e) {
-        console.error('error', e);
-      }
-    });
-
-    return () => {
-      subs.remove();
-    };
-  }, []);
+  const [switching, setSwitching] = useState<string>('');
+  const state = useAuth();
 
   return (
     <View style={styles.container}>
-      <Text>showLoader: {result.showLoader ? 'true' : 'false'}</Text>
-      <Text>initializing: {result.initializing ? 'true' : 'false'}</Text>
-      <Text>isLoading: {result.isLoading ? 'true' : 'false'}</Text>
-      <Text>isAuthenticated: {result.isAuthenticated ? 'true' : 'false'}</Text>
-      <Text>refreshToken: {result.refreshToken}</Text>
+      <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
+      <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
+      <Text>isLoading: {state.isLoading ? 'true' : 'false'}</Text>
+      <Text>isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}</Text>
+      <Text>Active Tenant: {state.user?.activeTenant.name}</Text>
+      <Text>refreshToken: {state.refreshToken}</Text>
       <Text>
         accessToken:{' '}
-        {result.accessToken
-          ? result.accessToken.substring(result.accessToken.length - 40)
+        {state.accessToken
+          ? state.accessToken.substring(state.accessToken.length - 40)
           : ''}
       </Text>
-      <Text>user: {result.user ? result.user.email : 'Not Logged in'}</Text>
+      <Text>user: {state.user ? state.user.email : 'Not Logged in'}</Text>
 
       <View style={styles.listenerButton}>
         <Button
-          color={result.isAuthenticated ? '#FF0000' : '#000000'}
-          title={result.isAuthenticated ? 'Logout' : 'Login'}
+          color={state.isAuthenticated ? '#FF0000' : '#000000'}
+          title={state.isAuthenticated ? 'Logout' : 'Login'}
           onPress={() => {
-            result.isAuthenticated ? logout() : login();
+            state.isAuthenticated ? logout() : login();
           }}
         />
       </View>
+
+      <View style={styles.listenerButton}>
+        <Button
+          title={'Refresh Token'}
+          onPress={() => {
+            refreshToken();
+          }}
+        />
+      </View>
+
+      <Text style={styles.tenantsTitle}>Tenants</Text>
+
+      {(state.user?.tenants ?? [])
+        .sort((a: any, b: any) => a.name.localeCompare(b.name))
+        .map((tenant: ITenantsResponse) => (
+          <View key={tenant.tenantId} style={styles.tenantRow}>
+            <Button
+              title={`${tenant.name} ${
+                tenant.tenantId === switching
+                  ? ' (switching...)'
+                  : tenant.tenantId === state.user?.activeTenant.tenantId
+                  ? ' (active)'
+                  : ''
+              }`.trim()}
+              onPress={() => {
+                console.log(tenant.tenantId, state.user?.activeTenant.tenantId);
+                setSwitching(tenant.tenantId);
+                switchTenant(tenant.tenantId).then(() => {
+                  setSwitching('');
+                });
+              }}
+            />
+          </View>
+        ))}
     </View>
   );
 }
@@ -73,12 +84,23 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    alignItems: 'center',
+    padding: 20,
+    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   box: {
     width: 60,
     height: 60,
     marginVertical: 20,
+  },
+  tenantsTitle: {
+    fontSize: 20,
+    marginTop: 20,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  tenantRow: {
+    marginBottom: 8,
+    alignSelf: 'flex-start',
   },
 });

@@ -9,13 +9,19 @@ const Stack = createNativeStackNavigator();
 
 export default () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <FronteggWrapper>
+    <FronteggWrapper>
+      <NavigationContainer>
+        <Stack.Navigator>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
-        </FronteggWrapper>
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </FronteggWrapper>
   );
 };
+
+/**
+ - custom login per tenant
+ - nextjs sub-domain
+ - app directory
+ */

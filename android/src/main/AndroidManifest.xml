@@ -4,22 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application>
-        <activity
-                android:name="com.frontegg.android.AuthenticationActivity"
-                android:exported="true">
-            <intent-filter android:autoVerify="true"
-                           tools:targetApi="m">
-                <action android:name="android.intent.action.VIEW"/>
 
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-
-                <data
-                        android:host="${frontegg_domain}"
-                        android:pathPrefix="/android/${package_name}/callback"
-                        android:scheme="https"/>
-            </intent-filter>
-        </activity>
     </application>
     <queries>
         <intent>
