@@ -69,11 +69,11 @@ PODS:
     - FlipperKit/Core
     - FlipperKit/FlipperKitNetworkPlugin
   - fmt (6.2.1)
-  - FronteggRN (1.1.0):
-    - FronteggSwift (= 1.1.3)
+  - FronteggRN (1.2.0):
+    - FronteggSwift (= 1.2.4)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - FronteggSwift (1.1.3)
+  - FronteggSwift (1.2.4)
   - glog (0.3.5)
   - hermes-engine (0.72.1):
     - hermes-engine/Pre-built (= 0.72.1)
@@ -687,8 +687,8 @@ SPEC CHECKSUMS:
   Flipper-PeerTalk: 116d8f857dc6ef55c7a5a75ea3ceaafe878aadc9
   FlipperKit: 2efad7007d6745a3f95e4034d547be637f89d3f6
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  FronteggRN: 7c228947ceeccf6b6eef8ed4bb6ea6fe6a3182e3
-  FronteggSwift: 31db0f5d0bf0d9d6acdc9d851b84e29132186269
+  FronteggRN: d9210fe6514638f712b9409a497fb54b05873497
+  FronteggSwift: 828d6a5a0685a15e6cf8729809b63bfd24075fc9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
@@ -733,4 +733,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 4712e391461ab97856d297215ea6f238e6aa8edc
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.14.3
