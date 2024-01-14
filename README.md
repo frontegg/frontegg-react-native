@@ -1,7 +1,7 @@
 # @frontegg/react-native
 
-Frontegg is a first-of-its-kind full-stack user management platform, empowering software teams with user infrastructure features for the product-led era.
-
+Frontegg is a first-of-its-kind full-stack user management platform, empowering software teams with user infrastructure
+features for the product-led era.
 
 ## Table of Contents
 
@@ -12,22 +12,21 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
     - [Add frontegg package to the project](#add-frontegg-package-to-the-project)
 - [Setup iOS Project](#setup-ios-project)
     - [Create Frontegg plist file](#create-frontegg-plist-file)
+    - [Handle Open App with URL](#handle-open-app-with-url)
     - [Config iOS associated domain](#config-ios-associated-domain)
 - [Setup Android Project](#setup-android-project)
     - [Set minimum SDK version](#set-minimum-sdk-version)
     - [Configure build config fields](#configure-build-config-fields)
     - [Config Android AssetLinks](#config-ios-associated-domain)
 - [Usages](#usages)
-  - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
-  - [Login with frontegg](#login-with-frontegg)
-  - [Check if user is authenticated](#check-if-user-is-authenticated)
-
+    - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
+    - [Login with frontegg](#login-with-frontegg)
+    - [Check if user is authenticated](#check-if-user-is-authenticated)
 
 ## Project Requirements
 
 - Minimum iOS deployment version **=> 14**
 - Min Android SDK **=> 26**
-
 
 ## Getting Started
 
@@ -35,28 +34,32 @@ Frontegg is a first-of-its-kind full-stack user management platform, empowering 
 
 Navigate to [Frontegg Portal Settings](https://portal.frontegg.com/development/settings), If you don't have application
 follow integration steps after signing up.
-Copy FronteggDomain to future steps from [Frontegg Portal Domain](https://portal.frontegg.com/development/settings/domains)
-
-### Setup Hosted Login
+Copy FronteggDomain to future steps
+from [Frontegg Portal Domain](https://portal.frontegg.com/development/settings/domains)
 
 - Navigate to [Login Method Settings](https://portal.frontegg.com/development/authentication/hosted)
-- Toggle Hosted login method
-- Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
-- Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
+- Toggle Hosted login method for iOS:
+    - Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
+- Toggle Hosted login method for Android:
+    - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback` **(for custom scheme)**
+    - Add `https://{{FRONTEGG_BASE_URL}}/{{ANDROID_PACKAGE_NAME}}/android/oauth/callback` **(for universal links)**
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
 - Replace `ANDROID_PACKAGE_NAME` with your android package name
-- 
+-
+
 ### Add frontegg package to the project
 
 Use a package manager npm/yarn to install frontegg React Native library.
 
 **NPM:**
+
 ```bash
 npm install -s @frontegg/react-native
 ```
 
 **Yarn:**
+
 ```bash
 yarn add @frontegg/react-native
 ```
@@ -65,34 +68,148 @@ yarn add @frontegg/react-native
 
 ### Create Frontegg plist file
 
-To setup your SwiftUI application to communicate with Frontegg, you have to create a new file named `Frontegg.plist` under
+To setup your SwiftUI application to communicate with Frontegg, you have to create a new file named `Frontegg.plist`
+under
 your root project directory, this file will store values to be used variables by Frontegg SDK:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>baseUrl</key>
-	<string>https://[DOMAIN_HOST_FROM_PREVIOUS_STEP]</string>
-	<key>clientId</key>
-	<string>[CLIENT_ID_FROM_PREVIOUS_STEP]</string>
-</dict>
+    <dict>
+        <key>baseUrl</key>
+        <string>https://[DOMAIN_HOST_FROM_PREVIOUS_STEP]</string>
+        <key>clientId</key>
+        <string>[CLIENT_ID_FROM_PREVIOUS_STEP]</string>
+    </dict>
 </plist>
 ```
+
+### Handle Open App with URL
+
+To handle Login with magic link and other authentication methods that require to open the app with a URL, you have to
+add the following code to.
+
+### `For Objective-C:`
+
+1. Create `FronteggSwiftAdapter.swift` in your project and add the following code:
+
+    ```objective-c
+    //  FronteggSwiftAdapter.swift
+    
+    import Foundation
+    import FronteggSwift
+    
+    @objc(FronteggSwiftAdapter)
+    public class FronteggSwiftAdapter: NSObject {
+        @objc public static let shared = FronteggSwiftAdapter()
+    
+        @objc public func handleOpenUrl(_ url: URL) -> Bool {
+            return FronteggAuth.shared.handleOpenUrl(url)
+        }
+    }
+    ```
+
+2. Open `AppDelegate.m` file and import swift headers:
+
+    ```objective-c
+    #import <[YOUR_PROJECT_NAME]-Swift.h>
+    ```
+3. Add URL handlers to `AppDelegate.m`:
+
+    ```objective-c
+    #import <[YOUR_PROJECT_NAME]-Swift.h>
+   
+   // ...CODE...
+   
+   - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
+    {
+      
+      if([[FronteggSwiftAdapter shared] handleOpenUrl:url] ){
+        return TRUE;
+      }
+      return [RCTLinkingManager application:app openURL:url options:options];
+    }
+    
+    - (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity
+     restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler
+    {
+      
+      if (userActivity.webpageURL != NULL){
+        if([[FronteggSwiftAdapter shared] handleOpenUrl:userActivity.webpageURL] ){
+          return TRUE;
+        }
+      }
+     return [RCTLinkingManager application:application
+                      continueUserActivity:userActivity
+                        restorationHandler:restorationHandler];
+    }
+    ```
+
+### `For Swift:`
+
+1. Open `AppDelegate.m` file and import swift headers:
+
+    ```swift
+    import FronteggSwift
+    ```
+2. Add URL handlers to `AppDelegate.swift`:
+    ```swift  
+    import UIKit
+    import FronteggSwift
+    
+    @UIApplicationMain
+    class AppDelegate: UIResponder, UIApplicationDelegate {
+    
+        /*
+         * Called when the app was launched with a url. Feel free to add additional processing here,
+         * but if you want the App API to support tracking app url opens, make sure to keep this call
+         */
+        func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+            
+            if(FronteggAuth.shared.handleOpenUrl(url)){
+                return true
+            }
+            
+            return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
+        }
+        
+        /*
+         * Called when the app was launched with an activity, including Universal Links.
+         * Feel free to add additional processing here, but if you want the App API to support
+         * tracking app url opens, make sure to keep this call
+         */
+        func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+            
+            if let url = userActivity.webpageURL {
+                if(FronteggAuth.shared.handleOpenUrl(url)){
+                    return true
+                }
+            }
+            return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+        }
+    }
+    ```
+
+### Handle Open App with URL (Objective-C)
 
 ### Config iOS associated domain
 
 Configuring your iOS associated domain is required for Magic Link authentication / Reset Password / Activate Account.
 
-In order to add your iOS associated domain to your Frontegg application, you will need to update in each of your integrated Frontegg Environments the iOS associated domain that you would like to use with that Environment. Send a POST request to `https://api.frontegg.com/vendors/resources/associated-domains/v1/ios` with the following payload:
+In order to add your iOS associated domain to your Frontegg application, you will need to update in each of your
+integrated Frontegg Environments the iOS associated domain that you would like to use with that Environment. Send a POST
+request to `https://api.frontegg.com/vendors/resources/associated-domains/v1/ios` with the following payload:
+
 ```
 {
     “appId”:[YOUR_ASSOCIATED_DOMAIN]
 }
 ```
-In order to use our API’s, follow [this guide](‘https://docs.frontegg.com/reference/getting-started-with-your-api’) to generate a vendor token.
 
+In order to use our API’s, follow [this guide](‘https://docs.frontegg.com/reference/getting-started-with-your-api’) to
+generate a vendor token.
 
 ## Setup Android Project
 
@@ -110,10 +227,10 @@ buildscript {
 }
 ```
 
-
 ### Configure build config fields
 
-To set up your Android application on to communicate with Frontegg, you have to add `buildConfigField` property the gradle `android/app/build.gradle`.
+To set up your Android application on to communicate with Frontegg, you have to add `buildConfigField` property the
+gradle `android/app/build.gradle`.
 This property will store frontegg hostname (without https) and client id from previous step:
 
 ```groovy
@@ -148,7 +265,6 @@ android {
 }
 ```
 
-
 ### Add permissions to AndroidManifest.xml
 
 Add `INTERNET` permission to the app's manifest file.
@@ -156,9 +272,8 @@ Add `INTERNET` permission to the app's manifest file.
 ```xml
 
 <uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 ```
-
 
 ### Config Android AssetLinks
 
@@ -210,19 +325,22 @@ keytool -list -v -keystore /PATH/file.jks -alias YourAlias -storepass *** -keypa
 In order to use our API’s, follow [this guide](https://docs.frontegg.com/reference/getting-started-with-your-api) to
 generate a vendor token.
 
-
 ## Usages
 
 ### Wrap your app with FronteggProvider
 
-NOTE: we recommend to use `FronteggWrapper` component along with  the `NavigationContainer` from `@react-navigation/native`:
+NOTE: we recommend to use `FronteggWrapper` component along with the `NavigationContainer`
+from `@react-navigation/native`:
 to install `@react-navigation/native` and `@react-navigation/native-stack` run the following command:
 
 **NPM:**
+
 ```bash
 npm install -s @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
 ```
+
 **Yarn:**
+
 ```bash
 yarn add @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
 ```
@@ -265,11 +383,11 @@ import { useAuth } from '@frontegg/react-native';
 
 export function MyScreen() {
   const { isAuthenticated, login, logout } = useAuth();
-  
+
   return <View>
     <Button title={'Login'} onPress={login} />
   </View>
-} 
+}
 
 ```
 
@@ -285,13 +403,13 @@ import { useAuth } from '@frontegg/react-native';
 
 export function MyScreen() {
   const { switchTenant, user } = useAuth();
-  
+
   // user avaiable tenants from user.tenants
   console.log("user tenants", user?.tenants)
 
   const handleSwitchTenant = useCallback(() => {
     const tenantId = 'TENANT_ID'; // get tenant id from your app state
-    
+
 
     switchTenant(tenantId).then(() => {
       console.log('Tenant switched successfully');
@@ -326,24 +444,24 @@ export default function HomeScreen() {
   } = useAuth();
 
   // showLoader when the SDK is initializing the app / authenticate the user
-  if(showLoader || isLoading) {
+  if (showLoader || isLoading) {
     return <View>
       <Text>Loading...</Text>
     </View>
   }
 
-  
+
   return <View>
     <Text>{isAuthenticated ? 'Authenticated' : 'Not authenticated'}</Text>
-    
+
     {isAuthenticated && <Text>{user?.email}</Text>}
 
     <Button
-        color={isAuthenticated ? '#FF0000' : '#000000'}
-        title={isAuthenticated ? 'Logout' : 'Login'}
-        onPress={() => {
-          isAuthenticated ? logout() : login();
-        }}
+      color={isAuthenticated ? '#FF0000' : '#000000'}
+      title={isAuthenticated ? 'Logout' : 'Login'}
+      onPress={() => {
+        isAuthenticated ? logout() : login();
+      }}
     />
   </View>
 }

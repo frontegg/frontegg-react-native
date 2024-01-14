@@ -2,6 +2,8 @@ package com.frontegg.reactnative
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.BaseActivityEventListener
 import com.facebook.react.bridge.Promise
@@ -84,36 +86,45 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       FronteggAuth.instance.initializing.observable,
       FronteggAuth.instance.showLoader.observable,
     ).subscribe {
-
       notifyChanges()
     }
     notifyChanges()
   }
 
+  private val handler = Handler(Looper.getMainLooper())
+  private val eventRunnable = Runnable {
+    notifyChanges()
+  }
+
   private fun notifyChanges() {
-    if (reactContext.lifecycleState == LifecycleState.RESUMED) {
-      val accessToken = FronteggAuth.instance.accessToken.value
-      val refreshToken = FronteggAuth.instance.refreshToken.value
-      val user = FronteggAuth.instance.user.value
-      val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
-      val isLoading = FronteggAuth.instance.isLoading.value
-      val initializing = FronteggAuth.instance.initializing.value
-      val showLoader = FronteggAuth.instance.showLoader.value
-
-      val params = Arguments.createMap().apply {
-
-        putString("accessToken", accessToken)
-        putString("refreshToken", refreshToken)
-        putMap("user", user?.toReadableMap())
-        putBoolean("isAuthenticated", isAuthenticated)
-        putBoolean("isLoading", isLoading)
-        putBoolean("initializing", initializing)
-        putBoolean("showLoader", showLoader)
-      }
-
-
-      sendEvent(reactContext, "onFronteggAuthEvent", params)
+    if (reactContext.lifecycleState != LifecycleState.RESUMED) {
+      // Remove any pending posts of eventRunnable and enqueue it again
+      handler.removeCallbacks(eventRunnable)
+      handler.postDelayed(eventRunnable, 500L) // Adjust the debounce delay as needed
+      return
     }
+    handler.removeCallbacks(eventRunnable)
+    val accessToken = FronteggAuth.instance.accessToken.value
+    val refreshToken = FronteggAuth.instance.refreshToken.value
+    val user = FronteggAuth.instance.user.value
+    val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
+    val isLoading = FronteggAuth.instance.isLoading.value
+    val initializing = FronteggAuth.instance.initializing.value
+    val showLoader = FronteggAuth.instance.showLoader.value
+
+    val params = Arguments.createMap().apply {
+
+      putString("accessToken", accessToken)
+      putString("refreshToken", refreshToken)
+      putMap("user", user?.toReadableMap())
+      putBoolean("isAuthenticated", isAuthenticated)
+      putBoolean("isLoading", isLoading)
+      putBoolean("initializing", initializing)
+      putBoolean("showLoader", showLoader)
+    }
+
+
+    sendEvent(reactContext, "onFronteggAuthEvent", params)
   }
 
   @ReactMethod
@@ -138,16 +149,21 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   fun login(promise: Promise) {
     val activity = currentActivity
     loginPromise = promise
-    AuthenticationActivity.authenticateUsingBrowser(activity!!)
+    FronteggAuth.instance.login(activity!!)
   }
 
   @ReactMethod
   fun switchTenant(tenantId: String, promise: Promise) {
     FronteggAuth.instance.switchTenant(tenantId) {
-        promise.resolve(tenantId)
+      promise.resolve(tenantId)
     }
   }
 
+  @ReactMethod
+  fun refreshToken(promise: Promise) {
+    FronteggAuth.instance.refreshTokenIfNeeded()
+    promise.resolve("")
+  }
 
   override fun getConstants(): MutableMap<String, Any> {
     val packageName = reactContext.packageName
@@ -188,6 +204,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     }
 
   }
+
   companion object {
     const val NAME = "FronteggRN"
 

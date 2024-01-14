@@ -20,6 +20,7 @@ const FronteggRN = NativeModules.FronteggRN
 export function getConstants() {
   return FronteggRN.getConstants();
 }
+
 export function login() {
   FronteggRN.login()
     .then((data: any) => {
@@ -36,6 +37,10 @@ export function logout() {
 
 export async function switchTenant(teanntId: string) {
   return FronteggRN.switchTenant(teanntId);
+}
+
+export async function refreshToken() {
+  return FronteggRN.refreshToken();
 }
 
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
@@ -55,7 +60,9 @@ function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
 
 export function listener(callback: (res: any) => any) {
   const CounterEvents = new NativeEventEmitter(FronteggRN);
-  const debouncedFunc = debounce((res: any) => callback(res), 200);
+  const debouncedFunc = debounce((res: any) => {
+    callback(res);
+  }, 50);
   const subs = CounterEvents.addListener('onFronteggAuthEvent', (res) => {
     debouncedFunc(res);
   });

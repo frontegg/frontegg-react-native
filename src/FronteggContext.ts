@@ -14,9 +14,6 @@ export interface FronteggState {
   user: User | null;
   initializing: boolean;
   showLoader: boolean;
-  logout: () => void;
-  login: () => void;
-  switchTenant: (tenantId: string) => Promise<void>;
 }
 
 export const defaultFronteggState: FronteggState = {
@@ -27,9 +24,6 @@ export const defaultFronteggState: FronteggState = {
   user: null,
   initializing: true,
   showLoader: true,
-  logout: () => {},
-  login: () => {},
-  switchTenant: () => Promise.resolve(),
 };
 const FronteggContext = createContext<FronteggState>(defaultFronteggState);
 
