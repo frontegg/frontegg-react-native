@@ -34,7 +34,9 @@
     "release": "release-it",
     "example": "yarn --cwd example",
     "bootstrap": "yarn example && yarn install && yarn example pods",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build"
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
+    "start:ios": "yarn example react-native run-ios",
+    "start:android": "yarn example react-native run-android"
   },
   "keywords": [
     "react-native",
@@ -52,7 +54,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@frontegg/types": "^6.116.0",
+    "@frontegg/types": "^6.171.0",
     "@react-native-async-storage/async-storage": "^1.19.0"
   },
   "devDependencies": {
@@ -62,8 +64,8 @@
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
-    "@types/react": "~17.0.21",
-    "@types/react-native": "0.70.0",
+    "@types/react": "~18.2.0",
+    "@types/react-native": "0.73.0",
     "commitlint": "^17.0.2",
     "del-cli": "^5.1.0",
     "eslint": "^8.4.1",
@@ -73,13 +75,13 @@
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
     "react": "18.2.0",
-    "react-native": "0.73.1",
-    "react-native-builder-bob": "^0.20.0",
+    "react-native": "0.73.2",
+    "react-native-builder-bob": "^0.23.2",
     "release-it": "^15.0.0",
     "typescript": "^5.0.2"
   },
   "resolutions": {
-    "@types/react": "17.0.21"
+    "@types/react": "18.2.0"
   },
   "peerDependencies": {
     "@react-navigation/native": "*",
