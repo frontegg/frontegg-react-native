@@ -1,33 +1,27 @@
 import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from './HomeScreen';
+import ProfileScreen from './ProfileScreen';
+import { FronteggWrapper } from '@frontegg/react-native';
 
-import { StyleSheet, View } from 'react-native';
-import FronteggWrapper from '../../src/FronteggWrapper';
-import MyApp from './MyApp';
+const Stack = createNativeStackNavigator();
 
-export default function App() {
+export default () => {
   return (
-    <View style={styles.container}>
-      <FronteggWrapper
-        contextOptions={{
-          baseUrl: 'https://auth.davidantoon.me',
-          clientId: 'b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca',
-        }}
-      >
-        <MyApp />
-      </FronteggWrapper>
-    </View>
+    <FronteggWrapper>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </FronteggWrapper>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
-});
+/**
+ - custom login per tenant
+ - nextjs sub-domain
+ - app directory
+ */
