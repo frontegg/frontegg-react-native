@@ -37,12 +37,12 @@ follow integration steps after signing up.
 Copy FronteggDomain to future steps
 from [Frontegg Portal Domain](https://portal.frontegg.com/development/settings/domains)
 
-### Setup Hosted Login
-
 - Navigate to [Login Method Settings](https://portal.frontegg.com/development/authentication/hosted)
-- Toggle Hosted login method
-- Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
-- Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
+- Toggle Hosted login method for iOS:
+    - Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
+- Toggle Hosted login method for Android:
+    - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback` **(for custom scheme)**
+    - Add `https://{{FRONTEGG_BASE_URL}}/{{ANDROID_PACKAGE_NAME}}/android/oauth/callback` **(for universal links)**
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
 - Replace `ANDROID_PACKAGE_NAME` with your android package name
