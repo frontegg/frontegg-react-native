@@ -70,10 +70,10 @@ PODS:
     - FlipperKit/FlipperKitNetworkPlugin
   - fmt (6.2.1)
   - FronteggRN (1.2.0):
-    - FronteggSwift (= 1.2.6)
+    - FronteggSwift (= 1.2.7)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - FronteggSwift (1.2.6)
+  - FronteggSwift (1.2.7)
   - glog (0.3.5)
   - hermes-engine (0.72.1):
     - hermes-engine/Pre-built (= 0.72.1)
@@ -687,8 +687,8 @@ SPEC CHECKSUMS:
   Flipper-PeerTalk: 116d8f857dc6ef55c7a5a75ea3ceaafe878aadc9
   FlipperKit: 2efad7007d6745a3f95e4034d547be637f89d3f6
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  FronteggRN: 7547bbb96fc0b32429de38d4cc15adfd5af16aaa
-  FronteggSwift: 1dd6c5f29f9d6901d4094f1ebb786ea1675df463
+  FronteggRN: a34e2d6b39d4e7891a41284003d5b47e37bbb32e
+  FronteggSwift: ffdf89f921a15e1b588de964eac6f482524fa729
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
