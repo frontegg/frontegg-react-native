@@ -71,3 +71,5 @@ lib/
 coverage
 
 .npmrc
+
+frontegg-react-native-*.tgz
