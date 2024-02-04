@@ -24,6 +24,11 @@ jobs:
           git config --global user.email 'frontegg@users.noreply.github.com'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pack Package
+        run: |
+          yarn pack
+
       - name: Authenticate with Registry
         run: |
           yarn logout
@@ -39,10 +44,6 @@ jobs:
           npm whoami
         env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-
-      - name: Pack Package
-        run: |
-          yarn pack
 
       - name: Set Current Version
         id: set_current_version
