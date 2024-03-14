@@ -37,14 +37,14 @@ class FronteggRN: RCTEventEmitter {
 
         anyChange.sink(receiveValue: { () in
             DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
-            
+
                 let auth =  self.fronteggApp.auth
-                
+
                 var jsonUser: [String: Any]? = nil
                 if let userData = try? JSONEncoder().encode(auth.user) {
                     jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
                 }
-                
+
                 let body: [String: Any?] = [
                     "accessToken": auth.accessToken,
                     "refreshToken": auth.refreshToken,
@@ -57,7 +57,7 @@ class FronteggRN: RCTEventEmitter {
                 ]
                     self.sendEvent(withName: "onFronteggAuthEvent", body: body)
             }
-            
+
         }).store(in: &cancellables)
 
         return ["status": "OK"]
@@ -82,7 +82,7 @@ class FronteggRN: RCTEventEmitter {
         resolve("ok")
     }
 
-    
+
     @objc
     func switchTenant(
       _ tenantId: String,
@@ -92,10 +92,24 @@ class FronteggRN: RCTEventEmitter {
             resolver(tenantId)
         }
     }
-    
+
+
+    @objc
+    func directLoginAction(
+      _ type: String,
+      data: String,
+      resolver: @escaping RCTPromiseResolveBlock,
+       rejecter: RCTPromiseRejectBlock
+    ) -> Void {
+        
+        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data) { _ in
+            resolver("ok")
+        }
+    }
+
     @objc
     func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
-        
+
         DispatchQueue.global(qos: .userInteractive).async {
            Task {
                await self.fronteggApp.auth.refreshTokenIfNeeded()

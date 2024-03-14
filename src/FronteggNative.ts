@@ -43,6 +43,13 @@ export async function refreshToken() {
   return FronteggRN.refreshToken();
 }
 
+export async function directLoginAction(
+  type: string,
+  data: string
+): Promise<void> {
+  return FronteggRN.directLoginAction({ type, data });
+}
+
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
   let timeout: any;
 
