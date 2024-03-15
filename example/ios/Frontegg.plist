@@ -6,11 +6,6 @@
   <string>https://auth.davidantoon.me</string>
   <key>clientId</key>
   <string>b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca</string>
-  <key>baseUrl22</key>
-  <string>https://authstg.davidantoon.me</string>
-  <key>clientId22</key>
-  <string>f7a3f13d-4cb5-4078-b785-e0189c287d4b</string>
-  
   <key>logLevel</key>
   <string>trace</string>
 </dict>

@@ -328,7 +328,7 @@ generate a vendor token.
 
 ### Enabling Chrome Custom Tabs for Social Login
 
-To enable social login using Chrome Custom Tabs within your Android application, you need to modify the `android/app/build.gradle` file. Add a boolean buildConfigField for the useChromeCustomTabs flag and set it to true.
+To enable social login using Chrome Custom Tabs within your Android application, you need to modify the `android/app/build.gradle` file. Add a boolean `buildConfigField` for the `FRONTEGG_USE_CHROME_CUSTOM_TABS` flag and set it to true.
 
 By default, the SDK defaults to using the Chrome browser for social login.
 
