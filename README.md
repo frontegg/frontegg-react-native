@@ -17,7 +17,8 @@ features for the product-led era.
 - [Setup Android Project](#setup-android-project)
     - [Set minimum SDK version](#set-minimum-sdk-version)
     - [Configure build config fields](#configure-build-config-fields)
-    - [Config Android AssetLinks](#config-ios-associated-domain)
+    - [Config Android AssetLinks](#config-android-assetlinks)
+    - [Enabling Chrome Custom Tabs for Social Login](#enabling-chrome-custom-tabs-for-social-login)
 - [Usages](#usages)
     - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
     - [Login with frontegg](#login-with-frontegg)
@@ -324,6 +325,36 @@ keytool -list -v -keystore /PATH/file.jks -alias YourAlias -storepass *** -keypa
 
 In order to use our API’s, follow [this guide](https://docs.frontegg.com/reference/getting-started-with-your-api) to
 generate a vendor token.
+
+### Enabling Chrome Custom Tabs for Social Login
+
+To enable social login using Chrome Custom Tabs within your Android application, you need to modify the `android/app/build.gradle` file. Add a boolean buildConfigField for the useChromeCustomTabs flag and set it to true.
+
+By default, the SDK defaults to using the Chrome browser for social login.
+
+ ```groovy
+
+def fronteggDomain = "FRONTEGG_DOMAIN_HOST.com" // without protocol https://
+def fronteggClientId = "FRONTEGG_CLIENT_ID"
+
+android {
+    defaultConfig {
+
+        manifestPlaceholders = [
+                "package_name" : applicationId,
+                "frontegg_domain" : fronteggDomain,
+                "frontegg_client_id": fronteggClientId
+        ]
+
+        buildConfigField "String", 'FRONTEGG_DOMAIN', "\"$fronteggDomain\""
+        buildConfigField "String", 'FRONTEGG_CLIENT_ID', "\"$fronteggClientId\""
+        
+        buildConfigField "Boolean", 'FRONTEGG_USE_CHROME_CUSTOM_TABS', "true"
+    }
+    
+    
+}
+```
 
 ## Usages
 

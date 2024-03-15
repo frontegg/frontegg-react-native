@@ -187,7 +187,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       val useChromeCustomTabsField = buildConfigClass.getField("FRONTEGG_USE_CHROME_CUSTOM_TABS")
       val baseUrl = baseUrlField.get(null) as String // Assuming it's a String
       val clientId = clientIdField.get(null) as String // Assuming it's a String
-      val useAssetsLinks = useAssetsLinksField.get(false) as Boolean // Assuming it's a String
+      val useAssetsLinks = useAssetsLinksField.get(true) as Boolean // Assuming it's a String
       val useChromeCustomTabs = useChromeCustomTabsField.get(false) as Boolean // Assuming it's a String
 
 
