@@ -16,6 +16,12 @@
     rejecter: (RCTPromiseRejectBlock)reject
   )
   RCT_EXTERN_METHOD(
+    directLoginAction: (NSString *)type
+    data: (NSString *)data
+    resolver: (RCTPromiseResolveBlock)resolve
+    rejecter: (RCTPromiseRejectBlock)reject
+  )
+  RCT_EXTERN_METHOD(
     refreshToken: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject
   )

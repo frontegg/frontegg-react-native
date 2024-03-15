@@ -55,7 +55,9 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     FronteggApp.init(
       constants.getValue("baseUrl") as String,
       constants.getValue("clientId") as String,
-      reactContext.applicationContext
+      reactContext.applicationContext,
+      useAssetsLinks = constants.getValue("useAssetsLinks") as Boolean,
+      useChromeCustomTabs = constants.getValue("useChromeCustomTabs") as Boolean,
     )
   }
 
@@ -160,6 +162,13 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun directLoginAction(type: String, data: String, promise: Promise) {
+    val activity = currentActivity
+    FronteggAuth.instance.directLoginAction(activity!!,type, data)
+    promise.resolve(true)
+  }
+
+  @ReactMethod
   fun refreshToken(promise: Promise) {
     FronteggAuth.instance.refreshTokenIfNeeded()
     promise.resolve("")
@@ -174,13 +183,19 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       // Get the field from BuildConfig class
       val baseUrlField = buildConfigClass.getField("FRONTEGG_DOMAIN")
       val clientIdField = buildConfigClass.getField("FRONTEGG_CLIENT_ID")
+      val useAssetsLinksField = buildConfigClass.getField("FRONTEGG_USE_ASSETS_LINKS")
+      val useChromeCustomTabsField = buildConfigClass.getField("FRONTEGG_USE_CHROME_CUSTOM_TABS")
       val baseUrl = baseUrlField.get(null) as String // Assuming it's a String
       val clientId = clientIdField.get(null) as String // Assuming it's a String
+      val useAssetsLinks = useAssetsLinksField.get(true) as Boolean // Assuming it's a String
+      val useChromeCustomTabs = useChromeCustomTabsField.get(false) as Boolean // Assuming it's a String
 
 
       return hashMapOf(
         "baseUrl" to baseUrl,
         "clientId" to clientId,
+        "useAssetsLinks" to useAssetsLinks,
+        "useChromeCustomTabs" to useChromeCustomTabs,
         "bundleId" to reactContext.packageName
       )
     } catch (e: ClassNotFoundException) {

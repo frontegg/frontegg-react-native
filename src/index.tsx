@@ -5,6 +5,7 @@ export {
   getConstants,
   login,
   logout,
+  directLoginAction,
   switchTenant,
   refreshToken,
 } from './FronteggNative';
