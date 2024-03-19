@@ -42,8 +42,8 @@ from [Frontegg Portal Domain](https://portal.frontegg.com/development/settings/d
 - Toggle Hosted login method for iOS:
     - Add `{{IOS_BUNDLE_IDENTIFIER}}://{{FRONTEGG_BASE_URL}}/ios/oauth/callback`
 - Toggle Hosted login method for Android:
-    - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback` **(for custom scheme)**
-    - Add `https://{{FRONTEGG_BASE_URL}}/{{ANDROID_PACKAGE_NAME}}/android/oauth/callback` **(for universal links)**
+    - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
+    - Add `https://{{FRONTEGG_BASE_URL}}/oauth/account/redirect/android/{{ANDROID_PACKAGE_NAME}}`
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
 - Replace `ANDROID_PACKAGE_NAME` with your android package name
@@ -250,6 +250,8 @@ android {
 
         buildConfigField "String", 'FRONTEGG_DOMAIN', "\"$fronteggDomain\""
         buildConfigField "String", 'FRONTEGG_CLIENT_ID', "\"$fronteggClientId\""
+        buildConfigField "Boolean", 'FRONTEGG_USE_ASSETS_LINKS', "true" /** For using frontegg domain for deeplinks **/
+        buildConfigField "Boolean", 'FRONTEGG_USE_CHROME_CUSTOM_TABS', "true"  /** For using custom chrome tab for social-logins **/
     }
     
     
