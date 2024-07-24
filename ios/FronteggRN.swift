@@ -13,6 +13,7 @@ class FronteggRN: RCTEventEmitter {
       return [
         "baseUrl": fronteggApp.baseUrl,
         "clientId": fronteggApp.clientId,
+        "applicationId": fronteggApp.applicationId as Any,
         "bundleId": Bundle.main.bundleIdentifier as Any
       ]
     }
