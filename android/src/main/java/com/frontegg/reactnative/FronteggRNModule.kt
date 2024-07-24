@@ -13,16 +13,16 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.frontegg.android.AuthenticationActivity
 import com.frontegg.android.FronteggApp
 import com.frontegg.android.FronteggAuth
-import com.frontegg.android.AuthenticationActivity
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 
 
 class FronteggRNModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
-
+  private val fronteggConstants: FronteggConstants
   private var disposable: Disposable? = null
   override fun getName(): String {
     return NAME
@@ -51,13 +51,15 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   init {
     reactContext.addActivityEventListener(activityEventListener)
+    fronteggConstants = reactContext.fronteggConstants
 
     FronteggApp.init(
-      constants.getValue("baseUrl") as String,
-      constants.getValue("clientId") as String,
+      fronteggConstants.baseUrl,
+      fronteggConstants.clientId,
       reactContext.applicationContext,
-      useAssetsLinks = constants.getValue("useAssetsLinks") as Boolean,
-      useChromeCustomTabs = constants.getValue("useChromeCustomTabs") as Boolean,
+      applicationId = fronteggConstants.applicationId,
+      useAssetsLinks = fronteggConstants.useAssetsLinks,
+      useChromeCustomTabs = fronteggConstants.useChromeCustomTabs,
     )
   }
 
@@ -164,7 +166,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun directLoginAction(type: String, data: String, promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.directLoginAction(activity!!,type, data)
+    FronteggAuth.instance.directLoginAction(activity!!, type, data)
     promise.resolve(true)
   }
 
@@ -174,51 +176,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     promise.resolve("")
   }
 
-  override fun getConstants(): MutableMap<String, Any> {
-    val packageName = reactContext.packageName
-    val className = "$packageName.BuildConfig"
-    try {
-      val buildConfigClass = Class.forName(className)
-
-      // Get the field from BuildConfig class
-      val baseUrlField = buildConfigClass.getField("FRONTEGG_DOMAIN")
-      val clientIdField = buildConfigClass.getField("FRONTEGG_CLIENT_ID")
-      val useAssetsLinksField = buildConfigClass.getField("FRONTEGG_USE_ASSETS_LINKS")
-      val useChromeCustomTabsField = buildConfigClass.getField("FRONTEGG_USE_CHROME_CUSTOM_TABS")
-      val baseUrl = baseUrlField.get(null) as String // Assuming it's a String
-      val clientId = clientIdField.get(null) as String // Assuming it's a String
-      val useAssetsLinks = useAssetsLinksField.get(true) as Boolean // Assuming it's a String
-      val useChromeCustomTabs = useChromeCustomTabsField.get(false) as Boolean // Assuming it's a String
-
-
-      return hashMapOf(
-        "baseUrl" to baseUrl,
-        "clientId" to clientId,
-        "useAssetsLinks" to useAssetsLinks,
-        "useChromeCustomTabs" to useChromeCustomTabs,
-        "bundleId" to reactContext.packageName
-      )
-    } catch (e: ClassNotFoundException) {
-      println("Class not found: $className")
-      throw e
-    } catch (e: NoSuchFieldException) {
-      println(
-        "Field not found in BuildConfig: " +
-          "buildConfigField \"String\", 'FRONTEGG_DOMAIN', \"\\\"\$fronteggDomain\\\"\"\n" +
-          "buildConfigField \"String\", 'FRONTEGG_CLIENT_ID', \"\\\"\$fronteggClientId\\\"\""
-      )
-      throw e
-
-    } catch (e: IllegalAccessException) {
-      println(
-        "Access problem with field in BuildConfig: " +
-          "buildConfigField \"String\", 'FRONTEGG_DOMAIN', \"\\\"\$fronteggDomain\\\"\"\n" +
-          "buildConfigField \"String\", 'FRONTEGG_CLIENT_ID', \"\\\"\$fronteggClientId\\\"\""
-      )
-      throw e
-    }
-
-  }
+  override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()
 
   companion object {
     const val NAME = "FronteggRN"
