@@ -14,11 +14,13 @@ features for the product-led era.
     - [Create Frontegg plist file](#create-frontegg-plist-file)
     - [Handle Open App with URL](#handle-open-app-with-url)
     - [Config iOS associated domain](#config-ios-associated-domain)
+    - [Multi-apps iOS Support](#multi-apps-ios-support)
 - [Setup Android Project](#setup-android-project)
     - [Set minimum SDK version](#set-minimum-sdk-version)
     - [Configure build config fields](#configure-build-config-fields)
     - [Config Android AssetLinks](#config-android-assetlinks)
     - [Enabling Chrome Custom Tabs for Social Login](#enabling-chrome-custom-tabs-for-social-login)
+    - [Multi-apps Android Support](#multi-apps-android-support)
 - [Usages](#usages)
     - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
     - [Login with frontegg](#login-with-frontegg)
@@ -97,14 +99,14 @@ add the following code to.
 
     ```objective-c
     //  FronteggSwiftAdapter.swift
-    
+
     import Foundation
     import FronteggSwift
-    
+
     @objc(FronteggSwiftAdapter)
     public class FronteggSwiftAdapter: NSObject {
         @objc public static let shared = FronteggSwiftAdapter()
-    
+
         @objc public func handleOpenUrl(_ url: URL) -> Bool {
             return FronteggAuth.shared.handleOpenUrl(url)
         }
@@ -120,23 +122,23 @@ add the following code to.
 
     ```objective-c
     #import <[YOUR_PROJECT_NAME]-Swift.h>
-   
+
    // ...CODE...
-   
+
    - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url
             options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
     {
-      
+
       if([[FronteggSwiftAdapter shared] handleOpenUrl:url] ){
         return TRUE;
       }
       return [RCTLinkingManager application:app openURL:url options:options];
     }
-    
+
     - (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity
      restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler
     {
-      
+
       if (userActivity.webpageURL != NULL){
         if([[FronteggSwiftAdapter shared] handleOpenUrl:userActivity.webpageURL] ){
           return TRUE;
@@ -156,33 +158,33 @@ add the following code to.
     import FronteggSwift
     ```
 2. Add URL handlers to `AppDelegate.swift`:
-    ```swift  
+    ```swift
     import UIKit
     import FronteggSwift
-    
+
     @UIApplicationMain
     class AppDelegate: UIResponder, UIApplicationDelegate {
-    
+
         /*
          * Called when the app was launched with a url. Feel free to add additional processing here,
          * but if you want the App API to support tracking app url opens, make sure to keep this call
          */
         func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-            
+
             if(FronteggAuth.shared.handleOpenUrl(url)){
                 return true
             }
-            
+
             return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
         }
-        
+
         /*
          * Called when the app was launched with an activity, including Universal Links.
          * Feel free to add additional processing here, but if you want the App API to support
          * tracking app url opens, make sure to keep this call
          */
         func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-            
+
             if let url = userActivity.webpageURL {
                 if(FronteggAuth.shared.handleOpenUrl(url)){
                     return true
@@ -211,6 +213,27 @@ request to `https://api.frontegg.com/vendors/resources/associated-domains/v1/ios
 
 In order to use our API’s, follow [this guide](‘https://docs.frontegg.com/reference/getting-started-with-your-api’) to
 generate a vendor token.
+
+## Multi-apps iOS Support
+
+This guide outlines the steps to configure your iOS application to support multiple applications.
+
+### Step 1: Modify the Frontegg.plist File
+
+Add `applicationId` to Frontegg.plist file:
+
+```xml
+<plist version="1.0">
+  <dict>
+    <key>applicationId</key>
+    <string>your-application-id-uuid</string>
+    <key>baseUrl</key>
+    <string>https://your-domain.fronteg.com</string>
+    <key>clientId</key>
+    <string>your-client-id-uuid</string>
+  </dict>
+</plist>
+```
 
 ## Setup Android Project
 
@@ -253,8 +276,8 @@ android {
         buildConfigField "Boolean", 'FRONTEGG_USE_ASSETS_LINKS', "true" /** For using frontegg domain for deeplinks **/
         buildConfigField "Boolean", 'FRONTEGG_USE_CHROME_CUSTOM_TABS', "true"  /** For using custom chrome tab for social-logins **/
     }
-    
-    
+
+
 }
 ```
 
@@ -350,13 +373,31 @@ android {
 
         buildConfigField "String", 'FRONTEGG_DOMAIN', "\"$fronteggDomain\""
         buildConfigField "String", 'FRONTEGG_CLIENT_ID', "\"$fronteggClientId\""
-        
+
         buildConfigField "Boolean", 'FRONTEGG_USE_CHROME_CUSTOM_TABS', "true"
     }
-    
-    
+
+
 }
 ```
+
+## Multi-apps Android Support
+
+This guide outlines the steps to configure your Android application to support multiple applications.
+
+### Step 1: Modify the Build.gradle file
+
+Add `FRONTEGG_APPLICATION_ID` buildConfigField into the `build.gradle` file:
+
+```groovy
+def fronteggApplicationId = "your-application-id-uuid"
+...
+android {
+    ...
+    buildConfigField "String", 'FRONTEGG_APPLICATION_ID', "\"$fronteggApplicationId\""
+}
+```
+
 
 ## Usages
 
