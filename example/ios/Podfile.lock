@@ -10,11 +10,11 @@ PODS:
     - React-jsi (= 0.72.1)
     - ReactCommon/turbomodule/core (= 0.72.1)
   - fmt (6.2.1)
-  - FronteggRN (1.2.2):
-    - FronteggSwift (= 1.2.11)
+  - FronteggRN (1.2.3):
+    - FronteggSwift (= 1.2.16)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - FronteggSwift (1.2.11)
+  - FronteggSwift (1.2.16)
   - glog (0.3.5)
   - hermes-engine (0.72.1):
     - hermes-engine/Pre-built (= 0.72.1)
@@ -578,13 +578,13 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: 57d2868c099736d80fcd648bf211b4431e51a558
+  boost: 7dcd2de282d72e344012f7d6564d024930a6a440
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 55cd4593d570bd9e5e227488d637ce6a9581ce51
   FBReactNativeSpec: 799b0e1a1561699cd0e424e24fe5624da38402f0
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  FronteggRN: 459d4230a51c5f4d933bd78ba8cf389c34087158
-  FronteggSwift: 62219f02bc71da4b85371a92feee251a640e34a5
+  FronteggRN: 01a1df999ee3b58c3b4ab881da1bbc60a00117b8
+  FronteggSwift: 7041ff82d1924e9be39a7c4db02cb2e8a1eb229a
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
@@ -627,4 +627,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 010992354d93ba29cfe4cff5fab47f9b2920a2da
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.2
