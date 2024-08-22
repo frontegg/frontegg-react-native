@@ -10,7 +10,7 @@ PODS:
     - React-jsi (= 0.72.1)
     - ReactCommon/turbomodule/core (= 0.72.1)
   - fmt (6.2.1)
-  - FronteggRN (1.2.3):
+  - FronteggRN (1.2.4):
     - FronteggSwift (= 1.2.16)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
@@ -431,7 +431,8 @@ PODS:
     - React-jsi (= 0.72.1)
     - React-logger (= 0.72.1)
     - React-perflogger (= 0.72.1)
-  - RNScreens (3.22.1):
+  - RNScreens (3.32.0):
+    - RCT-Folly (= 2021.07.22.00)
     - React-Core
     - React-RCTImage
   - SocketRocket (0.6.1)
@@ -578,12 +579,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: 7dcd2de282d72e344012f7d6564d024930a6a440
+  boost: 57d2868c099736d80fcd648bf211b4431e51a558
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 55cd4593d570bd9e5e227488d637ce6a9581ce51
   FBReactNativeSpec: 799b0e1a1561699cd0e424e24fe5624da38402f0
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  FronteggRN: 01a1df999ee3b58c3b4ab881da1bbc60a00117b8
+  FronteggRN: 4529b26513ca97509a34dbd59c1ff41ddcd56fba
   FronteggSwift: 7041ff82d1924e9be39a7c4db02cb2e8a1eb229a
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
@@ -621,7 +622,7 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 67707a955b9ecc628cc38bdc721fbc498910f0fd
   React-utils: 0a70ea97d4e2749f336b450c082905be1d389435
   ReactCommon: e593d19c9e271a6da4d0bd7f13b28cfeae5d164b
-  RNScreens: 50ffe2fa2342eabb2d0afbe19f7c1af286bc7fb3
+  RNScreens: 0bd9eec783bed1032e02a4db9976dae1664a5c7b
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 65286bb6a07edce5e4fe8c90774da977ae8fc009
 
