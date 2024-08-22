@@ -45,9 +45,10 @@ export async function refreshToken() {
 
 export async function directLoginAction(
   type: string,
-  data: string
+  data: string,
+  ephemeralSession: boolean = true
 ): Promise<void> {
-  return FronteggRN.directLoginAction({ type, data });
+  return FronteggRN.directLoginAction(type, data, ephemeralSession);
 }
 
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {

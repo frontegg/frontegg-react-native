@@ -164,7 +164,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun directLoginAction(type: String, data: String, promise: Promise) {
+  fun directLoginAction(type: String, data: String, ephemeralSession:Boolean, promise: Promise) {
     val activity = currentActivity
     FronteggAuth.instance.directLoginAction(activity!!, type, data)
     promise.resolve(true)

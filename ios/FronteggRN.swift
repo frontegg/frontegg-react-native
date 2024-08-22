@@ -99,11 +99,12 @@ class FronteggRN: RCTEventEmitter {
     func directLoginAction(
       _ type: String,
       data: String,
+      ephemeralSession: Bool,
       resolver: @escaping RCTPromiseResolveBlock,
        rejecter: RCTPromiseRejectBlock
     ) -> Void {
-        
-        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data) { _ in
+
+        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSesion: ephemeralSession) { _ in
             resolver("ok")
         }
     }

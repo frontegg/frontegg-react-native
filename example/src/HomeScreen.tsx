@@ -7,6 +7,7 @@ import {
   logout,
   refreshToken,
   useAuth,
+  directLoginAction,
 } from '@frontegg/react-native';
 import { useState } from 'react';
 import type { ITenantsResponse } from '@frontegg/rest-api';
@@ -40,6 +41,16 @@ export default function HomeScreen() {
           }}
         />
       </View>
+
+      {state.isAuthenticated ? null : (
+        <Button
+          color={'#000000'}
+          title={'Login with google'}
+          onPress={() => {
+            directLoginAction('social-login', 'google');
+          }}
+        />
+      )}
 
       <View style={styles.listenerButton}>
         <Button
