@@ -7,6 +7,8 @@ import Combine
 class FronteggRN: RCTEventEmitter {
 
     public let fronteggApp = FronteggApp.shared
+    var hasListeners: Bool = false
+    var pendingObservingState:Bool = false
     var cancellables = Set<AnyCancellable>()
 
     override func constantsToExport() -> [AnyHashable : Any]! {
@@ -17,7 +19,17 @@ class FronteggRN: RCTEventEmitter {
         "bundleId": Bundle.main.bundleIdentifier as Any
       ]
     }
-
+    override func startObserving() {
+        self.hasListeners = true
+        if(self.pendingObservingState){
+            self.pendingObservingState = false
+            self.sendEventToJS()
+        }
+    }
+    
+    override func stopObserving() {
+        self.hasListeners = false
+    }
     @objc
     func subscribe() -> [AnyHashable : Any]! {
 
@@ -38,30 +50,37 @@ class FronteggRN: RCTEventEmitter {
 
         anyChange.sink(receiveValue: { () in
             DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
-
-                let auth =  self.fronteggApp.auth
-
-                var jsonUser: [String: Any]? = nil
-                if let userData = try? JSONEncoder().encode(auth.user) {
-                    jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
+                if(self.hasListeners){
+                    self.sendEventToJS()
+                } else {
+                    self.pendingObservingState = true
                 }
-
-                let body: [String: Any?] = [
-                    "accessToken": auth.accessToken,
-                    "refreshToken": auth.refreshToken,
-                    "user": jsonUser,
-                    "isAuthenticated": auth.isAuthenticated,
-                    "isLoading": auth.isLoading,
-                    "initializing": auth.initializing,
-                    "showLoader": auth.showLoader,
-                    "appLink": auth.appLink
-                ]
-                    self.sendEvent(withName: "onFronteggAuthEvent", body: body)
             }
 
         }).store(in: &cancellables)
 
         return ["status": "OK"]
+    }
+    
+    func sendEventToJS() {
+        let auth =  self.fronteggApp.auth
+        
+        var jsonUser: [String: Any]? = nil
+        if let userData = try? JSONEncoder().encode(auth.user) {
+            jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
+        }
+
+        let body: [String: Any?] = [
+            "accessToken": auth.accessToken,
+            "refreshToken": auth.refreshToken,
+            "user": jsonUser,
+            "isAuthenticated": auth.isAuthenticated,
+            "isLoading": auth.isLoading,
+            "initializing": auth.initializing,
+            "showLoader": auth.showLoader,
+            "appLink": auth.appLink
+        ]
+        self.sendEvent(withName: "onFronteggAuthEvent", body: body)
     }
 
     @objc
