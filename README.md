@@ -46,10 +46,10 @@ from [Frontegg Portal Domain](https://portal.frontegg.com/development/settings/d
 - Toggle Hosted login method for Android:
     - Add `{{ANDROID_PACKAGE_NAME}}://{{FRONTEGG_BASE_URL}}/android/oauth/callback`
     - Add `https://{{FRONTEGG_BASE_URL}}/oauth/account/redirect/android/{{ANDROID_PACKAGE_NAME}}`
+- Add `{{FRONTEGG_BASE_URL}}/oauth/authorize`
 - Replace `IOS_BUNDLE_IDENTIFIER` with your application identifier
 - Replace `FRONTEGG_BASE_URL` with your frontegg base url
 - Replace `ANDROID_PACKAGE_NAME` with your android package name
--
 
 ### Add frontegg package to the project
 
