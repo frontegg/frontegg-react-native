@@ -452,11 +452,11 @@ To log in with frontegg you can use the `useAuth` hook:
 
 ```tsx
 import { View, Button } from 'react-native';
-import { useAuth } from '@frontegg/react-native';
+import { useAuth, login, logout } from '@frontegg/react-native';
 
 
 export function MyScreen() {
-  const { isAuthenticated, login, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return <View>
     <Button title={'Login'} onPress={login} />
