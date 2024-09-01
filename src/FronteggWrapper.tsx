@@ -1,13 +1,10 @@
 import React, { type ReactNode, useEffect, useState } from 'react';
-import type { FronteggAppOptions } from '@frontegg/types';
 import type { FC } from 'react';
 import type { FronteggState } from './FronteggContext';
 import FronteggContext, { defaultFronteggState } from './FronteggContext';
 import { listener } from './FronteggNative';
 
-export const FronteggWrapper: FC<
-  Omit<FronteggAppOptions, 'contextOptions'> & { children: ReactNode }
-> = (props) => {
+export const FronteggWrapper: FC<{ children: ReactNode }> = (props) => {
   const [state, setState] = useState<FronteggState>(defaultFronteggState);
 
   useEffect(() => {
