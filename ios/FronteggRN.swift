@@ -123,7 +123,7 @@ class FronteggRN: RCTEventEmitter {
        rejecter: RCTPromiseRejectBlock
     ) -> Void {
 
-        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSesion: ephemeralSession) { _ in
+        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSession: ephemeralSession) { _ in
             resolver("ok")
         }
     }
@@ -133,8 +133,8 @@ class FronteggRN: RCTEventEmitter {
 
         DispatchQueue.global(qos: .userInteractive).async {
            Task {
-               await self.fronteggApp.auth.refreshTokenIfNeeded()
-               resolve("ok")
+               let result = await self.fronteggApp.auth.refreshTokenIfNeeded()
+               resolve(result)
            }
        }
     }
