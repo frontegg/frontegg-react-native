@@ -291,16 +291,6 @@ android {
 }
 ```
 
-### Add permissions to AndroidManifest.xml
-
-Add `INTERNET` permission to the app's manifest file.
-
-```xml
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-<uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-```
-
 ### Config Android AssetLinks
 
 Configuring your Android `AssetLinks` is required for Magic Link authentication / Reset Password / Activate Account /
