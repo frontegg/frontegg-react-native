@@ -26,7 +26,7 @@ class FronteggRN: RCTEventEmitter {
             self.sendEventToJS()
         }
     }
-    
+
     override func stopObserving() {
         self.hasListeners = false
     }
@@ -34,21 +34,43 @@ class FronteggRN: RCTEventEmitter {
     func subscribe() -> [AnyHashable : Any]! {
 
         let auth = fronteggApp.auth
-        var anyChange: AnyPublisher<Void, Never> {
-            return Publishers.Merge8 (
-                auth.$accessToken.map { _ in },
-                auth.$refreshToken.map {_ in },
-                auth.$user.map {_ in },
+        
+        var stateChange: AnyPublisher<Void, Never> {
+            return Publishers.Merge5 (
+                auth.$refreshingToken.map { _ in },
                 auth.$isAuthenticated.map {_ in },
                 auth.$isLoading.map {_ in },
                 auth.$initializing.map {_ in },
-                auth.$showLoader.map {_ in },
-                auth.$appLink.map {_ in }
+                auth.$showLoader.map {_ in }
             )
             .eraseToAnyPublisher()
         }
+        
+        var dataChange: AnyPublisher<Void, Never> {
+            return Publishers.Merge4 (
+                auth.$accessToken.map { _ in },
+                auth.$refreshToken.map {_ in },
+                auth.$user.map {_ in },
+                auth.$selectedRegion.map{_ in}
+            )
+            .eraseToAnyPublisher()
+        }
+        
 
-        anyChange.sink(receiveValue: { () in
+        stateChange.sink(receiveValue: { () in
+            DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
+                if(self.hasListeners){
+                    self.sendEventToJS()
+                } else {
+                    self.pendingObservingState = true
+                }
+            }
+
+        }).store(in: &cancellables)
+        
+        
+
+        dataChange.sink(receiveValue: { () in
             DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
                 if(self.hasListeners){
                     self.sendEventToJS()
@@ -61,10 +83,10 @@ class FronteggRN: RCTEventEmitter {
 
         return ["status": "OK"]
     }
-    
+
     func sendEventToJS() {
         let auth =  self.fronteggApp.auth
-        
+
         var jsonUser: [String: Any]? = nil
         if let userData = try? JSONEncoder().encode(auth.user) {
             jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
@@ -73,6 +95,7 @@ class FronteggRN: RCTEventEmitter {
         let body: [String: Any?] = [
             "accessToken": auth.accessToken,
             "refreshToken": auth.refreshToken,
+            "refreshingToken": auth.refreshingToken,
             "user": jsonUser,
             "isAuthenticated": auth.isAuthenticated,
             "isLoading": auth.isLoading,
@@ -93,13 +116,22 @@ class FronteggRN: RCTEventEmitter {
 
     @objc
     func login(
-      _ resolve: RCTPromiseResolveBlock,
-      rejecter reject: RCTPromiseRejectBlock
+      _ loginHint: String?,
+      resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
     ) -> Void {
+        
         DispatchQueue.main.sync {
-            fronteggApp.auth.login()
+            let completion: FronteggAuth.CompletionHandler = { result in
+                switch(result) {
+                case .success(_): 
+                    resolver("Success")
+                case .failure(let error):
+                    resolver("Failed: \(error.failureReason ?? "")")
+                        
+                }
+            }
+            fronteggApp.auth.login(completion, loginHint:loginHint)
         }
-        resolve("ok")
     }
 
 

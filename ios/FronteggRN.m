@@ -7,7 +7,8 @@
   RCT_EXTERN_METHOD(subscribe)
   RCT_EXTERN_METHOD(logout)
   RCT_EXTERN_METHOD(
-    login: (RCTPromiseResolveBlock)resolve
+    login: (NSString *)loginHint
+    resolver: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject
   )
   RCT_EXTERN_METHOD(

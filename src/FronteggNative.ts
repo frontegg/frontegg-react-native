@@ -21,8 +21,8 @@ export function getConstants() {
   return FronteggRN.getConstants();
 }
 
-export function login() {
-  FronteggRN.login()
+export function login(loginHint?: string) {
+  FronteggRN.login(loginHint)
     .then((data: any) => {
       console.log(data);
     })
@@ -35,8 +35,8 @@ export function logout() {
   return FronteggRN.logout();
 }
 
-export async function switchTenant(teanntId: string) {
-  return FronteggRN.switchTenant(teanntId);
+export async function switchTenant(tenantId: string) {
+  return FronteggRN.switchTenant(tenantId);
 }
 
 export async function refreshToken() {

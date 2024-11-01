@@ -9,6 +9,7 @@ export type User = IUserProfile & {
 export interface FronteggState {
   accessToken: string | null;
   refreshToken: string | null;
+  refreshingToken: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
@@ -19,6 +20,7 @@ export interface FronteggState {
 export const defaultFronteggState: FronteggState = {
   accessToken: null,
   refreshToken: null,
+  refreshingToken: false,
   isAuthenticated: false,
   isLoading: true,
   user: null,
