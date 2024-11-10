@@ -154,9 +154,9 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun registerPasskeys(promise: Promise) {
+  fun loginWithPasskeys(promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.registerPasskeys(activity!!) {
+    FronteggAuth.instance.loginWithPasskeys(activity!!) {
       if (it != null) {
         promise.reject(it)
       } else {
@@ -166,9 +166,9 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun loginWithPasskeys(promise: Promise) {
+  fun registerPasskeys(promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.loginWithPasskeys(activity!!) {
+    FronteggAuth.instance.registerPasskeys(activity!!) {
       if (it != null) {
         promise.reject(it)
       } else {

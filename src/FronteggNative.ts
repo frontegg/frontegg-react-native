@@ -51,6 +51,14 @@ export async function directLoginAction(
   return FronteggRN.directLoginAction(type, data, ephemeralSession);
 }
 
+export async function loginWithPasskeys(): Promise<void> {
+  return FronteggRN.loginWithPasskeys();
+}
+
+export async function registerPasskeys(): Promise<void> {
+  return FronteggRN.registerPasskeys();
+}
+
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
   let timeout: any;
 
