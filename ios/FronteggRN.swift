@@ -156,7 +156,7 @@ class FronteggRN: RCTEventEmitter {
     ) -> Void {
 
         fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSession: ephemeralSession) { _ in
-            resolver("ok")
+            resolver("Success")
         }
     }
 
@@ -169,6 +169,46 @@ class FronteggRN: RCTEventEmitter {
                resolve(result)
            }
        }
+    }
+    
+    @objc
+    func loginWithPasskeys(
+      _ type: String,
+      data: String,
+      ephemeralSession: Bool,
+      resolver: @escaping RCTPromiseResolveBlock,
+       rejecter: RCTPromiseRejectBlock
+    ) -> Void {
+
+        let completion: FronteggAuth.CompletionHandler = { result in
+            switch(result) {
+            case .success(_):
+                resolver("Success")
+            case .failure(let error):
+                resolver("Failed: \(error.failureReason ?? "")")
+                    
+            }
+        }
+        fronteggApp.auth.loginWithPasskeys(completion)
+    }
+    
+    @objc
+    func registerPasskeys(
+      _ type: String,
+      data: String,
+      ephemeralSession: Bool,
+      resolver: @escaping RCTPromiseResolveBlock,
+       rejecter: RCTPromiseRejectBlock
+    ) -> Void {
+
+        let completion: FronteggAuth.ConditionCompletionHandler = { succeeded in
+            if succeeded {
+                resolver("Success")
+            } else {
+                resolver("Failed to register passkeys")
+            }
+        }
+        fronteggApp.auth.registerPasskeys(completion)
     }
 
     // we need to override this method and
