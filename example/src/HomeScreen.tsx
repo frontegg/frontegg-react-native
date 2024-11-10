@@ -20,9 +20,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 30, marginBottom: 16 }}>
-        React Native Example
-      </Text>
+      <Text style={styles.title}>React Native Example</Text>
 
       <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
       <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
@@ -132,6 +130,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 30,
+    marginBottom: 16,
+  },
   listenerButton: {
     marginVertical: 20,
   },
