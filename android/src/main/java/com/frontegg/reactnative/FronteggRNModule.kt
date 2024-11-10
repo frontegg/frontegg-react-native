@@ -126,7 +126,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun login(loginHint:String?, promise: Promise) {
+  fun login(loginHint: String?, promise: Promise) {
     val activity = currentActivity
     FronteggAuth.instance.login(activity!!, loginHint) {
       promise.resolve("")
@@ -151,6 +151,30 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   fun refreshToken(promise: Promise) {
     FronteggAuth.instance.refreshTokenIfNeeded()
     promise.resolve("")
+  }
+
+  @ReactMethod
+  fun registerPasskeys(promise: Promise) {
+    val activity = currentActivity
+    FronteggAuth.instance.registerPasskeys(activity!!) {
+      if (it != null) {
+        promise.reject(it)
+      } else {
+        promise.resolve("")
+      }
+    }
+  }
+
+  @ReactMethod
+  fun loginWithPasskeys(promise: Promise) {
+    val activity = currentActivity
+    FronteggAuth.instance.loginWithPasskeys(activity!!) {
+      if (it != null) {
+        promise.reject(it)
+      } else {
+        promise.resolve("")
+      }
+    }
   }
 
   override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()
