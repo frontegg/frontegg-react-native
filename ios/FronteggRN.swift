@@ -189,12 +189,11 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func registerPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
         
-        let completion: FronteggAuth.ConditionCompletionHandler = { succeeded in
-            if succeeded {
-                resolve("Success")
+        let completion: FronteggAuth.ConditionCompletionHandler = { error in
+            if let fronteggError = error {
+                rejecter(fronteggError.failureReason, fronteggError.localizedDescription, fronteggError)
             } else {
-                rejecter("failed_regsiter_passkeys", "Failed to register passkeys", nil)
-                
+                resolve("Success")
             }
         }
         fronteggApp.auth.registerPasskeys(completion)
