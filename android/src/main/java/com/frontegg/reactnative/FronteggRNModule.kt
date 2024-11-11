@@ -1,11 +1,8 @@
 package com.frontegg.reactnative
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.BaseActivityEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -13,7 +10,6 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.frontegg.android.AuthenticationActivity
 import com.frontegg.android.FronteggApp
 import com.frontegg.android.FronteggAuth
 import io.reactivex.rxjava3.core.Observable
@@ -28,29 +24,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     return NAME
   }
 
-  private val activityEventListener = object : BaseActivityEventListener() {
-    override fun onActivityResult(
-      activity: Activity?,
-      requestCode: Int,
-      resultCode: Int,
-      intent: Intent?
-    ) {
-      if (requestCode == AuthenticationActivity.OAUTH_LOGIN_REQUEST) {
-        when (resultCode) {
-          Activity.RESULT_CANCELED -> {
-            loginPromise?.reject("Canceled")
-          }
-
-          Activity.RESULT_OK -> {
-            loginPromise?.resolve("OK")
-          }
-        }
-      }
-    }
-  }
-
   init {
-    reactContext.addActivityEventListener(activityEventListener)
     fronteggConstants = reactContext.fronteggConstants
 
 
@@ -86,6 +60,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     this.disposable = Observable.mergeArray(
       FronteggAuth.instance.accessToken.observable,
       FronteggAuth.instance.refreshToken.observable,
+      FronteggAuth.instance.refreshingToken.observable,
       FronteggAuth.instance.user.observable,
       FronteggAuth.instance.isAuthenticated.observable,
       FronteggAuth.instance.isLoading.observable,
@@ -112,6 +87,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     handler.removeCallbacks(eventRunnable)
     val accessToken = FronteggAuth.instance.accessToken.value
     val refreshToken = FronteggAuth.instance.refreshToken.value
+    val refreshingToken = FronteggAuth.instance.refreshingToken.value
     val user = FronteggAuth.instance.user.value
     val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
     val isLoading = FronteggAuth.instance.isLoading.value
@@ -122,6 +98,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
       putString("accessToken", accessToken)
       putString("refreshToken", refreshToken)
+      putBoolean("refreshingToken", refreshingToken)
       putMap("user", user?.toReadableMap())
       putBoolean("isAuthenticated", isAuthenticated)
       putBoolean("isLoading", isLoading)
@@ -148,14 +125,12 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   }
 
-
-  private var loginPromise: Promise? = null
-
   @ReactMethod
-  fun login(promise: Promise) {
+  fun login(loginHint: String?, promise: Promise) {
     val activity = currentActivity
-    loginPromise = promise
-    FronteggAuth.instance.login(activity!!)
+    FronteggAuth.instance.login(activity!!, loginHint) {
+      promise.resolve("")
+    }
   }
 
   @ReactMethod
@@ -176,6 +151,30 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   fun refreshToken(promise: Promise) {
     FronteggAuth.instance.refreshTokenIfNeeded()
     promise.resolve("")
+  }
+
+  @ReactMethod
+  fun loginWithPasskeys(promise: Promise) {
+    val activity = currentActivity
+    FronteggAuth.instance.loginWithPasskeys(activity!!) {
+      if (it != null) {
+        promise.reject(it)
+      } else {
+        promise.resolve("")
+      }
+    }
+  }
+
+  @ReactMethod
+  fun registerPasskeys(promise: Promise) {
+    val activity = currentActivity
+    FronteggAuth.instance.registerPasskeys(activity!!) {
+      if (it != null) {
+        promise.reject(it)
+      } else {
+        promise.resolve("")
+      }
+    }
   }
 
   override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()

@@ -5,19 +5,19 @@ import Combine
 
 @objc(FronteggRN)
 class FronteggRN: RCTEventEmitter {
-
+    
     public let fronteggApp = FronteggApp.shared
     var hasListeners: Bool = false
     var pendingObservingState:Bool = false
     var cancellables = Set<AnyCancellable>()
-
+    
     override func constantsToExport() -> [AnyHashable : Any]! {
-      return [
-        "baseUrl": fronteggApp.baseUrl,
-        "clientId": fronteggApp.clientId,
-        "applicationId": fronteggApp.applicationId as Any,
-        "bundleId": Bundle.main.bundleIdentifier as Any
-      ]
+        return [
+            "baseUrl": fronteggApp.baseUrl,
+            "clientId": fronteggApp.clientId,
+            "applicationId": fronteggApp.applicationId as Any,
+            "bundleId": Bundle.main.bundleIdentifier as Any
+        ]
     }
     override func startObserving() {
         self.hasListeners = true
@@ -32,23 +32,32 @@ class FronteggRN: RCTEventEmitter {
     }
     @objc
     func subscribe() -> [AnyHashable : Any]! {
-
+        
         let auth = fronteggApp.auth
-        var anyChange: AnyPublisher<Void, Never> {
-            return Publishers.Merge8 (
-                auth.$accessToken.map { _ in },
-                auth.$refreshToken.map {_ in },
-                auth.$user.map {_ in },
+        
+        var stateChange: AnyPublisher<Void, Never> {
+            return Publishers.Merge5 (
+                auth.$refreshingToken.map { _ in },
                 auth.$isAuthenticated.map {_ in },
                 auth.$isLoading.map {_ in },
                 auth.$initializing.map {_ in },
-                auth.$showLoader.map {_ in },
-                auth.$appLink.map {_ in }
+                auth.$showLoader.map {_ in }
             )
             .eraseToAnyPublisher()
         }
-
-        anyChange.sink(receiveValue: { () in
+        
+        var dataChange: AnyPublisher<Void, Never> {
+            return Publishers.Merge4 (
+                auth.$accessToken.map { _ in },
+                auth.$refreshToken.map {_ in },
+                auth.$user.map {_ in },
+                auth.$selectedRegion.map{_ in}
+            )
+            .eraseToAnyPublisher()
+        }
+        
+        
+        stateChange.sink(receiveValue: { () in
             DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
                 if(self.hasListeners){
                     self.sendEventToJS()
@@ -56,9 +65,22 @@ class FronteggRN: RCTEventEmitter {
                     self.pendingObservingState = true
                 }
             }
-
+            
         }).store(in: &cancellables)
-
+        
+        
+        
+        dataChange.sink(receiveValue: { () in
+            DispatchQueue.global(qos: .userInteractive).asyncAfter(deadline: .now() + 0.1) {
+                if(self.hasListeners){
+                    self.sendEventToJS()
+                } else {
+                    self.pendingObservingState = true
+                }
+            }
+            
+        }).store(in: &cancellables)
+        
         return ["status": "OK"]
     }
     
@@ -69,10 +91,11 @@ class FronteggRN: RCTEventEmitter {
         if let userData = try? JSONEncoder().encode(auth.user) {
             jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any]
         }
-
+        
         let body: [String: Any?] = [
             "accessToken": auth.accessToken,
             "refreshToken": auth.refreshToken,
+            "refreshingToken": auth.refreshingToken,
             "user": jsonUser,
             "isAuthenticated": auth.isAuthenticated,
             "isLoading": auth.isLoading,
@@ -82,71 +105,108 @@ class FronteggRN: RCTEventEmitter {
         ]
         self.sendEvent(withName: "onFronteggAuthEvent", body: body)
     }
-
+    
     @objc
     func logout() -> [AnyHashable : Any]! {
-      DispatchQueue.main.sync {
-        fronteggApp.auth.logout()
-      }
-      return ["status": "OK"]
+        DispatchQueue.main.sync {
+            fronteggApp.auth.logout()
+        }
+        return ["status": "OK"]
     }
-
+    
     @objc
     func login(
-      _ resolve: RCTPromiseResolveBlock,
-      rejecter reject: RCTPromiseRejectBlock
+        _ loginHint: String?,
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
     ) -> Void {
+        
         DispatchQueue.main.sync {
-            fronteggApp.auth.login()
+            let completion: FronteggAuth.CompletionHandler = { result in
+                switch(result) {
+                case .success(_):
+                    resolver("Success")
+                case .failure(let error):
+                    resolver("Failed: \(error.failureReason ?? "")")
+                    
+                }
+            }
+            fronteggApp.auth.login(completion, loginHint:loginHint)
         }
-        resolve("ok")
     }
-
-
+    
+    
     @objc
     func switchTenant(
-      _ tenantId: String,
-      resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
+        _ tenantId: String,
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
     ) -> Void {
         fronteggApp.auth.switchTenant(tenantId: tenantId) { _ in
             resolver(tenantId)
         }
     }
-
-
+    
+    
     @objc
     func directLoginAction(
-      _ type: String,
-      data: String,
-      ephemeralSession: Bool,
-      resolver: @escaping RCTPromiseResolveBlock,
-       rejecter: RCTPromiseRejectBlock
+        _ type: String,
+        data: String,
+        ephemeralSession: Bool,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: RCTPromiseRejectBlock
     ) -> Void {
-
+        
         fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSession: ephemeralSession) { _ in
-            resolver("ok")
+            resolver("Success")
         }
     }
-
+    
     @objc
     func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
-
+        
         DispatchQueue.global(qos: .userInteractive).async {
-           Task {
-               let result = await self.fronteggApp.auth.refreshTokenIfNeeded()
-               resolve(result)
-           }
-       }
+            Task {
+                let result = await self.fronteggApp.auth.refreshTokenIfNeeded()
+                resolve(result)
+            }
+        }
     }
-
+    
+    @objc
+    func loginWithPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
+        
+        let completion: FronteggAuth.CompletionHandler = { result in
+            switch(result) {
+            case .success(_):
+                resolve("Success")
+            case .failure(let error):
+                rejecter(error.failureReason, error.localizedDescription, error)
+                
+            }
+        }
+        fronteggApp.auth.loginWithPasskeys(completion)
+    }
+    
+    @objc
+    func registerPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
+        
+        let completion: FronteggAuth.ConditionCompletionHandler = { error in
+            if let fronteggError = error {
+                rejecter(fronteggError.failureReason, fronteggError.localizedDescription, fronteggError)
+            } else {
+                resolve("Success")
+            }
+        }
+        fronteggApp.auth.registerPasskeys(completion)
+    }
+    
     // we need to override this method and
     // return an array of event names that we can listen to
     override func supportedEvents() -> [String]! {
-      return ["onFronteggAuthEvent"]
+        return ["onFronteggAuthEvent"]
     }
-
+    
     override static func requiresMainQueueSetup() -> Bool {
-      return true
+        return true
     }
-
+    
 }

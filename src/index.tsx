@@ -8,4 +8,6 @@ export {
   directLoginAction,
   switchTenant,
   refreshToken,
+  loginWithPasskeys,
+  registerPasskeys,
 } from './FronteggNative';

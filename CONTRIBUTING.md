@@ -112,3 +112,13 @@ When you're sending a pull request:
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
 - For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
+
+
+
+### Common iOS build issues:
+- If you encounter an error like 'Sandbox: rsync.samba(73955) deny(1) file-write-create' when running the iOS app, you can fix it by update to cocoapods 1.16.0 or higher **OR** freeze xcodeproj to 1.25 the following command:
+- https://github.com/CocoaPods/CocoaPods/releases/tag/1.16.0
+```sh
+sudo gem uninstall xcodeproj -x --ignore-dependencies
+sudo gem install xcodeproj -v 1.25.1
+```

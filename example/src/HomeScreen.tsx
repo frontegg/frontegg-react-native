@@ -8,6 +8,8 @@ import {
   refreshToken,
   useAuth,
   directLoginAction,
+  registerPasskeys,
+  loginWithPasskeys,
 } from '@frontegg/react-native';
 import { useState } from 'react';
 import type { ITenantsResponse } from '@frontegg/rest-api';
@@ -18,6 +20,8 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>React Native Example</Text>
+
       <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
       <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
       <Text>isLoading: {state.isLoading ? 'true' : 'false'}</Text>
@@ -43,13 +47,49 @@ export default function HomeScreen() {
       </View>
 
       {state.isAuthenticated ? null : (
-        <Button
-          color={'#000000'}
-          title={'Login with google'}
-          onPress={() => {
-            directLoginAction('social-login', 'google');
-          }}
-        />
+        <View style={styles.listenerButton}>
+          <Button
+            color={'#000000'}
+            title={'Login with google'}
+            onPress={() => {
+              directLoginAction('social-login', 'google');
+            }}
+          />
+        </View>
+      )}
+
+      {state.isAuthenticated ? (
+        <View style={styles.listenerButton}>
+          <Button
+            color={'#000000'}
+            title={'Register Passkeys'}
+            onPress={() => {
+              registerPasskeys()
+                .then(() => {
+                  console.log('Passkeys registered');
+                })
+                .catch((e) => {
+                  console.error(e);
+                });
+            }}
+          />
+        </View>
+      ) : (
+        <View style={styles.listenerButton}>
+          <Button
+            color={'#000000'}
+            title={'Login with Passkeys'}
+            onPress={() => {
+              loginWithPasskeys()
+                .then(() => {
+                  console.log('Passkeys login succeeded');
+                })
+                .catch((e) => {
+                  console.error(e);
+                });
+            }}
+          />
+        </View>
       )}
 
       <View style={styles.listenerButton}>
@@ -90,6 +130,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 30,
+    marginBottom: 16,
+  },
   listenerButton: {
     marginVertical: 20,
   },
