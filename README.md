@@ -539,8 +539,8 @@ Passkeys provide a seamless, passwordless authentication experience, leveraging 
 ### Prerequisites
 
 1. **iOS Version**: Ensure your project targets **iOS 15 or later** to support the necessary WebAuthn APIs.
-2. **Associated Domain**: Configure your app's associated domains to enable passkeys functionality.
-3. **Frontegg SDK Version**: Use Frontegg iOS SDK version **1.2.24 or later**.
+3. **Android**: Use **Android SDK 26+**.
+5. **Frontegg SDK Version**: Use Frontegg iOS SDK version **1.2.24 or later**.
 
 ---
 
