@@ -25,6 +25,7 @@ features for the product-led era.
     - [Wrap your app with FronteggProvider](#wrap-your-app-with-fronteggprovider)
     - [Login with frontegg](#login-with-frontegg)
     - [Check if user is authenticated](#check-if-user-is-authenticated)
+    - [Passkeys Authentication](#passkeys-authentication)
 
 ## Project Requirements
 
@@ -528,5 +529,107 @@ export default function HomeScreen() {
       }}
     />
   </View>
+}
+```
+
+## Passkeys Authentication
+
+Passkeys provide a seamless, passwordless authentication experience, leveraging platform-level biometric authentication and WebAuthn. Follow the steps below to integrate passkeys functionality into your iOS app.
+
+### Prerequisites
+
+1. **iOS Version**: Ensure your project targets **iOS 15 or later** to support the necessary WebAuthn APIs.
+3. **Android**: Use **Android SDK 26+**.
+5. **Frontegg SDK Version**: Use Frontegg iOS SDK version **1.2.24 or later**.
+
+---
+
+## Setup
+
+### Android Setup
+
+1. **Update Gradle Dependencies**:
+   Add the following dependencies in your `android/build.gradle`:
+   ```groovy
+   dependencies {
+       implementation 'androidx.browser:browser:1.8.0'
+       implementation 'com.frontegg.sdk:android:1.2.30'
+   }
+   ```
+
+2. **Java Compatibility**: 
+    Ensure sourceCompatibility and targetCompatibility are set to Java 8 in android/app/build.gradle**:
+```groovy
+   android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+```
+
+### IOS Setup
+
+1. **Set up the Associated Domains Capability**:
+   - Open your project in Xcode.
+   - Go to the **Signing & Capabilities** tab.
+   - Add **Associated Domains** under the **+ Capability** section.
+   - Enter the domain for your app in the format:
+     ```
+     webcredentials:[YOUR_DOMAIN]
+     ```
+     Example:
+     ```
+     webcredentials:example.com
+     ```
+
+2. **Host the WebAuthn Configuration File**:
+   - Add a `.well-known/webauthn` JSON file to your domain server with the following structure:
+     ```json
+     {
+       "origins": [
+         "https://example.com",
+         "https://subdomain.example.com"
+       ]
+     }
+     ```
+   - Ensure this file is publicly accessible at `https://example.com/.well-known/webauthn`.
+
+3. **Test Associated Domains**:
+   - Verify that your associated domain configuration works using Apple's [Associated Domains Validator](https://developer.apple.com/contact/request/associated-domains).
+
+
+### Using Passkeys
+The following examples demonstrate how to use the React Native SDK's Passkeys functions.
+
+###  Registering Passkeys
+Use the registerPasskeys method to register a passkey for the current user.
+
+```typescript
+import { registerPasskeys } from '@frontegg/react-native';
+
+async function handleRegisterPasskeys() {
+  try {
+    await registerPasskeys();
+    console.log('Passkeys registered successfully');
+  } catch (error) {
+    console.error('Error registering passkeys:', error);
+  }
+}
+```
+
+###  Login with Passkeys
+Use the loginWithPasskeys method to authenticate users using passkeys.
+
+```typescript
+import { loginWithPasskeys } from '@frontegg/react-native';
+
+async function handleLoginWithPasskeys() {
+  try {
+    await loginWithPasskeys();
+    console.log('Passkeys login successful');
+  } catch (error) {
+    console.error('Error logging in with Passkeys:', error);
+  }
 }
 ```
