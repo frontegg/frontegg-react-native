@@ -37,4 +37,10 @@ RCT_EXTERN_METHOD(
                   registerPasskeys: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
+RCT_EXTERN_METHOD(
+                  requestAuthorize: (NSString *)refreshToken
+                  deviceTokenCookie: (NSString *)deviceTokenCookie
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
 @end

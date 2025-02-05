@@ -10,4 +10,5 @@ export {
   refreshToken,
   loginWithPasskeys,
   registerPasskeys,
+  requestAuthorize,
 } from './FronteggNative';
