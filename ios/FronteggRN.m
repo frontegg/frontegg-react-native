@@ -39,7 +39,7 @@ RCT_EXTERN_METHOD(
                   )
 RCT_EXTERN_METHOD(
                   requestAuthorize: (NSString *)refreshToken
-                  deviceTokenCookie: (NSString *)deviceTokenCookie
+                  deviceTokenCookie: (nullable NSString *)deviceTokenCookie
                   resolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
