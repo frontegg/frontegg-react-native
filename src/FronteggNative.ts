@@ -55,6 +55,13 @@ export async function loginWithPasskeys(): Promise<void> {
   return FronteggRN.loginWithPasskeys();
 }
 
+export async function requestAuthorize(
+  refreshToken: string,
+  deviceTokenCookie?: string
+) {
+  return await FronteggRN.requestAuthorize(refreshToken, deviceTokenCookie);
+}
+
 export async function registerPasskeys(): Promise<void> {
   return FronteggRN.registerPasskeys();
 }

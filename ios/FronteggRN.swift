@@ -185,6 +185,29 @@ class FronteggRN: RCTEventEmitter {
         }
         fronteggApp.auth.loginWithPasskeys(completion)
     }
+
+  @objc
+  func requestAuthorize(
+      _ refreshToken: String,
+      deviceTokenCookie: String?,
+      resolver: @escaping RCTPromiseResolveBlock,
+      rejecter: @escaping RCTPromiseRejectBlock
+  ) {
+      fronteggApp.auth.requestAuthorize(refreshToken: refreshToken, deviceTokenCookie: deviceTokenCookie) { result in
+          switch result {
+          case .success(let user):
+              if let userData = try? JSONEncoder().encode(user),
+                 let jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any] {
+                  resolver(jsonUser)
+              } else {
+                  resolver(nil)
+              }
+          case .failure(let error):
+              rejecter("AUTHORIZATION_ERROR", error.localizedDescription, error)
+          }
+      }
+  }
+
     
     @objc
     func registerPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {

@@ -166,6 +166,26 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun requestAuthorize(refreshToken: String, deviceTokenCookie: String?, promise: Promise) {
+    try {
+      FronteggAuth.instance.requestAuthorize(refreshToken, deviceTokenCookie) { result ->
+        result.fold(
+          onSuccess = { user ->
+            promise.resolve(user.toReadableMap())
+          },
+          onFailure = { error ->
+            promise.reject("AUTHORIZATION_ERROR", error.message, error)
+          }
+        )
+      }
+    } catch (e: Exception) {
+      promise.reject("EXCEPTION", e.message, e)
+    }
+  }
+
+
+
+  @ReactMethod
   fun registerPasskeys(promise: Promise) {
     val activity = currentActivity
     FronteggAuth.instance.registerPasskeys(activity!!) {

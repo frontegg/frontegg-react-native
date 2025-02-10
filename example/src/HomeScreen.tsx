@@ -10,6 +10,7 @@ import {
   directLoginAction,
   registerPasskeys,
   loginWithPasskeys,
+  requestAuthorize,
 } from '@frontegg/react-native';
 import { useState } from 'react';
 import type { ITenantsResponse } from '@frontegg/rest-api';
@@ -57,6 +58,22 @@ export default function HomeScreen() {
           />
         </View>
       )}
+      <View style={styles.listenerButton}>
+        <Button
+          title={'Request Authorization'}
+          onPress={async () => {
+            try {
+              const user = await requestAuthorize(
+                '1251386f-dcab-413b-aebf-c5b2903eccf6',
+                '0827d7b7-e07c-46c5-bb03-b85189d57d21'
+              );
+              console.log('Authorization Success:', user);
+            } catch (error) {
+              console.error('Authorization Failed:', error);
+            }
+          }}
+        />
+      </View>
 
       {state.isAuthenticated ? (
         <View style={styles.listenerButton}>
