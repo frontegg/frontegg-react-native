@@ -11,10 +11,10 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.72.1)
   - fmt (6.2.1)
   - FronteggRN (1.2.8):
-    - FronteggSwift (= 1.2.31)
+    - FronteggSwift (= 1.2.32)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - FronteggSwift (1.2.31)
+  - FronteggSwift (1.2.32)
   - glog (0.3.5)
   - hermes-engine (0.72.1):
     - hermes-engine/Pre-built (= 0.72.1)

@@ -20,6 +20,7 @@ RCT_EXTERN_METHOD(
                   directLoginAction: (NSString *)type
                   data: (NSString *)data
                   ephemeralSession: (BOOL)ephemeralSession
+                  additionalQueryParams: (nullable NSDictionary *)additionalQueryParams
                   resolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )

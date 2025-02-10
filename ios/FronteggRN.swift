@@ -151,11 +151,18 @@ class FronteggRN: RCTEventEmitter {
         _ type: String,
         data: String,
         ephemeralSession: Bool,
+        additionalQueryParams: [String: String]? = nil,
         resolver: @escaping RCTPromiseResolveBlock,
         rejecter: RCTPromiseRejectBlock
     ) -> Void {
         
-        fronteggApp.auth.directLoginAction(window: nil, type: type, data: data, ephemeralSession: ephemeralSession) { _ in
+        fronteggApp.auth.directLoginAction(
+            window: nil, 
+            type: type, 
+            data: data, 
+            ephemeralSession: ephemeralSession, 
+            additionalQueryParams: additionalQueryParams
+        ) { _ in
             resolver("Success")
         }
     }
