@@ -49,7 +49,12 @@ export async function directLoginAction(
   ephemeralSession: boolean = true,
   additionalQueryParams?: Record<string, string>
 ): Promise<void> {
-  return FronteggRN.directLoginAction(type, data, ephemeralSession, additionalQueryParams);
+  return FronteggRN.directLoginAction(
+    type,
+    data,
+    ephemeralSession,
+    additionalQueryParams
+  );
 }
 
 export async function loginWithPasskeys(): Promise<void> {
