@@ -146,26 +146,28 @@ class FronteggRN: RCTEventEmitter {
     }
     
     
-    @objc
-    func directLoginAction(
-        _ type: String,
-        data: String,
-        ephemeralSession: Bool,
-        additionalQueryParams: [String: String]? = nil,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: RCTPromiseRejectBlock
-    ) -> Void {
-        
-        fronteggApp.auth.directLoginAction(
-            window: nil, 
-            type: type, 
-            data: data, 
-            ephemeralSession: ephemeralSession, 
-            additionalQueryParams: additionalQueryParams
-        ) { _ in
+  @objc
+  func directLoginAction(
+      _ type: String,
+      data: String,
+      ephemeralSession: Bool,
+      additionalQueryParams: [String: String]? = nil,
+      resolver: @escaping RCTPromiseResolveBlock,
+      rejecter: @escaping RCTPromiseRejectBlock
+  ) -> Void {
+      
+      fronteggApp.auth.directLoginAction(
+          window: nil,
+          type: type,
+          data: data,
+          ephemeralSession: ephemeralSession,
+          _completion: { _ in
             resolver("Success")
-        }
-    }
+          },
+          additionalQueryParams: additionalQueryParams
+      )
+  }
+
     
     @objc
     func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
