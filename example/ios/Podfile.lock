@@ -10,11 +10,11 @@ PODS:
     - React-jsi (= 0.72.1)
     - ReactCommon/turbomodule/core (= 0.72.1)
   - fmt (6.2.1)
-  - FronteggRN (1.2.11):
-    - FronteggSwift (= 1.2.32)
+  - FronteggRN (1.2.13):
+    - FronteggSwift (= 1.2.34)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - FronteggSwift (1.2.32)
+  - FronteggSwift (1.2.34)
   - glog (0.3.5)
   - hermes-engine (0.72.1):
     - hermes-engine/Pre-built (= 0.72.1)
@@ -584,8 +584,8 @@ SPEC CHECKSUMS:
   FBLazyVector: 55cd4593d570bd9e5e227488d637ce6a9581ce51
   FBReactNativeSpec: 799b0e1a1561699cd0e424e24fe5624da38402f0
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  FronteggRN: 0fd4c3f1dca25855bb51aaff19bb57edc452719e
-  FronteggSwift: 5b377460184baa56924188cd6554e7c671cf0c99
+  FronteggRN: 5b77d04cc146acee4f7ca025c83db91db0277719
+  FronteggSwift: 6c5483852a91adecbfed1bd54f26436a6dfd5d26
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
