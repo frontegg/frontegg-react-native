@@ -15,7 +15,7 @@ This repository includes:
 - A [Setup Guide](/docs/setup.md) with detailed setup instructions
 - [Usage Examples](/docs/usage.md) with common implementation patterns
 - [Advanced Topics](/docs/advanced.md) for complex integration scenarReact Native
-- A [Embedded](/example) example projects to help you get started quickly
+- A [Embedded](https://github.com/frontegg/frontegg-react-native/tree/master/example) example projects to help you get started quickly
 
 For full documentation, visit the Frontegg Developer Portal:
 🔗 [https://developers.frontegg.com](https://developers.frontegg.com)
