@@ -11,10 +11,10 @@ single SDK.
 
 This repository includes:
 
-- A [Get Started](/docs/getting-started.md) guide for quick integration
-- A [Setup Guide](/docs/setup.md) with detailed setup instructions
-- [Usage Examples](/docs/usage.md) with common implementation patterns
-- [Advanced Topics](/docs/advanced.md) for complex integration scenarReact Native
+- A [Get Started](https://react-native-guide.frontegg.com/#/getting-started) guide for quick integration
+- A [Setup Guide](https://react-native-guide.frontegg.com/#/setup) with detailed setup instructions
+- [Usage Examples](https://react-native-guide.frontegg.com/#/usage) with common implementation patterns
+- [Advanced Topics](https://react-native-guide.frontegg.com/#/advanced) for complex integration scenarReact Native
 - A [Embedded](https://github.com/frontegg/frontegg-react-native/tree/master/example) example projects to help you get started quickly
 
 For full documentation, visit the Frontegg Developer Portal:
