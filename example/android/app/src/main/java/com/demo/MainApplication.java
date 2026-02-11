@@ -2,12 +2,16 @@ package com.frontegg.demo;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.widget.ProgressBar;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
+import com.frontegg.android.ui.DefaultLoader;
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -57,6 +61,15 @@ public class MainApplication extends Application implements ReactApplication {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
       DefaultNewArchitectureEntryPoint.load();
     }
+
     ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+
+    DefaultLoader.INSTANCE.setLoaderProvider(context -> {
+      ProgressBar progressBar = new ProgressBar(context);
+      ColorStateList colorStateList = ColorStateList.valueOf(Color.RED);
+      progressBar.setIndeterminateTintList(colorStateList);
+      return progressBar;
+    });
+
   }
 }
