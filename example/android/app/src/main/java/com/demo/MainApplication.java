@@ -62,14 +62,21 @@ public class MainApplication extends Application implements ReactApplication {
       DefaultNewArchitectureEntryPoint.load();
     }
 
-    ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+    try {
+      ReactNativeFlipper.initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
+    } catch (Exception e) {
+      // Flipper can crash on some devices/API levels; don't let it take down the app
+    }
 
-    DefaultLoader.INSTANCE.setLoaderProvider(context -> {
-      ProgressBar progressBar = new ProgressBar(context);
-      ColorStateList colorStateList = ColorStateList.valueOf(Color.RED);
-      progressBar.setIndeterminateTintList(colorStateList);
-      return progressBar;
-    });
-
+    try {
+      DefaultLoader.INSTANCE.setLoaderProvider(context -> {
+        ProgressBar progressBar = new ProgressBar(context);
+        ColorStateList colorStateList = ColorStateList.valueOf(Color.RED);
+        progressBar.setIndeterminateTintList(colorStateList);
+        return progressBar;
+      });
+    } catch (Exception e) {
+      // Don't crash if Frontegg loader setup fails
+    }
   }
 }
