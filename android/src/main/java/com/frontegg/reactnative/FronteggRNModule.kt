@@ -10,8 +10,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.frontegg.android.FronteggApp
-import com.frontegg.android.FronteggAuth
+import com.frontegg.android.fronteggAuth
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 
@@ -20,23 +19,16 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
   private val fronteggConstants: FronteggConstants
   private var disposable: Disposable? = null
+
+  private val auth get() = reactContext.applicationContext.fronteggAuth
+
   override fun getName(): String {
     return NAME
   }
 
   init {
     fronteggConstants = reactContext.fronteggConstants
-
-
-
-    FronteggApp.init(
-      fronteggConstants.baseUrl,
-      fronteggConstants.clientId,
-      reactContext.applicationContext,
-      applicationId = fronteggConstants.applicationId,
-      useAssetsLinks = fronteggConstants.useAssetsLinks,
-      useChromeCustomTabs = fronteggConstants.useChromeCustomTabs,
-    )
+    // SDK 1.3+ auto-initializes from BuildConfig when first accessing context.fronteggAuth
   }
 
   private fun sendEvent(
@@ -58,14 +50,14 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       this.disposable!!.dispose()
     }
     this.disposable = Observable.mergeArray(
-      FronteggAuth.instance.accessToken.observable,
-      FronteggAuth.instance.refreshToken.observable,
-      FronteggAuth.instance.refreshingToken.observable,
-      FronteggAuth.instance.user.observable,
-      FronteggAuth.instance.isAuthenticated.observable,
-      FronteggAuth.instance.isLoading.observable,
-      FronteggAuth.instance.initializing.observable,
-      FronteggAuth.instance.showLoader.observable,
+      auth.accessToken.observable,
+      auth.refreshToken.observable,
+      auth.refreshingToken.observable,
+      auth.user.observable,
+      auth.isAuthenticated.observable,
+      auth.isLoading.observable,
+      auth.initializing.observable,
+      auth.showLoader.observable,
     ).subscribe {
       notifyChanges()
     }
@@ -85,14 +77,14 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       return
     }
     handler.removeCallbacks(eventRunnable)
-    val accessToken = FronteggAuth.instance.accessToken.value
-    val refreshToken = FronteggAuth.instance.refreshToken.value
-    val refreshingToken = FronteggAuth.instance.refreshingToken.value
-    val user = FronteggAuth.instance.user.value
-    val isAuthenticated = FronteggAuth.instance.isAuthenticated.value
-    val isLoading = FronteggAuth.instance.isLoading.value
-    val initializing = FronteggAuth.instance.initializing.value
-    val showLoader = FronteggAuth.instance.showLoader.value
+    val accessToken = auth.accessToken.value
+    val refreshToken = auth.refreshToken.value
+    val refreshingToken = auth.refreshingToken.value
+    val user = auth.user.value
+    val isAuthenticated = auth.isAuthenticated.value
+    val isLoading = auth.isLoading.value
+    val initializing = auth.initializing.value
+    val showLoader = auth.showLoader.value
 
     val params = Arguments.createMap().apply {
 
@@ -112,7 +104,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun logout() {
-    FronteggAuth.instance.logout()
+    auth.logout()
   }
 
   @ReactMethod
@@ -128,14 +120,14 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun login(loginHint: String?, promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.login(activity!!, loginHint) {
+    auth.login(activity!!, loginHint) {
       promise.resolve("")
     }
   }
 
   @ReactMethod
   fun switchTenant(tenantId: String, promise: Promise) {
-    FronteggAuth.instance.switchTenant(tenantId) {
+    auth.switchTenant(tenantId) {
       promise.resolve(tenantId)
     }
   }
@@ -143,22 +135,22 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun directLoginAction(type: String, data: String, ephemeralSession: Boolean, promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.directLoginAction(activity!!, type, data)
+    auth.directLoginAction(activity!!, type, data)
     promise.resolve(true)
   }
 
   @ReactMethod
   fun refreshToken(promise: Promise) {
-    FronteggAuth.instance.refreshTokenIfNeeded()
+    auth.refreshTokenIfNeeded()
     promise.resolve("")
   }
 
   @ReactMethod
   fun loginWithPasskeys(promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.loginWithPasskeys(activity!!) {
-      if (it != null) {
-        promise.reject(it)
+    auth.loginWithPasskeys(activity!!) { error ->
+      if (error != null) {
+        promise.reject(error)
       } else {
         promise.resolve("")
       }
@@ -168,7 +160,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun requestAuthorize(refreshToken: String, deviceTokenCookie: String?, promise: Promise) {
     try {
-      FronteggAuth.instance.requestAuthorize(refreshToken, deviceTokenCookie) { result ->
+      auth.requestAuthorize(refreshToken, deviceTokenCookie) { result ->
         result.fold(
           onSuccess = { user ->
             promise.resolve(user.toReadableMap())
@@ -188,9 +180,9 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun registerPasskeys(promise: Promise) {
     val activity = currentActivity
-    FronteggAuth.instance.registerPasskeys(activity!!) {
-      if (it != null) {
-        promise.reject(it)
+    auth.registerPasskeys(activity!!) { error ->
+      if (error != null) {
+        promise.reject(error)
       } else {
         promise.resolve("")
       }
