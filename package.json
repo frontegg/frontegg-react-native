@@ -37,7 +37,7 @@
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build",
     "start:ios": "yarn example react-native run-ios",
     "start:android": "yarn example react-native run-android",
-    "start:android:example": "adb root 2>/dev/null; adb shell setprop metro.host localhost 2>/dev/null; adb reverse tcp:8081 tcp:8081 && adb shell pm clear com.frontegg.demo 2>/dev/null; yarn example react-native run-android --no-packager",
+    "start:android:example": "rm -rf ~/.gradle/caches/8.0.1/scripts ~/.gradle/caches/8.5/scripts 2>/dev/null; (cd example/android && ./gradlew --stop) 2>/dev/null; adb root 2>/dev/null; adb shell setprop metro.host localhost 2>/dev/null; adb reverse tcp:8081 tcp:8081 && adb shell pm clear com.frontegg.demo 2>/dev/null; yarn example react-native run-android --no-packager",
     "run:android:release": "cd example && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle && cd android && ./gradlew assembleRelease && adb install -r app/build/outputs/apk/release/app-release.apk && adb shell am start -n com.frontegg.demo/.MainActivity"
   },
   "keywords": [
