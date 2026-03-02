@@ -16,6 +16,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9FAF02B86F1794E4CE2B25FC /* libPods-ReactNativeExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 48D7E04979345AE7E4960E7D /* libPods-ReactNativeExample.a */; };
 		B24DB32AEF180101559169F0 /* libPods-ReactNativeExample-ReactNativeExampleTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2FEEAB4BC4E6A87D996DBDB /* libPods-ReactNativeExample-ReactNativeExampleTests.a */; };
+		D847CC182D99D1DA00CAB625 /* FronteggLoaderInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D847CC172D99D1D900CAB625 /* FronteggLoaderInitializer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +49,7 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ReactNativeExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A2FEEAB4BC4E6A87D996DBDB /* libPods-ReactNativeExample-ReactNativeExampleTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ReactNativeExample-ReactNativeExampleTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD982C31CEF36640C39F4113 /* Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-ReactNativeExample-ReactNativeExampleTests/Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
+		D847CC172D99D1D900CAB625 /* FronteggLoaderInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FronteggLoaderInitializer.swift; sourceTree = "<group>"; };
 		DBD4E57CAF9F6DF06DB159C4 /* Pods-ReactNativeExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReactNativeExample.debug.xcconfig"; path = "Target Support Files/Pods-ReactNativeExample/Pods-ReactNativeExample.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -92,6 +94,7 @@
 		13B07FAE1A68108700A75B9A /* ReactNativeExample */ = {
 			isa = PBXGroup;
 			children = (
+				D847CC172D99D1D900CAB625 /* FronteggLoaderInitializer.swift */,
 				41E63BA72A5430AB00BF6DE4 /* ReactNativeExample.entitlements */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
@@ -425,6 +428,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				41872B5B2AFBC5CF0014FB13 /* FronteggSwiftAdapter.swift in Sources */,
+				D847CC182D99D1DA00CAB625 /* FronteggLoaderInitializer.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
