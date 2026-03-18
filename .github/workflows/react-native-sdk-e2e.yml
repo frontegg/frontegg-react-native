@@ -1,0 +1,18 @@
+# Runs React Native SDK E2E tests from e2e-system-tests on every PR.
+# The check runs in the e2e-system-tests repo and reports back here; merge is blocked until it passes.
+# Require this check in branch protection: Settings → Branches → rule → "React Native SDK E2E".
+
+name: React Native SDK E2E
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  react-native-sdk-e2e:
+    name: React Native SDK E2E
+    uses: frontegg/e2e-system-tests/.github/workflows/react-native-sdk-e2e-reusable.yml@main
+    with:
+      repo_ref: ${{ github.event.pull_request.head.sha }}
+      test_suite: hosted:no-social
+    secrets: inherit
