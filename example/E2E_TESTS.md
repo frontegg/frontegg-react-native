@@ -15,9 +15,11 @@ The test suites mirror the patterns used by the sibling native SDKs:
 - **iOS** — XCUITest, mirroring
   [`frontegg-ios-swift/demo-embedded/demo-embedded-e2e`](https://github.com/frontegg/frontegg-ios-swift/tree/master/demo-embedded/demo-embedded-e2e).
 
-Both suites drive the real Frontegg backend using the shared credentials the
-example app is already wired to
-(`app-x4gr8g28fxr5.frontegg.com`, clientId `5f493de4-01c5-4a61-8642-fca650a6a9dc`).
+Both suites drive the real Frontegg backend using whatever credentials the
+example app is wired to in `example/android/app/build.gradle` and
+`example/ios/Frontegg.plist` — the tests themselves are credential-agnostic
+and only need the test-user values exported via the environment variables
+listed below.
 
 ---
 
