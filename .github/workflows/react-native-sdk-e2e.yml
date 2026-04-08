@@ -11,7 +11,7 @@ on:
 jobs:
   react-native-sdk-e2e:
     name: React Native SDK E2E
-    uses: frontegg/e2e-system-tests/.github/workflows/react-native-sdk-e2e-reusable.yml@main
+    uses: frontegg/e2e-system-tests/.github/workflows/react-native-sdk-e2e-reusable.yml@master
     with:
       repo_ref: ${{ github.event.pull_request.head.sha }}
       test_suite: hosted:no-social
