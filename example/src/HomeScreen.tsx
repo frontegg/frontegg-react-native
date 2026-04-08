@@ -23,22 +23,35 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>React Native Example</Text>
 
-      <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
-      <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
-      <Text>isLoading: {state.isLoading ? 'true' : 'false'}</Text>
-      <Text>isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}</Text>
-      <Text>Active Tenant: {state.user?.activeTenant.name}</Text>
-      <Text>refreshToken: {state.refreshToken}</Text>
-      <Text>
+      <Text testID="showLoaderValue">
+        showLoader: {state.showLoader ? 'true' : 'false'}
+      </Text>
+      <Text testID="initializingValue">
+        initializing: {state.initializing ? 'true' : 'false'}
+      </Text>
+      <Text testID="isLoadingValue">
+        isLoading: {state.isLoading ? 'true' : 'false'}
+      </Text>
+      <Text testID="isAuthenticatedValue">
+        isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}
+      </Text>
+      <Text testID="activeTenantValue">
+        Active Tenant: {state.user?.activeTenant.name}
+      </Text>
+      <Text testID="refreshTokenValue">refreshToken: {state.refreshToken}</Text>
+      <Text testID="accessTokenValue">
         accessToken:{' '}
         {state.accessToken
           ? state.accessToken.substring(state.accessToken.length - 40)
           : ''}
       </Text>
-      <Text>user: {state.user ? state.user.email : 'Not Logged in'}</Text>
+      <Text testID="userEmailValue">
+        user: {state.user ? state.user.email : 'Not Logged in'}
+      </Text>
 
       <View style={styles.listenerButton}>
         <Button
+          testID={state.isAuthenticated ? 'logoutButton' : 'loginButton'}
           color={state.isAuthenticated ? '#FF0000' : '#000000'}
           title={state.isAuthenticated ? 'Logout' : 'Login'}
           onPress={() => {
@@ -50,6 +63,7 @@ export default function HomeScreen() {
       {state.isAuthenticated ? null : (
         <View style={styles.listenerButton}>
           <Button
+            testID="loginWithGoogleButton"
             color={'#000000'}
             title={'Login with google'}
             onPress={() => {
@@ -60,6 +74,7 @@ export default function HomeScreen() {
       )}
       <View style={styles.listenerButton}>
         <Button
+          testID="requestAuthorizeButton"
           title={'Request Authorization'}
           onPress={async () => {
             try {
@@ -78,6 +93,7 @@ export default function HomeScreen() {
       {state.isAuthenticated ? (
         <View style={styles.listenerButton}>
           <Button
+            testID="registerPasskeysButton"
             color={'#000000'}
             title={'Register Passkeys'}
             onPress={() => {
@@ -94,6 +110,7 @@ export default function HomeScreen() {
       ) : (
         <View style={styles.listenerButton}>
           <Button
+            testID="loginWithPasskeysButton"
             color={'#000000'}
             title={'Login with Passkeys'}
             onPress={() => {
@@ -111,6 +128,7 @@ export default function HomeScreen() {
 
       <View style={styles.listenerButton}>
         <Button
+          testID="refreshTokenButton"
           title={'Refresh Token'}
           onPress={() => {
             refreshToken();
@@ -125,6 +143,7 @@ export default function HomeScreen() {
         .map((tenant: ITenantsResponse) => (
           <View key={tenant.tenantId} style={styles.tenantRow}>
             <Button
+              testID={`tenantSwitchButton-${tenant.tenantId}`}
               title={`${tenant.name} ${
                 tenant.tenantId === switching
                   ? ' (switching...)'

@@ -6,7 +6,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.listenerButton}>
-        <Button title={'Test'} onPress={() => {}} />
+        <Button testID="profileTestButton" title={'Test'} onPress={() => {}} />
       </View>
     </View>
   );
