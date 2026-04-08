@@ -1,12 +1,6 @@
 import * as React from 'react';
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 
 type ButtonVariant = 'primary' | 'danger' | 'outline';
 
