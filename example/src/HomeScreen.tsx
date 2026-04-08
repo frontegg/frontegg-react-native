@@ -140,7 +140,10 @@ export default function HomeScreen() {
                 }`.trim()}
                 disabled={tenant.tenantId === switching}
                 onPress={() => {
-                  console.log(tenant.tenantId, state.user?.activeTenant.tenantId);
+                  console.log(
+                    tenant.tenantId,
+                    state.user?.activeTenant.tenantId
+                  );
                   setSwitching(tenant.tenantId);
                   switchTenant(tenant.tenantId).then(() => {
                     setSwitching('');

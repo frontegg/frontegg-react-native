@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Pressable, StyleProp, Text, TextStyle, ViewStyle } from 'react-native';
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 
 type ButtonVariant = 'primary' | 'danger' | 'outline';
 
@@ -35,14 +42,22 @@ export default function FronteggButton({
   const backgroundColor = disabled
     ? COLORS.gray
     : isOutline
-      ? '#FFFFFF'
-      : isDanger
-        ? COLORS.danger
-        : COLORS.primary;
+    ? '#FFFFFF'
+    : isDanger
+    ? COLORS.danger
+    : COLORS.primary;
 
-  const borderColor = disabled ? COLORS.gray : isOutline ? COLORS.gray : 'transparent';
+  const borderColor = disabled
+    ? COLORS.gray
+    : isOutline
+    ? COLORS.gray
+    : 'transparent';
 
-  const color = disabled ? COLORS.text : isOutline ? COLORS.text : COLORS.primaryText;
+  const color = disabled
+    ? COLORS.text
+    : isOutline
+    ? COLORS.text
+    : COLORS.primaryText;
 
   return (
     <Pressable
@@ -67,20 +82,14 @@ export default function FronteggButton({
         style,
       ]}
     >
-      <Text
-        style={[
-          {
-            fontSize: 16,
-            fontWeight: '600',
-            letterSpacing: 0.01,
-            color,
-          },
-          textStyle,
-        ]}
-      >
-        {title}
-      </Text>
+      <Text style={[styles.text, { color }, textStyle]}>{title}</Text>
     </Pressable>
   );
 }
-
+const styles = StyleSheet.create({
+  text: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.01,
+  },
+});
