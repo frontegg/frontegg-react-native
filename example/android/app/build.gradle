@@ -68,8 +68,9 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-def fronteggDomain = "app-x4gr8g28fxr5.frontegg.com"
-def fronteggClientId = "5f493de4-01c5-4a61-8642-fca650a6a9dc"
+def fronteggDomain = "autheu.davidantoon.me"
+def fronteggClientId = "b6adfe4c-d695-4c04-b95f-3ec9fd0c6cca"
+def fronteggApplicationId = "7ae7de24-99f7-4880-a325-1b638ad933ee"
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -92,6 +93,7 @@ android {
 
         buildConfigField "String", 'FRONTEGG_DOMAIN', "\"$fronteggDomain\""
         buildConfigField "String", 'FRONTEGG_CLIENT_ID', "\"$fronteggClientId\""
+        buildConfigField "String", 'FRONTEGG_APPLICATION_ID', "\"$fronteggApplicationId\""
         buildConfigField "Boolean", 'FRONTEGG_USE_ASSETS_LINKS', "true"
         buildConfigField "Boolean", 'FRONTEGG_USE_CHROME_CUSTOM_TABS', "true"
     }
