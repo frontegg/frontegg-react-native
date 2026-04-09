@@ -1,12 +1,12 @@
-# Local Android E2E tests for the React Native example app.
-# Mirrors frontegg-android-kotlin's demo-e2e.yml: builds the example app,
-# boots an emulator, runs the UiAutomator instrumentation tests, and reports
-# JUnit results as a PR check.
+# Local E2E tests for the React Native example app (Android + iOS).
+# Mirrors frontegg-android-kotlin's demo-e2e.yml and frontegg-ios-swift's
+# demo-e2e.yml: builds the example app, boots a device/simulator, runs the
+# instrumented tests, and reports results as PR checks.
 #
 # The previous cross-repo call to e2e-system-tests was never functional
 # (0-second failure on every run since the workflow was created) due to
 # GitHub's private-repo reusable-workflow access restrictions. This replaces
-# it with a self-contained local suite that actually runs.
+# it with self-contained local suites that actually run.
 
 name: React Native SDK E2E
 
@@ -20,6 +20,9 @@ permissions:
   checks: write
 
 jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Android — UiAutomator on an API 34 emulator
+  # ──────────────────────────────────────────────────────────────────────
   android-e2e:
     name: Android E2E
     runs-on: ubuntu-latest
@@ -140,7 +143,7 @@ jobs:
         if: always()
         with:
           report_paths: e2e-artifacts/*.xml
-          check_name: React Native SDK E2E
+          check_name: Android E2E
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
@@ -148,4 +151,77 @@ jobs:
         with:
           name: android-e2e-results
           path: e2e-artifacts/
+          if-no-files-found: ignore
+
+  # ──────────────────────────────────────────────────────────────────────
+  # iOS — XCUITest on an iPhone simulator (macOS runner)
+  # Mirrors frontegg-ios-swift's demo-e2e.yml.
+  # ──────────────────────────────────────────────────────────────────────
+  ios-e2e:
+    name: iOS E2E
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      LOGIN_EMAIL: ${{ secrets.E2E_LOGIN_EMAIL }}
+      LOGIN_PASSWORD: ${{ secrets.E2E_LOGIN_PASSWORD }}
+      LOGIN_WRONG_PASSWORD: ${{ secrets.E2E_LOGIN_WRONG_PASSWORD }}
+      TENANT_NAME_1: ${{ secrets.E2E_TENANT_NAME_1 }}
+      TENANT_NAME_2: ${{ secrets.E2E_TENANT_NAME_2 }}
+      GOOGLE_EMAIL: ${{ secrets.E2E_GOOGLE_EMAIL }}
+      GOOGLE_PASSWORD: ${{ secrets.E2E_GOOGLE_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install JS dependencies
+        run: |
+          yarn install --frozen-lockfile
+          cd example && yarn install --frozen-lockfile
+
+      - name: Install CocoaPods dependencies
+        working-directory: example/ios
+        run: pod install
+
+      - name: Build for testing
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            build-for-testing \
+            -workspace ReactNativeExample.xcworkspace \
+            -scheme ReactNativeExample \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Run UI tests
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            test-without-building \
+            -workspace ReactNativeExample.xcworkspace \
+            -scheme ReactNativeExample \
+            -only-testing:ReactNativeExampleUITests \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/ios-e2e.xcresult" \
+            -parallel-testing-enabled NO \
+            2>&1 | tee "$RUNNER_TEMP/test.log"
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-e2e-results
+          path: |
+            ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/test.log
+            ${{ runner.temp }}/ios-e2e.xcresult
           if-no-files-found: ignore
