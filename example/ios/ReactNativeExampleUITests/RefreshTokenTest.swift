@@ -1,29 +1,25 @@
 import XCTest
 
-/// New coverage — the Refresh Token button was flagged as untested in
-/// docs/E2E_REACT_NATIVE_TESTS_REVIEW.md §5.4.
 final class RefreshTokenTest: UITestCase {
     func test_refresh_token_rotates_access_token() throws {
         launchApp()
-        loginWithPassword(email: env("LOGIN_EMAIL"), password: env("LOGIN_PASSWORD"))
+        loginWithPassword()
 
-        let before = app.staticTexts["accessTokenValue"].label
+        let tokenLabel = app.staticTexts["accessTokenValue"]
+        let before = tokenLabel.label
+
         app.buttons["refreshTokenButton"].tap()
 
         let deadline = Date().addingTimeInterval(15)
         var after = before
         while Date() < deadline {
-            after = app.staticTexts["accessTokenValue"].label
+            after = tokenLabel.label
             if after != before { break }
             RunLoop.current.run(until: Date().addingTimeInterval(0.25))
         }
 
-        XCTAssertNotEqual(
-            before, after,
-            "Expected access token to change after tapping Refresh Token"
-        )
+        XCTAssertNotEqual(before, after, "Access token should change after refresh")
         XCTAssertTrue(app.buttons["logoutButton"].exists)
-
         logoutAndAssert()
     }
 }

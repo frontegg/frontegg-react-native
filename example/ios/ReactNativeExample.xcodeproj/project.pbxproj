@@ -11,6 +11,7 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		176C4DEA5716A6804C3AB052 /* FronteggTest.plist in Resources */ = {isa = PBXBuildFile; fileRef = B7E1F45B4381E4879975EFD4 /* FronteggTest.plist */; };
 		2364A654C2620568CCB5905F /* LoginViaGoogleTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D8EC2BCDE8109CD5250BE9C /* LoginViaGoogleTest.swift */; };
 		2822482AD2C62796C19C3E56 /* RefreshTokenTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C418CD51C97A3E993F11D75B /* RefreshTokenTest.swift */; };
 		2EB32FAA1723BA7334722AD8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54F84B30B8F4920EC3095790 /* Foundation.framework */; };
@@ -19,6 +20,7 @@
 		41E63BA62A52DA4E00BF6DE4 /* Frontegg.plist in Resources */ = {isa = PBXBuildFile; fileRef = 41E63BA52A52DA4E00BF6DE4 /* Frontegg.plist */; };
 		785C8E261D7641A52AD008EF /* PasskeysLoginTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F0AC25298FE3333A55BC3AE /* PasskeysLoginTest.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		9F65A4D6A610BC2175C18F00 /* LocalMockAuthServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB8CC355FF29D7B9E8A7D43 /* LocalMockAuthServer.swift */; };
 		9FAF02B86F1794E4CE2B25FC /* libPods-ReactNativeExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 48D7E04979345AE7E4960E7D /* libPods-ReactNativeExample.a */; };
 		A99DAF81D9CC5A9E34268431 /* PasskeysRegisterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5729DAA2E10288041FC896 /* PasskeysRegisterTest.swift */; };
 		B24DB32AEF180101559169F0 /* libPods-ReactNativeExample-ReactNativeExampleTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2FEEAB4BC4E6A87D996DBDB /* libPods-ReactNativeExample-ReactNativeExampleTests.a */; };
@@ -74,9 +76,11 @@
 		8D8EC2BCDE8109CD5250BE9C /* LoginViaGoogleTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginViaGoogleTest.swift; sourceTree = "<group>"; };
 		8F0AC25298FE3333A55BC3AE /* PasskeysLoginTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PasskeysLoginTest.swift; sourceTree = "<group>"; };
 		A2FEEAB4BC4E6A87D996DBDB /* libPods-ReactNativeExample-ReactNativeExampleTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ReactNativeExample-ReactNativeExampleTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7E1F45B4381E4879975EFD4 /* FronteggTest.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = FronteggTest.plist; sourceTree = "<group>"; };
 		BB2DCE1938B63097A1D39D4C /* LoginViaEmailAndPasswordTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LoginViaEmailAndPasswordTest.swift; sourceTree = "<group>"; };
 		C153F4831CA2EAA69EE5D2E6 /* SwitchTenantTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SwitchTenantTest.swift; sourceTree = "<group>"; };
 		C418CD51C97A3E993F11D75B /* RefreshTokenTest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RefreshTokenTest.swift; sourceTree = "<group>"; };
+		CBB8CC355FF29D7B9E8A7D43 /* LocalMockAuthServer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocalMockAuthServer.swift; sourceTree = "<group>"; };
 		CD982C31CEF36640C39F4113 /* Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-ReactNativeExample-ReactNativeExampleTests/Pods-ReactNativeExample-ReactNativeExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		D847CC172D99D1D900CAB625 /* FronteggLoaderInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FronteggLoaderInitializer.swift; sourceTree = "<group>"; };
 		DBD4E57CAF9F6DF06DB159C4 /* Pods-ReactNativeExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ReactNativeExample.debug.xcconfig"; path = "Target Support Files/Pods-ReactNativeExample/Pods-ReactNativeExample.debug.xcconfig"; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				B032B2539FBF81902D9043BA /* ReactNativeExampleUITests */,
+				B7E1F45B4381E4879975EFD4 /* FronteggTest.plist */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -214,6 +219,7 @@
 				C153F4831CA2EAA69EE5D2E6 /* SwitchTenantTest.swift */,
 				3DB824CE732E6D3031A15D3B /* UITestCase.swift */,
 				4FADE62DC05ADAB12DBFEDF0 /* Info.plist */,
+				CBB8CC355FF29D7B9E8A7D43 /* LocalMockAuthServer.swift */,
 			);
 			name = ReactNativeExampleUITests;
 			path = ReactNativeExampleUITests;
@@ -351,6 +357,7 @@
 				41E63BA62A52DA4E00BF6DE4 /* Frontegg.plist in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				176C4DEA5716A6804C3AB052 /* FronteggTest.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,6 +554,7 @@
 				C9A3C60EF37389A5270D5336 /* SessionRestoreTest.swift in Sources */,
 				F920BE6712AB97EC19C5FB05 /* SwitchTenantTest.swift in Sources */,
 				31B5A469F30019F99B7A84DB /* UITestCase.swift in Sources */,
+				9F65A4D6A610BC2175C18F00 /* LocalMockAuthServer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

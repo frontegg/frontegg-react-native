@@ -1,16 +1,36 @@
 import XCTest
 
-/// Base class for the React Native example app UI tests.
+/// Base class for React Native example app UI tests.
 ///
-/// Mirrors the pattern from `frontegg-ios-swift`'s
-/// `DemoEmbeddedUITestCase.swift`, scaled down for the RN example app which
-/// drives the hosted Frontegg login flow with real credentials supplied via
-/// `launchEnvironment`. See `example/E2E_TESTS.md` for how to run.
+/// Mirrors the `MockServerTestCase` from frontegg-ionic-capacitor and
+/// `DemoEmbeddedUITestCase` from frontegg-ios-swift.  Starts a
+/// `LocalMockAuthServer` once per test class.  Each test launches the
+/// app with `frontegg-testing=true` so FronteggSwift reads
+/// `FronteggTest.plist` (baseUrl → mock server at 127.0.0.1:49381).
 class UITestCase: XCTestCase {
+    static var server: LocalMockAuthServer!
     var app: XCUIApplication!
+
+    // MARK: - Class lifecycle (mock server)
+
+    override class func setUp() {
+        super.setUp()
+        if server == nil {
+            server = try! LocalMockAuthServer()
+        }
+    }
+
+    override class func tearDown() {
+        server?.stop()
+        server = nil
+        super.tearDown()
+    }
+
+    // MARK: - Per-test lifecycle
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        try Self.server.reset()
     }
 
     override func tearDownWithError() throws {
@@ -20,40 +40,23 @@ class UITestCase: XCTestCase {
     // MARK: - Launch
 
     @discardableResult
-    func launchApp() -> XCUIApplication {
+    func launchApp(resetState: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
-        // Forward the credentials injected by `xcodebuild ... -testPlan` or the
-        // exporting shell into the app — they are only used inside this test
-        // target, never read by the shipping app.
-        for key in [
-            "LOGIN_EMAIL", "LOGIN_PASSWORD", "LOGIN_WRONG_PASSWORD",
-            "TENANT_NAME_1", "TENANT_NAME_2",
-            "GOOGLE_EMAIL", "GOOGLE_PASSWORD",
-        ] {
-            if let value = ProcessInfo.processInfo.environment[key] {
-                app.launchEnvironment[key] = value
-            }
-        }
+        app.launchEnvironment = Self.server.launchEnvironment(resetState: resetState)
         app.launch()
         self.app = app
         return app
     }
 
-    // MARK: - Env
-
-    func env(_ key: String, file: StaticString = #filePath, line: UInt = #line) -> String {
-        guard let value = ProcessInfo.processInfo.environment[key], !value.isEmpty else {
-            XCTFail("Missing required environment variable: \(key)", file: file, line: line)
-            return ""
-        }
-        return value
-    }
-
     // MARK: - Waits
 
     @discardableResult
-    func waitFor(_ element: XCUIElement, timeout: TimeInterval = 20,
-                 file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+    func waitFor(
+        _ element: XCUIElement,
+        timeout: TimeInterval = 20,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> XCUIElement {
         XCTAssertTrue(
             element.waitForExistence(timeout: timeout),
             "Element did not appear: \(element)",
@@ -68,31 +71,49 @@ class UITestCase: XCTestCase {
         return element.waitForExistence(timeout: timeout)
     }
 
-    // MARK: - High-level flows
+    // MARK: - Login flow (via mock hosted login webview)
 
-    func tapLoginButton() {
+    /// Taps the Login button and drives the mock hosted login form.
+    /// Email defaults to "test@frontegg.com", password to "Testpassword1!".
+    func loginWithPassword(
+        email: String = "test@frontegg.com",
+        password: String = "Testpassword1!"
+    ) {
+        // Tap the RN app's Login button
         waitFor(app.buttons["loginButton"]).tap()
-    }
 
-    func loginWithPassword(email: String, password: String) {
-        tapLoginButton()
+        // Handle ASWebAuthenticationSession consent alert
+        addUIInterruptionMonitor(withDescription: "ASWebAuth consent") { alert in
+            let continueButton = alert.buttons["Continue"]
+            if continueButton.exists {
+                continueButton.tap()
+                return true
+            }
+            return false
+        }
+        app.tap() // nudge the interruption monitor
 
-        // The hosted login form is inside a WKWebView. Use web descendants.
-        let emailField = app.webViews.textFields.firstMatch
-        _ = emailField.waitForExistence(timeout: 20)
+        // Drive the mock hosted login WebView
+        let webView = app.webViews.firstMatch
+        _ = webView.waitForExistence(timeout: 20)
+
+        let emailField = webView.textFields.firstMatch
+        _ = emailField.waitForExistence(timeout: 10)
         emailField.tap()
         emailField.typeText(email)
 
-        app.webViews.buttons["Continue"].firstMatch.tap()
+        let continueBtn = webView.buttons["Continue"]
+        _ = continueBtn.waitForExistence(timeout: 5)
+        continueBtn.tap()
 
-        let passwordField = app.webViews.secureTextFields.firstMatch
-        _ = passwordField.waitForExistence(timeout: 20)
+        let passwordField = webView.secureTextFields.firstMatch
+        _ = passwordField.waitForExistence(timeout: 10)
         passwordField.tap()
         passwordField.typeText(password)
 
-        app.webViews.buttons["Sign in"].firstMatch.tap()
+        webView.buttons["Sign in"].tap()
 
-        // Back on the native HomeScreen — logout button present.
+        // Wait until we're back on the native screen, authenticated.
         waitFor(app.buttons["logoutButton"], timeout: 30)
     }
 

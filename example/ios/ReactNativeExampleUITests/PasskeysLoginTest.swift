@@ -1,9 +1,5 @@
 import XCTest
 
-/// New coverage — passkey login gap flagged in
-/// docs/E2E_REACT_NATIVE_TESTS_REVIEW.md §4. Smoke test only: verifies the
-/// button exists on the unauthenticated HomeScreen and tapping it does not
-/// crash the app.
 final class PasskeysLoginTest: UITestCase {
     func test_login_with_passkeys_button_is_reachable() throws {
         launchApp()
@@ -13,12 +9,10 @@ final class PasskeysLoginTest: UITestCase {
         button.tap()
 
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let cancel = springboard.buttons["Cancel"]
-        if cancel.waitForExistence(timeout: 3) {
-            cancel.tap()
+        if springboard.buttons["Cancel"].waitForExistence(timeout: 3) {
+            springboard.buttons["Cancel"].tap()
         }
 
-        // App still alive, still on the unauthenticated HomeScreen.
         XCTAssertTrue(app.buttons["loginButton"].waitForExistence(timeout: 10))
     }
 }
