@@ -3,7 +3,7 @@ import XCTest
 final class RefreshTokenTest: UITestCase {
     func test_refresh_token_rotates_access_token() throws {
         launchApp()
-        loginWithPassword()
+        try loginWithPassword()
 
         let tokenLabel = app.staticTexts["accessTokenValue"]
         let before = tokenLabel.label

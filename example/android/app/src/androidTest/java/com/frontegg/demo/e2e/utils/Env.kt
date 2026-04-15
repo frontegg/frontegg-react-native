@@ -22,7 +22,9 @@ object Env {
     val googleEmail: String get() = get("GOOGLE_EMAIL")
     val googlePassword: String get() = get("GOOGLE_PASSWORD")
 
+    fun isAvailable(vararg names: String): Boolean =
+        names.all { InstrumentationRegistry.getArguments().getString(it)?.isNotEmpty() == true }
+
     private fun get(name: String): String =
-        InstrumentationRegistry.getArguments().getString(name)
-            ?: error("Missing instrumentation argument: $name")
+        InstrumentationRegistry.getArguments().getString(name) ?: ""
 }

@@ -7,6 +7,7 @@ import com.frontegg.demo.e2e.utils.UiTestInstrumentation
 import com.frontegg.demo.e2e.utils.delay
 import com.frontegg.demo.e2e.utils.loginWithPassword
 import com.frontegg.demo.e2e.utils.logoutAndAssert
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +24,7 @@ class RefreshTokenTest {
 
     @Before
     fun setUp() {
+        assumeTrue("LOGIN_EMAIL and LOGIN_PASSWORD required", Env.isAvailable("LOGIN_EMAIL", "LOGIN_PASSWORD"))
         ui = UiTestInstrumentation()
         ui.openApp()
     }

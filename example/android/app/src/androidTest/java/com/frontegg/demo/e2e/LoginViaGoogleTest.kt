@@ -6,6 +6,7 @@ import com.frontegg.demo.e2e.utils.Env
 import com.frontegg.demo.e2e.utils.UiTestInstrumentation
 import com.frontegg.demo.e2e.utils.delay
 import com.frontegg.demo.e2e.utils.logoutAndAssert
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,6 +22,7 @@ class LoginViaGoogleTest {
 
     @Before
     fun setUp() {
+        assumeTrue("GOOGLE_EMAIL and GOOGLE_PASSWORD required", Env.isAvailable("GOOGLE_EMAIL", "GOOGLE_PASSWORD"))
         ui = UiTestInstrumentation()
         ui.openApp()
     }

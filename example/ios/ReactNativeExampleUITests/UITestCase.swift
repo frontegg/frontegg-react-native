@@ -2,11 +2,16 @@ import XCTest
 
 /// Base class for React Native example app UI tests.
 ///
-/// Mirrors the `MockServerTestCase` from frontegg-ionic-capacitor and
-/// `DemoEmbeddedUITestCase` from frontegg-ios-swift.  Starts a
-/// `LocalMockAuthServer` once per test class.  Each test launches the
-/// app with `frontegg-testing=true` so FronteggSwift reads
-/// `FronteggTest.plist` (baseUrl → mock server at 127.0.0.1:49381).
+/// Starts a `LocalMockAuthServer` once per test class. The app is launched
+/// with `frontegg-testing=true` so FronteggSwift reads `FronteggTest.plist`,
+/// and `FRONTEGG_E2E_BASE_URL` / `FRONTEGG_E2E_CLIENT_ID` redirect the SDK
+/// to the mock server at localhost:49381.
+///
+/// Login-dependent tests drive the hosted login form via
+/// ASWebAuthenticationSession. When `LOGIN_EMAIL` and `LOGIN_PASSWORD` env
+/// vars are set (CI / local `.env`), real Frontegg is used for the login
+/// WebView while the SDK itself talks to the mock server. When the vars are
+/// absent, login tests are skipped with `XCTSkip`.
 class UITestCase: XCTestCase {
     static var server: LocalMockAuthServer!
     var app: XCUIApplication!
@@ -42,7 +47,10 @@ class UITestCase: XCTestCase {
     @discardableResult
     func launchApp(resetState: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchEnvironment = Self.server.launchEnvironment(resetState: resetState)
+        app.launchEnvironment = Self.server.launchEnvironment(
+            resetState: resetState,
+            useTestingWebAuthenticationTransport: false
+        )
         app.launch()
         self.app = app
         return app
@@ -71,45 +79,61 @@ class UITestCase: XCTestCase {
         return element.waitForExistence(timeout: timeout)
     }
 
-    // MARK: - Login flow (via mock hosted login webview)
+    // MARK: - Login flow (via ASWebAuthenticationSession)
 
-    /// Taps the Login button and drives the mock hosted login form.
-    /// Email defaults to "test@frontegg.com", password to "Testpassword1!".
+    /// Taps the Login button, dismisses the ASWebAuth consent alert,
+    /// and fills the hosted login form with the provided credentials.
+    ///
+    /// Requires `LOGIN_EMAIL` and `LOGIN_PASSWORD` environment variables.
+    /// Throws `XCTSkip` if credentials are not available.
     func loginWithPassword(
-        email: String = "test@frontegg.com",
-        password: String = "Testpassword1!"
-    ) {
+        email: String? = nil,
+        password: String? = nil
+    ) throws {
+        let resolvedEmail = email ?? ProcessInfo.processInfo.environment["LOGIN_EMAIL"]
+        let resolvedPassword = password ?? ProcessInfo.processInfo.environment["LOGIN_PASSWORD"]
+
+        guard let loginEmail = resolvedEmail, !loginEmail.isEmpty,
+              let loginPassword = resolvedPassword, !loginPassword.isEmpty else {
+            throw XCTSkip("LOGIN_EMAIL and LOGIN_PASSWORD env vars required for login tests")
+        }
+
         // Tap the RN app's Login button
         waitFor(app.buttons["loginButton"]).tap()
 
         // Handle ASWebAuthenticationSession consent alert
-        addUIInterruptionMonitor(withDescription: "ASWebAuth consent") { alert in
-            let continueButton = alert.buttons["Continue"]
-            if continueButton.exists {
-                continueButton.tap()
-                return true
-            }
-            return false
-        }
-        app.tap() // nudge the interruption monitor
+        acceptSystemDialogIfNeeded()
 
-        // Drive the mock hosted login WebView
+        // The hosted login opens in ASWebAuthenticationSession. On iOS 17+
+        // the webview content IS accessible via app.webViews.
         let webView = app.webViews.firstMatch
-        _ = webView.waitForExistence(timeout: 20)
+        guard webView.waitForExistence(timeout: 30) else {
+            XCTFail("Hosted login web view did not appear")
+            return
+        }
 
         let emailField = webView.textFields.firstMatch
-        _ = emailField.waitForExistence(timeout: 10)
+        guard emailField.waitForExistence(timeout: 15) else {
+            XCTFail("Email field not found in hosted login")
+            return
+        }
         emailField.tap()
-        emailField.typeText(email)
+        emailField.typeText(loginEmail)
 
         let continueBtn = webView.buttons["Continue"]
-        _ = continueBtn.waitForExistence(timeout: 5)
+        guard continueBtn.waitForExistence(timeout: 5) else {
+            XCTFail("Continue button not found")
+            return
+        }
         continueBtn.tap()
 
         let passwordField = webView.secureTextFields.firstMatch
-        _ = passwordField.waitForExistence(timeout: 10)
+        guard passwordField.waitForExistence(timeout: 15) else {
+            XCTFail("Password field not found in hosted login")
+            return
+        }
         passwordField.tap()
-        passwordField.typeText(password)
+        passwordField.typeText(loginPassword)
 
         webView.buttons["Sign in"].tap()
 
@@ -120,5 +144,21 @@ class UITestCase: XCTestCase {
     func logoutAndAssert() {
         app.buttons["logoutButton"].tap()
         waitFor(app.buttons["loginButton"], timeout: 15)
+    }
+
+    func acceptSystemDialogIfNeeded(timeout: TimeInterval = 5) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let deadline = Date().addingTimeInterval(timeout)
+        let buttonTitles = ["Continue", "Open", "Allow", "OK"]
+        while Date() < deadline {
+            for title in buttonTitles {
+                let button = springboard.buttons[title]
+                if button.exists {
+                    button.tap()
+                    return
+                }
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
     }
 }

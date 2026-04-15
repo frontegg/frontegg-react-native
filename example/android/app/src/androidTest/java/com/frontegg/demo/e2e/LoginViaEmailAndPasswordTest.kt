@@ -7,21 +7,18 @@ import com.frontegg.demo.e2e.utils.UiTestInstrumentation
 import com.frontegg.demo.e2e.utils.loginWithPassword
 import com.frontegg.demo.e2e.utils.logoutAndAssert
 import com.frontegg.demo.e2e.utils.tapLoginButton
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Mirrors frontegg-android-kotlin's LoginViaEmailAndPasswordTest.kt against the
- * React Native example app. Uses real Frontegg credentials supplied via
- * instrumentation arguments (see example/E2E_TESTS.md).
- */
 @RunWith(AndroidJUnit4::class)
 class LoginViaEmailAndPasswordTest {
     private lateinit var ui: UiTestInstrumentation
 
     @Before
     fun setUp() {
+        assumeTrue("LOGIN_EMAIL and LOGIN_PASSWORD required", Env.isAvailable("LOGIN_EMAIL", "LOGIN_PASSWORD"))
         ui = UiTestInstrumentation()
         ui.openApp()
     }
@@ -29,8 +26,6 @@ class LoginViaEmailAndPasswordTest {
     @Test
     fun success_login_via_email_and_password() {
         ui.loginWithPassword(Env.loginEmail, Env.loginPassword)
-        // Authenticated state is asserted inside loginWithPassword via the
-        // logoutButton being visible. Email should also now be rendered.
         check(ui.waitForText(Env.loginEmail)) {
             "Expected logged-in email ${Env.loginEmail} to be rendered on HomeScreen"
         }
@@ -39,6 +34,7 @@ class LoginViaEmailAndPasswordTest {
 
     @Test
     fun failure_login_via_email_and_wrong_password() {
+        assumeTrue("LOGIN_WRONG_PASSWORD required", Env.isAvailable("LOGIN_WRONG_PASSWORD"))
         ui.tapLoginButton()
         ui.inputTextByIndex(0, Env.loginEmail)
         ui.clickByTextOrFail("Continue")

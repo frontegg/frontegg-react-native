@@ -5,6 +5,7 @@ import com.frontegg.demo.e2e.utils.Env
 import com.frontegg.demo.e2e.utils.UiTestInstrumentation
 import com.frontegg.demo.e2e.utils.loginWithPassword
 import com.frontegg.demo.e2e.utils.logoutAndAssert
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,6 +17,7 @@ class SwitchTenantTest {
 
     @Before
     fun setUp() {
+        assumeTrue("TENANT_NAME_1 and TENANT_NAME_2 required", Env.isAvailable("LOGIN_EMAIL", "LOGIN_PASSWORD", "TENANT_NAME_1", "TENANT_NAME_2"))
         ui = UiTestInstrumentation()
         ui.openApp()
     }

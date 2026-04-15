@@ -127,9 +127,8 @@ fun delay(ms: Long = 1_000L) = SystemClock.sleep(ms)
  * High-level helpers matching the reference repo's `Utils.kt` style.
  */
 fun UiTestInstrumentation.tapLoginButton() {
-    clickByTestId("loginButton")
-    // The RN SDK opens a Chrome Custom Tab / WebView with the hosted login form.
-    // The first field is email. Wait for it to settle before returning.
+    // FronteggButton renders with content-desc = title text on Android.
+    clickByTextOrFail("Login", timeout = 15_000)
     requireView(By.clazz(EditText::class.java), timeout = 20_000)
 }
 
@@ -139,11 +138,10 @@ fun UiTestInstrumentation.loginWithPassword(email: String, password: String) {
     clickByTextOrFail("Continue")
     inputTextByIndex(1, password)
     clickByTextOrFail("Sign in")
-    // Wait until we're back on the app and authenticated.
-    requireView(By.res("com.frontegg.demo:id/logoutButton"), timeout = 30_000)
+    requireView(By.desc("Logout"), timeout = 30_000)
 }
 
 fun UiTestInstrumentation.logoutAndAssert() {
-    clickByTestId("logoutButton")
-    requireView(By.res("com.frontegg.demo:id/loginButton"), timeout = 15_000)
+    clickByTextOrFail("Logout")
+    requireView(By.desc("Login"), timeout = 15_000)
 }
