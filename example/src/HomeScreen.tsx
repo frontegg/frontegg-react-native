@@ -25,22 +25,37 @@ export default function HomeScreen() {
       <View style={styles.card}>
         <Text style={styles.title}>React Native Example</Text>
 
-        <Text>showLoader: {state.showLoader ? 'true' : 'false'}</Text>
-        <Text>initializing: {state.initializing ? 'true' : 'false'}</Text>
-        <Text>isLoading: {state.isLoading ? 'true' : 'false'}</Text>
-        <Text>isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}</Text>
-        <Text>Active Tenant: {state.user?.activeTenant.name}</Text>
-        <Text>refreshToken: {state.refreshToken}</Text>
-        <Text>
+        <Text testID="showLoaderValue">
+          showLoader: {state.showLoader ? 'true' : 'false'}
+        </Text>
+        <Text testID="initializingValue">
+          initializing: {state.initializing ? 'true' : 'false'}
+        </Text>
+        <Text testID="isLoadingValue">
+          isLoading: {state.isLoading ? 'true' : 'false'}
+        </Text>
+        <Text testID="isAuthenticatedValue">
+          isAuthenticated: {state.isAuthenticated ? 'true' : 'false'}
+        </Text>
+        <Text testID="activeTenantValue">
+          Active Tenant: {state.user?.activeTenant.name}
+        </Text>
+        <Text testID="refreshTokenValue">
+          refreshToken: {state.refreshToken}
+        </Text>
+        <Text testID="accessTokenValue">
           accessToken:{' '}
           {state.accessToken
             ? state.accessToken.substring(state.accessToken.length - 40)
             : ''}
         </Text>
-        <Text>user: {state.user ? state.user.email : 'Not Logged in'}</Text>
+        <Text testID="userEmailValue">
+          user: {state.user ? state.user.email : 'Not Logged in'}
+        </Text>
 
         <View style={styles.listenerButton}>
           <FronteggButton
+            testID={state.isAuthenticated ? 'logoutButton' : 'loginButton'}
             variant="primary"
             title={state.isAuthenticated ? 'Logout' : 'Login'}
             onPress={() => {
@@ -52,6 +67,7 @@ export default function HomeScreen() {
         {state.isAuthenticated ? null : (
           <View style={styles.listenerButton}>
             <FronteggButton
+              testID="loginWithGoogleButton"
               variant="primary"
               title="Login with google"
               onPress={() => {
@@ -63,6 +79,7 @@ export default function HomeScreen() {
 
         <View style={styles.listenerButton}>
           <FronteggButton
+            testID="requestAuthorizeButton"
             variant="primary"
             title="Request Authorization"
             onPress={async () => {
@@ -82,6 +99,7 @@ export default function HomeScreen() {
         {state.isAuthenticated ? (
           <View style={styles.listenerButton}>
             <FronteggButton
+              testID="registerPasskeysButton"
               variant="primary"
               title="Register Passkeys"
               onPress={() => {
@@ -98,6 +116,7 @@ export default function HomeScreen() {
         ) : (
           <View style={styles.listenerButton}>
             <FronteggButton
+              testID="loginWithPasskeysButton"
               variant="primary"
               title="Login with Passkeys"
               onPress={() => {
@@ -115,6 +134,7 @@ export default function HomeScreen() {
 
         <View style={styles.listenerButton}>
           <FronteggButton
+            testID="refreshTokenButton"
             variant="primary"
             title="Refresh Token"
             onPress={() => {
@@ -130,6 +150,7 @@ export default function HomeScreen() {
           .map((tenant: ITenantsResponse) => (
             <View key={tenant.tenantId} style={styles.tenantRow}>
               <FronteggButton
+                testID={`tenantSwitchButton-${tenant.tenantId}`}
                 variant="primary"
                 title={`${tenant.name} ${
                   tenant.tenantId === switching

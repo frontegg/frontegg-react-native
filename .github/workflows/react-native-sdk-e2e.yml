@@ -1,18 +1,227 @@
-# Runs React Native SDK E2E tests from e2e-system-tests on every PR.
-# The check runs in the e2e-system-tests repo and reports back here; merge is blocked until it passes.
-# Require this check in branch protection: Settings → Branches → rule → "React Native SDK E2E".
+# Local E2E tests for the React Native example app (Android + iOS).
+# Mirrors frontegg-android-kotlin's demo-e2e.yml and frontegg-ios-swift's
+# demo-e2e.yml: builds the example app, boots a device/simulator, runs the
+# instrumented tests, and reports results as PR checks.
+#
+# The previous cross-repo call to e2e-system-tests was never functional
+# (0-second failure on every run since the workflow was created) due to
+# GitHub's private-repo reusable-workflow access restrictions. This replaces
+# it with self-contained local suites that actually run.
 
 name: React Native SDK E2E
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
 
 jobs:
-  react-native-sdk-e2e:
-    name: React Native SDK E2E
-    uses: frontegg/e2e-system-tests/.github/workflows/react-native-sdk-e2e-reusable.yml@main
-    with:
-      repo_ref: ${{ github.event.pull_request.head.sha }}
-      test_suite: hosted:no-social
-    secrets: inherit
+  # ──────────────────────────────────────────────────────────────────────
+  # Android — UiAutomator on an API 34 emulator
+  # ──────────────────────────────────────────────────────────────────────
+  android-e2e:
+    name: Android E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install JS dependencies
+        run: |
+          yarn install --frozen-lockfile
+          cd example && yarn install --frozen-lockfile
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('example/android/**/*.gradle*', 'example/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Build debug APK + androidTest APK
+        working-directory: example/android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api34-google_apis-x86_64-pixel6-v1
+
+      - name: Create AVD snapshot if cache missing
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "AVD snapshot generated"
+
+      - name: Run E2E tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          LOGIN_EMAIL: ${{ secrets.E2E_LOGIN_EMAIL }}
+          LOGIN_PASSWORD: ${{ secrets.E2E_LOGIN_PASSWORD }}
+          LOGIN_WRONG_PASSWORD: ${{ secrets.E2E_LOGIN_WRONG_PASSWORD }}
+          TENANT_NAME_1: ${{ secrets.E2E_TENANT_NAME_1 }}
+          TENANT_NAME_2: ${{ secrets.E2E_TENANT_NAME_2 }}
+          GOOGLE_EMAIL: ${{ secrets.E2E_GOOGLE_EMAIL }}
+          GOOGLE_PASSWORD: ${{ secrets.E2E_GOOGLE_PASSWORD }}
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          heap-size: 1024M
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: example/android
+          script: |
+            adb shell input keyevent 82
+            adb shell settings put global window_animation_scale 0
+            adb shell settings put global transition_animation_scale 0
+            adb shell settings put global animator_duration_scale 0
+            sleep 5
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon \
+              -Pandroid.testInstrumentationRunnerArguments.LOGIN_EMAIL="$LOGIN_EMAIL" \
+              -Pandroid.testInstrumentationRunnerArguments.LOGIN_PASSWORD="$LOGIN_PASSWORD" \
+              -Pandroid.testInstrumentationRunnerArguments.LOGIN_WRONG_PASSWORD="$LOGIN_WRONG_PASSWORD" \
+              -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_1="$TENANT_NAME_1" \
+              -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_2="$TENANT_NAME_2" \
+              -Pandroid.testInstrumentationRunnerArguments.GOOGLE_EMAIL="$GOOGLE_EMAIL" \
+              -Pandroid.testInstrumentationRunnerArguments.GOOGLE_PASSWORD="$GOOGLE_PASSWORD"
+
+      - name: Collect JUnit reports
+        if: always()
+        run: |
+          mkdir -p e2e-artifacts
+          find example/android -path "*/androidTest-results/*" -name "*.xml" -exec cp -f {} e2e-artifacts/ \; 2>/dev/null || true
+          find example/android -path "*/build/outputs/*" -name "TEST-*.xml" -exec cp -f {} e2e-artifacts/ \; 2>/dev/null || true
+
+      - name: Publish JUnit report
+        uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          report_paths: e2e-artifacts/*.xml
+          check_name: Android E2E
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-e2e-results
+          path: e2e-artifacts/
+          if-no-files-found: ignore
+
+  # ──────────────────────────────────────────────────────────────────────
+  # iOS — XCUITest on an iPhone simulator (macOS runner)
+  # Mirrors frontegg-ios-swift's demo-e2e.yml.
+  # ──────────────────────────────────────────────────────────────────────
+  ios-e2e:
+    name: iOS E2E
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      LOGIN_EMAIL: ${{ secrets.E2E_LOGIN_EMAIL }}
+      LOGIN_PASSWORD: ${{ secrets.E2E_LOGIN_PASSWORD }}
+      LOGIN_WRONG_PASSWORD: ${{ secrets.E2E_LOGIN_WRONG_PASSWORD }}
+      TENANT_NAME_1: ${{ secrets.E2E_TENANT_NAME_1 }}
+      TENANT_NAME_2: ${{ secrets.E2E_TENANT_NAME_2 }}
+      GOOGLE_EMAIL: ${{ secrets.E2E_GOOGLE_EMAIL }}
+      GOOGLE_PASSWORD: ${{ secrets.E2E_GOOGLE_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install JS dependencies
+        run: |
+          yarn install --frozen-lockfile
+          cd example && yarn install --frozen-lockfile
+
+      - name: Install CocoaPods dependencies
+        working-directory: example/ios
+        run: pod install
+
+      - name: Build for testing
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            build-for-testing \
+            -workspace ReactNativeExample.xcworkspace \
+            -scheme ReactNativeExample \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Run UI tests
+        working-directory: example/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            test-without-building \
+            -workspace ReactNativeExample.xcworkspace \
+            -scheme ReactNativeExample \
+            -only-testing:ReactNativeExampleUITests \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/ios-e2e.xcresult" \
+            -parallel-testing-enabled NO \
+            2>&1 | tee "$RUNNER_TEMP/test.log"
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-e2e-results
+          path: |
+            ${{ runner.temp }}/build.log
+            ${{ runner.temp }}/test.log
+            ${{ runner.temp }}/ios-e2e.xcresult
+          if-no-files-found: ignore
