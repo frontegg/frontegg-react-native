@@ -56,18 +56,10 @@ val Context.fronteggConstants: FronteggConstants
  *     `<application>` in `AndroidManifest.xml`, suffixed with `.BuildConfig`.
  */
 private fun resolveBuildConfigClass(context: Context): Class<*> {
-    val candidates = LinkedHashSet<String>()
-    candidates.add("${context.packageName}.BuildConfig")
-
-    runCatching {
-        val appInfo = context.packageManager.getApplicationInfo(
-            context.packageName,
-            PackageManager.GET_META_DATA,
-        )
-        appInfo.metaData?.getString(BUILD_CONFIG_PACKAGE_META)?.takeIf { it.isNotBlank() }?.let {
-            candidates.add("$it.BuildConfig")
-        }
-    }
+    val candidates = buildConfigClassCandidates(
+        primaryPackageName = context.packageName,
+        fallbackPackageName = readFallbackBuildConfigPackage(context),
+    )
 
     var lastError: ClassNotFoundException? = null
     for (className in candidates) {
@@ -88,6 +80,35 @@ private fun resolveBuildConfigClass(context: Context): Class<*> {
     )
     throw lastError ?: ClassNotFoundException("BuildConfig not found for ${context.packageName}")
 }
+
+/**
+ * Pure-logic candidate list for `BuildConfig` class lookup. Extracted from
+ * [resolveBuildConfigClass] so it can be unit-tested without Android dependencies.
+ *
+ * Guarantees:
+ *  - `primaryPackageName` is always tried first.
+ *  - `fallbackPackageName`, if non-null and non-blank, is appended next.
+ *  - If both inputs produce the same candidate string, only the first occurrence is kept.
+ */
+internal fun buildConfigClassCandidates(
+    primaryPackageName: String,
+    fallbackPackageName: String?,
+): List<String> {
+    val candidates = LinkedHashSet<String>()
+    candidates.add("$primaryPackageName.BuildConfig")
+    fallbackPackageName?.takeIf { it.isNotBlank() }?.let {
+        candidates.add("$it.BuildConfig")
+    }
+    return candidates.toList()
+}
+
+private fun readFallbackBuildConfigPackage(context: Context): String? = runCatching {
+    val appInfo = context.packageManager.getApplicationInfo(
+        context.packageName,
+        PackageManager.GET_META_DATA,
+    )
+    appInfo.metaData?.getString(BUILD_CONFIG_PACKAGE_META)
+}.getOrNull()
 
 fun <T> safeGetNullableValueFromBuildConfig(
     buildConfigClass: Class<*>,
