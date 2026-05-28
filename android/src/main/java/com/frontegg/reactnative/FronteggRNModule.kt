@@ -119,7 +119,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun login(loginHint: String?, promise: Promise) {
-    val activity = currentActivity
+    val activity = reactApplicationContext.currentActivity
     auth.login(activity!!, loginHint) {
       promise.resolve("")
     }
@@ -134,7 +134,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun directLoginAction(type: String, data: String, ephemeralSession: Boolean, promise: Promise) {
-    val activity = currentActivity
+    val activity = reactApplicationContext.currentActivity
     auth.directLoginAction(activity!!, type, data)
     promise.resolve(true)
   }
@@ -147,7 +147,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun loginWithPasskeys(promise: Promise) {
-    val activity = currentActivity
+    val activity = reactApplicationContext.currentActivity
     auth.loginWithPasskeys(activity!!) { error ->
       if (error != null) {
         promise.reject(error)
@@ -179,7 +179,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun registerPasskeys(promise: Promise) {
-    val activity = currentActivity
+    val activity = reactApplicationContext.currentActivity
     auth.registerPasskeys(activity!!) { error ->
       if (error != null) {
         promise.reject(error)
