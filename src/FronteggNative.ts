@@ -68,6 +68,19 @@ export async function requestAuthorize(
   return await FronteggRN.requestAuthorize(refreshToken, deviceTokenCookie);
 }
 
+/** Sentinel for optional maxAge on the native bridge (NSNumber must be nonnull on iOS). */
+const NO_MAX_AGE = -1;
+
+/** Max age in seconds for step-up validity (same semantics as native SDK). */
+export async function isSteppedUp(maxAge?: number): Promise<boolean> {
+  return FronteggRN.isSteppedUp(maxAge ?? NO_MAX_AGE);
+}
+
+/** Starts step-up authentication (MFA / re-auth). Max age in seconds. */
+export async function stepUp(maxAge?: number): Promise<void> {
+  return FronteggRN.stepUp(maxAge ?? NO_MAX_AGE);
+}
+
 export async function registerPasskeys(): Promise<void> {
   return FronteggRN.registerPasskeys();
 }

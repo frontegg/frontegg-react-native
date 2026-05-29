@@ -1,3 +1,18 @@
+# boostorg.jfrog.io often returns a bad tarball; use archives.boost.io (RN 0.72 workaround).
+boost_podspec_path = File.expand_path('../node_modules/react-native/third-party-podspecs/boost.podspec', __dir__)
+if File.exist?(boost_podspec_path)
+  boost_podspec = File.read(boost_podspec_path)
+  unless boost_podspec.include?('archives.boost.io')
+    File.write(
+      boost_podspec_path,
+      boost_podspec.gsub(
+        'https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2',
+        'https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2'
+      )
+    )
+  end
+end
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -26,6 +41,9 @@ if linkage != nil
 end
 
 target 'ReactNativeExample' do
+  # Required so FronteggRN (Swift) can import the FronteggSwift SPM product.
+  use_frameworks! :linkage => :static
+
   config = use_native_modules!
 
   # Flags change depending on the env values.
@@ -58,5 +76,10 @@ target 'ReactNativeExample' do
       :mac_catalyst_enabled => false
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+  end
+
+  post_integrate do |installer|
+    require_relative '../../ios/frontegg_spm'
+    FronteggSPM.link_frontegg_rn_pod(installer)
   end
 end

@@ -4,6 +4,85 @@ This section guides you through configuring the Frontegg React Native SDK for bo
 
 ## Setup iOS Project
 
+### Integrate FronteggSwift via Swift Package Manager
+
+The iOS native SDK (`FronteggSwift`) is delivered through **Swift Package Manager (SPM)** only. The CocoaPods pod `FronteggSwift` is **not** used (previously pinned at `1.2.76`). React Native still uses CocoaPods for `FronteggRN` and other dependencies; `FronteggSwift` is linked into the `FronteggRN` pod target via SPM after `pod install`.
+
+**Requirements:** Xcode **15+**, iOS deployment target **14.0+**, CocoaPods.
+
+#### 1. Update `ios/Podfile`
+
+Inside your app target (the same block as `use_native_modules!`):
+
+```ruby
+target 'YourApp' do
+  # Required so the FronteggRN pod can import the FronteggSwift SPM product.
+  use_frameworks! :linkage => :static
+
+  config = use_native_modules!
+  # ... use_react_native! etc.
+```
+
+After `post_install` (do **not** put the SPM hook inside `post_install` — CocoaPods would overwrite the patched `Pods` project):
+
+```ruby
+  post_install do |installer|
+    react_native_post_install(installer, config[:reactNativePath], :mac_catalyst_enabled => false)
+    # ...your other post_install hooks...
+  end
+
+  post_integrate do |installer|
+    require_relative '../node_modules/@frontegg/react-native/ios/frontegg_spm'
+    FronteggSPM.link_frontegg_rn_pod(installer)
+  end
+end
+```
+
+Adjust the `require_relative` path if your `node_modules` layout differs (monorepo, etc.).
+
+#### 2. Install pods
+
+From the `ios` directory:
+
+```bash
+cd ios
+bundle exec pod install   # recommended if you use a Gemfile
+```
+
+**React Native 0.72:** if `pod install` fails downloading `boost`, add the boost URL workaround at the top of your `Podfile` (see the [example `ios/Podfile`](https://github.com/frontegg/frontegg-react-native/blob/master/example/ios/Podfile)).
+
+#### 3. Build and run
+
+- Open **`YourApp.xcworkspace`** (not `.xcodeproj`).
+- For local development on a **simulator**, prefer:
+
+```bash
+cd ..
+yarn start          # Metro — one terminal
+yarn ios --simulator "iPhone 17 Pro Max"
+```
+
+If a physical iPhone is connected, React Native may target the device and fail on code signing (`com.your.bundle`). Use `--simulator` or disconnect the device.
+
+The `frontegg_spm` helper pins **FronteggSwift 1.3.8** from `https://github.com/frontegg/frontegg-ios-swift.git`, links it to the **FronteggRN** CocoaPods target, and configures the app Xcode project so SPM resolves without duplicate symbol errors at link time.
+
+> **Embedded mode step-up:** `FronteggSwift` **1.3.8** routes `stepUp()` through the embedded `WKWebView` when `embeddedMode` is enabled (instead of `ASWebAuthenticationSession`), so MFA/step-up reuses the existing web session. Set `<key>embeddedMode</key><true/>` in `Frontegg.plist` if you use the embedded login box.
+
+#### Step-up from JavaScript
+
+```ts
+import { isSteppedUp, stepUp } from '@frontegg/react-native';
+
+const maxAgeSeconds = 60;
+if (await isSteppedUp(maxAgeSeconds)) {
+  // already stepped up
+} else {
+  await stepUp(maxAgeSeconds);
+}
+```
+
+See the [example `HomeScreen`](https://github.com/frontegg/frontegg-react-native/blob/master/example/src/HomeScreen.tsx) for a **Sensitive action** button matching the native iOS SDK demo.
+
 ### Create Frontegg.plist
 
 1. Add a new file named `Frontegg.plist` to your root project directory.
