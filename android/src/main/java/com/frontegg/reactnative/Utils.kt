@@ -15,9 +15,11 @@ interface ActivityProvider {
 val Context.fronteggConstants: FronteggConstants
     get() {
         val packageName = this.packageName
-        val className = "$packageName.BuildConfig"
         try {
-            val buildConfigClass = Class.forName(className)
+            val buildConfigClass = resolveBuildConfigClass(
+                packageName,
+                readBuildConfigPackageMetaData(),
+            )
 
             // Get the field from BuildConfig class
             val baseUrl = safeGetValueFromBuildConfig(buildConfigClass, "FRONTEGG_DOMAIN", "")
@@ -41,7 +43,6 @@ val Context.fronteggConstants: FronteggConstants
                 bundleId = this.packageName,
             )
         } catch (e: ClassNotFoundException) {
-            Log.e(TAG, "Class not found: $className")
             throw e
         }
     }
