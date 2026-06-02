@@ -67,13 +67,16 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
    }
    ```
 
-3. Inside the `android` block, add the following to set Java 8 compatibility:
+3. Inside the `android` block, set JVM 17 compatibility (required for React Native 0.80+ and AGP 8.x; use AGP 7.4+ if upgrading from older toolchains):
 
    ```groovy
     android {
      compileOptions {
-         sourceCompatibility JavaVersion.VERSION_1_8
-         targetCompatibility JavaVersion.VERSION_1_8
+         sourceCompatibility JavaVersion.VERSION_17
+         targetCompatibility JavaVersion.VERSION_17
+     }
+     kotlinOptions {
+         jvmTarget = "17"
      }
    }
    ```

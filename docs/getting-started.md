@@ -18,7 +18,7 @@ The Frontegg React Native SDK automatically handles token refresh behind the sce
 
 ### Supported platforms
 - iOS: Deployment target 14.0 or higher
-- Android: Minimum SDK version 26 (Android 8.0)
+- Android: Minimum SDK version 26 (Android 8.0); **JDK 17** and **AGP 7.4+** for the Android toolchain (required by React Native 0.80+ and AGP 8.x)
 - React Native: Version 0.63+ (recommended for best compatibility)
 - WebAuthn support (Passkeys):
   - iOS: Version 15+ required for platform-level support
