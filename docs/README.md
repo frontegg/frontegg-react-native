@@ -7,6 +7,18 @@ app. [Frontegg](https://frontegg.com/) is a self-served user management platform
 SaaS applications. Easily implement authentication, SSO, RBAC, multi-tenancy, and more — all from a
 single SDK.
 
+## 📦 Peer Dependencies
+
+Install the required peer dependencies in your app:
+
+```sh
+# Expo
+npx expo install @react-native-async-storage/async-storage @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
+
+# Bare React Native
+npm install @react-native-async-storage/async-storage @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
+```
+
 ## 📚 Documentation
 
 This repository includes:
