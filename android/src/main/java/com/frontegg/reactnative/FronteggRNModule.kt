@@ -10,6 +10,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.frontegg.android.AdminPortalActivity
 import com.frontegg.android.fronteggAuth
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -187,6 +188,18 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
         promise.resolve("")
       }
     }
+  }
+
+  @ReactMethod
+  fun openAdminPortal(promise: Promise) {
+    val activity = currentActivity
+    if (activity == null) {
+      promise.reject("NO_ACTIVITY", "Cannot open Admin Portal without an active Activity")
+      return
+    }
+
+    AdminPortalActivity.open(activity)
+    promise.resolve(null)
   }
 
   override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()

@@ -34,6 +34,28 @@ For full documentation, visit the Frontegg Developer Portal:
 
 ---
 
+## 🔐 Native SDK versions
+
+The React Native wrapper depends on the underlying native SDKs:
+
+- On **Android**, the plugin and example app use `com.frontegg.sdk:android:1.3.34`.
+- On **iOS**, the plugin depends on `FronteggSwift` **1.3.10** via CocoaPods.
+
+After upgrading, run `pod install` in your iOS project and rebuild both platforms.
+
+---
+
+## 🔐 Native SDK versions
+
+The React Native wrapper depends on the underlying native SDKs:
+
+- On **Android**, the plugin and example app use `com.frontegg.sdk:android:1.3.34`.
+- On **iOS**, the plugin depends on `FronteggSwift` **1.3.10** via CocoaPods.
+
+After upgrading, run `pod install` in your iOS project and rebuild both platforms.
+
+---
+
 ## 🧑‍💻 Getting Started with Frontegg
 
 Don't have a Frontegg account yet?

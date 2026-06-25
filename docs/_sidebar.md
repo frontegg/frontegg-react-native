@@ -3,3 +3,4 @@
 - [Setup Guide](setup.md)
 - [Usage Examples](usage.md)
 - [Advanced Topics](advanced.md)
+- [API Reference](api.md)
