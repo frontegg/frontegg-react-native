@@ -53,7 +53,7 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
 
 1. **iOS Version**:  Ensure your project targets iOS 15 or later to support the necessary WebAuthn APIs.
 2. **Android**: Use Android SDK 26+.
-3. **Frontegg SDK Version**: Use Frontegg iOS SDK version 1.2.24 or later.
+3. **Frontegg SDK Version**: Use Frontegg iOS SDK version 1.3.10 or later.
 
 #### Android setup
 
@@ -63,17 +63,20 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
    ```groovy
       dependencies {
        implementation 'androidx.browser:browser:1.8.0'
-       implementation 'com.frontegg.sdk:android:1.2.30'
+       implementation 'com.frontegg.sdk:android:1.3.34'
    }
    ```
 
-3. Inside the `android` block, add the following to set Java 8 compatibility:
+3. Inside the `android` block, set JVM 17 compatibility (required for React Native 0.80+ and AGP 8.x; use AGP 7.4+ if upgrading from older toolchains):
 
    ```groovy
     android {
      compileOptions {
-         sourceCompatibility JavaVersion.VERSION_1_8
-         targetCompatibility JavaVersion.VERSION_1_8
+         sourceCompatibility JavaVersion.VERSION_17
+         targetCompatibility JavaVersion.VERSION_17
+     }
+     kotlinOptions {
+         jvmTarget = "17"
      }
    }
    ```
@@ -132,3 +135,34 @@ async function handleLoginWithPasskeys() {
   }
 }
 ```
+
+## Admin Portal (Beta)
+
+The Admin Portal is a hosted page that lets end users manage their account, profile, sessions, and tenant settings. The React Native SDK exposes `openAdminPortal()` which delegates to the native SDKs:
+
+- **Android** — launches `AdminPortalActivity` (full-screen `WebView`)
+- **iOS** — presents `AdminPortalView` as a page sheet (`WKWebView`)
+
+The portal loads `${baseUrl}/oauth/portal?appId=<applicationId>` and shares the SDK session, so authenticated users are not asked to sign in again.
+
+> **Beta.** The API may change in future minor releases. Pin to an exact SDK version when embedding this in a shipping app.
+
+### Multi-app prerequisite
+
+For multi-app workspaces, configure `applicationId` in your native setup (see [Multi-app support](#multi-app-support)). Without `?appId=` the portal renders **"Application not found"** after sign-in.
+
+### Open the portal
+
+```tsx
+import { openAdminPortal } from '@frontegg/react-native';
+
+async function handleOpenAdminPortal() {
+  try {
+    await openAdminPortal();
+  } catch (error) {
+    console.error('Failed to open Admin Portal:', error);
+  }
+}
+```
+
+The portal is dismissed when the user swipes down (iOS) or taps the built-in close button. On Android, `window.close()` finishes the activity automatically.

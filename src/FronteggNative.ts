@@ -85,6 +85,10 @@ export async function registerPasskeys(): Promise<void> {
   return FronteggRN.registerPasskeys();
 }
 
+export async function openAdminPortal(): Promise<void> {
+  return FronteggRN.openAdminPortal();
+}
+
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
   let timeout: any;
 

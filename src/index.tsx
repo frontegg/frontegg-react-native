@@ -13,4 +13,5 @@ export {
   requestAuthorize,
   isSteppedUp,
   stepUp,
+  openAdminPortal,
 } from './FronteggNative';

@@ -108,6 +108,10 @@ android {
     buildFeatures {
       buildConfig = true
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
@@ -125,7 +129,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation 'com.frontegg.sdk:android:1.3.18'
+    implementation 'com.frontegg.sdk:android:1.3.34'
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
         exclude group:'com.squareup.okhttp3', module:'okhttp'
