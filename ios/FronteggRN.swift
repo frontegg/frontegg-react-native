@@ -1,6 +1,8 @@
 import FronteggSwift
 import Foundation
 import Combine
+import SwiftUI
+import UIKit
 
 
 @objc(FronteggRN)
@@ -229,6 +231,45 @@ class FronteggRN: RCTEventEmitter {
             }
         }
         fronteggApp.auth.registerPasskeys(completion)
+    }
+
+    @objc
+    func openAdminPortal(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        DispatchQueue.main.async {
+            guard let viewController = Self.topViewController() else {
+                rejecter(
+                    "NO_VIEW_CONTROLLER",
+                    "Cannot open Admin Portal without an active view controller",
+                    nil
+                )
+                return
+            }
+
+            if #available(iOS 14.0, *) {
+                let host = UIHostingController(rootView: AdminPortalView())
+                host.modalPresentationStyle = .pageSheet
+                viewController.present(host, animated: true)
+                resolve(nil)
+            } else {
+                rejecter("UNSUPPORTED", "Admin Portal requires iOS 14+", nil)
+            }
+        }
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+
+        var topController = keyWindow?.rootViewController
+        while let presented = topController?.presentedViewController {
+            topController = presented
+        }
+        return topController
     }
     
     // we need to override this method and
