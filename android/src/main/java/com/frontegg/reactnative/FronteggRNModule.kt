@@ -14,6 +14,8 @@ import com.frontegg.android.AdminPortalActivity
 import com.frontegg.android.fronteggAuth
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 
 class FronteggRNModule(val reactContext: ReactApplicationContext) :
@@ -154,6 +156,31 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
         promise.reject(error)
       } else {
         promise.resolve("")
+      }
+    }
+  }
+
+  @ReactMethod
+  fun isSteppedUp(maxAgeSeconds: Double, promise: Promise) {
+    val maxAge =
+      if (maxAgeSeconds < 0) null else maxAgeSeconds.toDuration(DurationUnit.SECONDS)
+    promise.resolve(auth.isSteppedUp(maxAge))
+  }
+
+  @ReactMethod
+  fun stepUp(maxAgeSeconds: Double, promise: Promise) {
+    val activity = currentActivity
+    if (activity == null) {
+      promise.reject("NO_ACTIVITY", "Current activity is null")
+      return
+    }
+    val maxAge =
+      if (maxAgeSeconds < 0) null else maxAgeSeconds.toDuration(DurationUnit.SECONDS)
+    auth.stepUp(activity, maxAge) { error ->
+      if (error != null) {
+        promise.reject("STEP_UP_ERROR", error.message, error)
+      } else {
+        promise.resolve(null)
       }
     }
   }

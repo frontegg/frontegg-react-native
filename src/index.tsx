@@ -11,5 +11,7 @@ export {
   loginWithPasskeys,
   registerPasskeys,
   requestAuthorize,
+  isSteppedUp,
+  stepUp,
   openAdminPortal,
 } from './FronteggNative';
