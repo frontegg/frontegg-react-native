@@ -287,6 +287,18 @@ android {
 }
 ```
 
+### White-label apps (`applicationId` ≠ `namespace`)
+
+If your product flavors use different `applicationId` values but share one Java/Kotlin `namespace`, AGP generates `BuildConfig` under the **namespace** package, not under each flavor's `applicationId`. The SDK looks up `BuildConfig` by `applicationId` first; when that fails, add this under `<application>` in `android/app/src/main/AndroidManifest.xml` (use your shared namespace, without `.BuildConfig`):
+
+```xml
+<meta-data
+  android:name="com.frontegg.reactnative.BUILD_CONFIG_PACKAGE"
+  android:value="com.main" />
+```
+
+Apps where `applicationId` matches `namespace` do not need this entry.
+
 ### Enable Android AssetLinks
 
 To enable Android features like Magic Link authentication, password reset, account activation, and login with identity providers, follow the steps below.
