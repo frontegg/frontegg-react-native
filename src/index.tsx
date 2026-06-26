@@ -11,4 +11,5 @@ export {
   loginWithPasskeys,
   registerPasskeys,
   requestAuthorize,
+  openAdminPortal,
 } from './FronteggNative';
