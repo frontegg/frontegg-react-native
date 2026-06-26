@@ -12,6 +12,7 @@ export type FronteggButtonProps = {
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   testID?: string;
+  accessibilityLabel?: string;
 };
 
 const COLORS = {
@@ -31,6 +32,7 @@ export default function FronteggButton({
   style,
   textStyle,
   testID,
+  accessibilityLabel,
 }: FronteggButtonProps) {
   const isOutline = variant === 'outline';
   const isDanger = variant === 'danger';
@@ -59,6 +61,7 @@ export default function FronteggButton({
     <Pressable
       accessibilityRole="button"
       testID={testID}
+      accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [

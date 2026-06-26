@@ -12,6 +12,7 @@ import {
   registerPasskeys,
   loginWithPasskeys,
   requestAuthorize,
+  openAdminPortal,
 } from '@frontegg/react-native';
 import { useState } from 'react';
 import type { ITenantsResponse } from '@frontegg/rest-api';
@@ -100,6 +101,23 @@ export default function HomeScreen() {
           <View style={styles.listenerButton}>
             <FronteggButton
               testID="registerPasskeysButton"
+              variant="primary"
+              title="Open Admin Portal"
+              accessibilityLabel="OpenAdminPortalButton"
+              onPress={async () => {
+                try {
+                  await openAdminPortal();
+                } catch (error) {
+                  console.error('Failed to open Admin Portal:', error);
+                }
+              }}
+            />
+          </View>
+        ) : null}
+
+        {state.isAuthenticated ? (
+          <View style={styles.listenerButton}>
+            <FronteggButton
               variant="primary"
               title="Register Passkeys"
               onPress={() => {
