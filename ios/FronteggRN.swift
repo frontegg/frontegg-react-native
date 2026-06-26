@@ -197,6 +197,41 @@ class FronteggRN: RCTEventEmitter {
         fronteggApp.auth.loginWithPasskeys(completion)
     }
 
+    /// React Native bridge requires nonnull NSNumber; pass -1 from JS when maxAge is omitted.
+    private func maxAgeInterval(from maxAgeSeconds: NSNumber) -> TimeInterval? {
+        let seconds = maxAgeSeconds.doubleValue
+        return seconds < 0 ? nil : seconds
+    }
+
+    @objc
+    func isSteppedUp(
+        _ maxAgeSeconds: NSNumber,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) {
+        resolver(fronteggApp.auth.isSteppedUp(maxAge: maxAgeInterval(from: maxAgeSeconds)))
+    }
+
+    @objc
+    func stepUp(
+        _ maxAgeSeconds: NSNumber,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) {
+        let completion: FronteggAuth.CompletionHandler = { result in
+            switch result {
+            case .success:
+                resolver(nil)
+            case .failure(let error):
+                rejecter(error.failureReason, error.localizedDescription, error)
+            }
+        }
+
+        Task {
+            await fronteggApp.auth.stepUp(maxAge: maxAgeInterval(from: maxAgeSeconds), completion)
+        }
+    }
+
   @objc
   func requestAuthorize(
       _ refreshToken: String,

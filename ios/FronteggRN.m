@@ -45,6 +45,16 @@ RCT_EXTERN_METHOD(
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(
+                  isSteppedUp: (nonnull NSNumber *)maxAgeSeconds
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
+RCT_EXTERN_METHOD(
+                  stepUp: (nonnull NSNumber *)maxAgeSeconds
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
+RCT_EXTERN_METHOD(
                   openAdminPortal: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
