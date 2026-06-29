@@ -4,7 +4,10 @@ import XCTest
 /// the app survives tapping it.
 final class LoginViaGoogleTest: UITestCase {
     func test_social_login_button_is_reachable() throws {
-        launchApp()
+        // Use the SDK's mock web-auth transport (DEBUG-only) so the social flow completes
+        // against the local mock server instead of a real ASWebAuthenticationSession, which
+        // can't be driven headlessly in CI.
+        launchApp(useTestingWebAuthenticationTransport: true)
         let button = app.buttons["loginWithGoogleButton"]
         waitFor(button, timeout: 10)
         button.tap()

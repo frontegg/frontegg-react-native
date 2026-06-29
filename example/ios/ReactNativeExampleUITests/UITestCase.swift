@@ -50,11 +50,14 @@ class UITestCase: XCTestCase {
     // MARK: - Launch
 
     @discardableResult
-    func launchApp(resetState: Bool = true) -> XCUIApplication {
+    func launchApp(
+        resetState: Bool = true,
+        useTestingWebAuthenticationTransport: Bool = false
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment = Self.server.launchEnvironment(
             resetState: resetState,
-            useTestingWebAuthenticationTransport: false
+            useTestingWebAuthenticationTransport: useTestingWebAuthenticationTransport
         )
         app.launch()
         self.app = app

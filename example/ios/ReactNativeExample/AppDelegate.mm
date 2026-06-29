@@ -49,6 +49,15 @@
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
 #if DEBUG
+  // Under E2E tests the JS bundle is embedded (FORCE_BUNDLING) and Metro is not running,
+  // while the SDK's mock web-auth transport requires a DEBUG build. So in a testing launch
+  // prefer the embedded bundle; fall back to Metro for normal development.
+  if ([[[NSProcessInfo processInfo] environment][@"frontegg-testing"] isEqualToString:@"true"]) {
+    NSURL *embeddedBundleURL = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+    if (embeddedBundleURL != nil) {
+      return embeddedBundleURL;
+    }
+  }
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];

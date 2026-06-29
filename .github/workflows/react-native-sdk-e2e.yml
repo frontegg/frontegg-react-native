@@ -188,10 +188,10 @@ jobs:
             build-for-testing \
             -workspace ReactNativeExample.xcworkspace \
             -scheme ReactNativeExample \
-            -configuration Release \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO \
+            FORCE_BUNDLING=1 \
             2>&1 | tee "$RUNNER_TEMP/build.log"
 
       - name: Run UI tests
@@ -202,7 +202,6 @@ jobs:
             test-without-building \
             -workspace ReactNativeExample.xcworkspace \
             -scheme ReactNativeExample \
-            -configuration Release \
             -only-testing:ReactNativeExampleUITests \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
