@@ -188,21 +188,27 @@ jobs:
             build-for-testing \
             -workspace ReactNativeExample.xcworkspace \
             -scheme ReactNativeExample \
+            -configuration Release \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO \
-            FORCE_BUNDLING=1 \
             2>&1 | tee "$RUNNER_TEMP/build.log"
 
       - name: Run UI tests
         working-directory: example/ios
         run: |
           set -o pipefail
+          # Exclude the real social-login test from CI: it drives a real
+          # ASWebAuthenticationSession that can't complete headlessly on a simulator.
+          # This mirrors the frontegg-ios-swift SDK E2E, which runs the
+          # "hosted:no-social" suite and excludes real system-web-auth social login.
           xcodebuild \
             test-without-building \
             -workspace ReactNativeExample.xcworkspace \
             -scheme ReactNativeExample \
+            -configuration Release \
             -only-testing:ReactNativeExampleUITests \
+            -skip-testing:ReactNativeExampleUITests/LoginViaGoogleTest \
             -destination "platform=iOS Simulator,name=iPhone 16" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -resultBundlePath "$RUNNER_TEMP/ios-e2e.xcresult" \
