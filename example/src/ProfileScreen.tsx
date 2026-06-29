@@ -8,7 +8,12 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.listenerButton}>
-          <FronteggButton variant="primary" title="Test" onPress={() => {}} />
+          <FronteggButton
+            testID="profileTestButton"
+            variant="primary"
+            title="Test"
+            onPress={() => {}}
+          />
         </View>
       </View>
     </View>

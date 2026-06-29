@@ -68,10 +68,15 @@ React Native’s default accessibility behavior (button `title` → accessibilit
 | User profile (email/name on screen) | Yes — `react-native-sdk-user-profile-test.ts` | Asserts user info displayed. |
 | Tenant switching | Yes — `react-native-sdk-tenant-switching-test.ts` | Asserts "Active Tenant" text; handles case where tenant UI is absent. |
 | Social login (e.g. Google) | Yes — `react-native-sdk-social-login-test.ts` | — |
-| Passkeys (Register / Login with Passkeys) | No | Buttons exist in example app; no dedicated e2e yet. |
-| Refresh Token button | No | Selector exists; no test that explicitly uses it. |
+| Passkeys (Register / Login with Passkeys) | Partial | External suite: no. Local suite (`example/android/app/src/androidTest/.../PasskeysRegisterTest.kt`, `PasskeysLoginTest.kt` + iOS equivalents) adds smoke coverage that verifies the buttons are reachable and the app survives the system credential-manager sheet. Full biometric-backed enrolment still TODO. |
+| Refresh Token button | Partial | External suite: no. Local suite (`RefreshTokenTest.kt` / `RefreshTokenTest.swift`) now asserts that tapping the button rotates the access-token suffix while the user stays authenticated. |
 
-So: core auth, MFA, step-up, tenant, and social flows are covered; Passkeys and “Refresh Token” are not.
+So: core auth, MFA, step-up, tenant, and social flows are covered by the
+external Nightwatch suite. Passkeys and "Refresh Token" now have
+developer-runnable coverage in `example/` — see
+[`example/E2E_TESTS.md`](../example/E2E_TESTS.md) for the full local suite
+(Android UiAutomator + iOS XCUITest) that mirrors the patterns used by
+`frontegg-android-kotlin` and `frontegg-ios-swift`.
 
 ---
 
@@ -97,12 +102,12 @@ So: core auth, MFA, step-up, tenant, and social flows are covered; Passkeys and 
 ### 5.3 Optional: more stable selectors
 
 - Selectors are text-based (button title / static text). They are correct for the current example app but can break if copy or i18n changes.
-- **Recommendation (optional):** In the example app, add `testID` (and optionally `accessibilityLabel`) to key elements (e.g. `Login`, `Logout`, `Request Authorization`), and in e2e use `testID`-based or accessibility selectors where the framework supports it, to reduce fragility.
+- **Status:** Addressed. `example/src/HomeScreen.tsx` now sets `testID` on every actionable element (`loginButton`, `logoutButton`, `loginWithGoogleButton`, `requestAuthorizeButton`, `refreshTokenButton`, `registerPasskeysButton`, `loginWithPasskeysButton`, `tenantSwitchButton-$tenantId`) and on the diagnostic text nodes (`accessTokenValue`, `userEmailValue`, `activeTenantValue`, …). The new local suite under `example/` uses these; the Nightwatch suite can migrate off text-based selectors at its own pace.
 
 ### 5.4 Unused selector
 
 - `ReactNativeSDKUserPageSelectors.REFRESH_TOKEN_BUTTON_*` is defined but the page object has no `clickRefreshToken()`. No test uses it.
-- **Recommendation:** Either add a small test that taps “Refresh Token” and asserts token/state (if useful), or remove the selector to avoid dead code.
+- **Status:** Addressed locally. `example/android/app/src/androidTest/.../RefreshTokenTest.kt` and `example/ios/ReactNativeExampleUITests/RefreshTokenTest.swift` exercise the button and assert the access-token value changes. The Nightwatch selector can now either be wired up to a similar test or removed.
 
 ### 5.5 Step-up test assertion
 

@@ -8,6 +8,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // E2E test mode must be initialized BEFORE React Native modules load,
+  // because FronteggRNModule accesses FronteggApp.shared at init time
+  // which triggers plist loading and HTTPS validation.
+  [FronteggLoaderInitializer initializeE2EIfNeeded];
   [FronteggLoaderInitializer initializeLoader];
 
   self.moduleName = @"ReactNativeExample";

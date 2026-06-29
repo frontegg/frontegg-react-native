@@ -11,6 +11,7 @@ export type FronteggButtonProps = {
   variant?: ButtonVariant;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  testID?: string;
   accessibilityLabel?: string;
 };
 
@@ -30,6 +31,7 @@ export default function FronteggButton({
   variant = 'primary',
   style,
   textStyle,
+  testID,
   accessibilityLabel,
 }: FronteggButtonProps) {
   const isOutline = variant === 'outline';
@@ -58,6 +60,7 @@ export default function FronteggButton({
   return (
     <Pressable
       accessibilityRole="button"
+      testID={testID}
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={onPress}

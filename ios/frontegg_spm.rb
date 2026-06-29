@@ -15,6 +15,20 @@ module FronteggSPM
   SPM_TARGET_DEP_ID = '7A1B2C3D4E5F6000100140001'
   SPM_FRAMEWORK_BUILD_ID = '7A1B2C3D4E5F6000100140002'
 
+  # One XCSwiftPackageProductDependency + one PBXBuildFile per app/unit-test target that links
+  # FronteggRN (Xcode uses a distinct product-dependency object per target). Index 0..N follow the
+  # order targets appear in the app pbxproj; three slots cover app + up to two test bundles.
+  APP_SPM_PRODUCT_DEP_IDS = %w[
+    6DD78663B3B3114CC0D8A6DA
+    6DD78663B3B3114CC0D8A6DB
+    6DD78663B3B3114CC0D8A6DC
+  ].freeze
+  APP_SPM_FRAMEWORK_BUILD_IDS = %w[
+    7A1B2C3D4E5F6000100140003
+    7A1B2C3D4E5F6000100140004
+    7A1B2C3D4E5F6000100140005
+  ].freeze
+
   module_function
 
   def link_frontegg_rn_pod(installer)
@@ -24,7 +38,7 @@ module FronteggSPM
     patch_app_pods_xcconfigs(installer.sandbox.root)
 
     app_pbxproj = user_app_pbxproj_path(installer)
-    dedupe_app_frontegg_spm_link(app_pbxproj) if app_pbxproj
+    link_frontegg_spm_into_app(app_pbxproj) if app_pbxproj
   end
 
   def user_app_pbxproj_path(installer)
@@ -53,51 +67,110 @@ module FronteggSPM
     end
   end
 
-  # App Swift files import FronteggSwift but must not link it (FronteggRN already does).
-  # Keep package resolution on the app project; drop target-level package products only.
-  def dedupe_app_frontegg_spm_link(app_pbxproj_path)
+  # The app's Swift files AND every target that links FronteggRN reference FronteggSwift symbols, so
+  # each such binary must LINK the FronteggSwift SPM product. Under use_frameworks! :static FronteggRN
+  # builds as a static framework and does NOT embed FronteggSwift's objects, so the link has to live
+  # on those targets themselves — otherwise the final link fails with
+  # "Undefined symbols for architecture arm64: ... FronteggSwift.*". The application target and any
+  # unit-test bundle (which links FronteggRN via `inherit! :complete`) need it; UI-test bundles are
+  # black-box and link neither, so they are intentionally excluded.
+  def link_frontegg_spm_into_app(app_pbxproj_path)
     return unless File.exist?(app_pbxproj_path)
 
     content = File.read(app_pbxproj_path)
     content = content.sub(%r{^// FRONTEGG_SPM_DEDUPED_MARKER\n}, '')
 
-    content = content.gsub(
-      /\n\t\t\tpackageProductDependencies = \(\n\t\t\t\t#{PRODUCT_DEP_ID} \/\* #{PRODUCT_NAME} \*\/,\n\t\t\t\);/,
-      ''
-    )
+    targets = frontegg_link_targets(content)
+    return if targets.empty?
 
-    unless content.include?('XCRemoteSwiftPackageReference "frontegg-ios-swift.git"')
-      content = content.sub(
-        /(mainGroup = [A-F0-9]+;\n)(\t\t\tproductRefGroup)/,
-        "\\1\t\t\tpackageReferences = (\n\t\t\t\t#{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference \"frontegg-ios-swift.git\" */,\n\t\t\t);\n\t\t\t\\2"
-      )
+    content = ensure_app_package_reference(content, targets.length)
+    targets.each_with_index do |target, idx|
+      product_dep_id = APP_SPM_PRODUCT_DEP_IDS[idx]
+      build_id = APP_SPM_FRAMEWORK_BUILD_IDS[idx]
+      next unless product_dep_id && build_id
 
-      package_sections = <<~PBX
-
-      /* Begin XCRemoteSwiftPackageReference section */
-      \t\t#{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference "frontegg-ios-swift.git" */ = {
-      \t\t\tisa = XCRemoteSwiftPackageReference;
-      \t\t\trepositoryURL = "#{PACKAGE_URL}";
-      \t\t\trequirement = {
-      \t\t\t\tkind = exactVersion;
-      \t\t\t\tversion = #{PACKAGE_VERSION};
-      \t\t\t};
-      \t\t};
-      /* End XCRemoteSwiftPackageReference section */
-
-      /* Begin XCSwiftPackageProductDependency section */
-      \t\t#{PRODUCT_DEP_ID} /* #{PRODUCT_NAME} */ = {
-      \t\t\tisa = XCSwiftPackageProductDependency;
-      \t\t\tpackage = #{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference "frontegg-ios-swift.git" */;
-      \t\t\tproductName = #{PRODUCT_NAME};
-      \t\t};
-      /* End XCSwiftPackageProductDependency section */
-      PBX
-
-      content.sub!(/\n\t\};\n\trootObject = /, "#{package_sections}\n\t};\n\trootObject = ")
+      content = add_target_product_dependency(content, target[:id], product_dep_id)
+      content = add_target_framework_build_file(content, target[:frameworks_phase_id], build_id, product_dep_id)
     end
 
     File.write(app_pbxproj_path, content)
+  end
+
+  # Native targets whose final binary links FronteggRN and therefore need FronteggSwift linked too:
+  # the application and any unit-test bundle. Returns [{id:, frameworks_phase_id:}] in pbxproj order.
+  def frontegg_link_targets(content)
+    targets = []
+    content.scan(/\t\t[A-F0-9]+ \/\* [^*]+ \*\/ = \{\n\t\t\tisa = PBXNativeTarget;[\s\S]*?\n\t\t\};/) do |block|
+      next unless block.match?(/productType = "com\.apple\.product-type\.(?:application|bundle\.unit-test)";/)
+      tid = block[/\A\t\t([A-F0-9]+) /, 1]
+      phases = block[/buildPhases = \(\n([\s\S]*?)\t\t\t\);/, 1]
+      next unless tid && phases
+      fid = phases[/([A-F0-9]+) \/\* Frameworks \*\//, 1]
+      targets << { id: tid, frameworks_phase_id: fid } if fid
+    end
+    targets
+  end
+
+  # Project-level Swift package resolution: one XCRemoteSwiftPackageReference + one
+  # XCSwiftPackageProductDependency per linking target.
+  def ensure_app_package_reference(content, product_dep_count)
+    return content if content.include?('XCRemoteSwiftPackageReference "frontegg-ios-swift.git"')
+
+    content = content.sub(
+      /(mainGroup = [A-F0-9]+;\n)(\t\t\tproductRefGroup)/,
+      "\\1\t\t\tpackageReferences = (\n\t\t\t\t#{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference \"frontegg-ios-swift.git\" */,\n\t\t\t);\n\t\t\t\\2"
+    )
+
+    product_deps = (0...product_dep_count).map do |i|
+      "\t\t#{APP_SPM_PRODUCT_DEP_IDS[i]} /* #{PRODUCT_NAME} */ = {\n" \
+        "\t\t\tisa = XCSwiftPackageProductDependency;\n" \
+        "\t\t\tpackage = #{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference \"frontegg-ios-swift.git\" */;\n" \
+        "\t\t\tproductName = #{PRODUCT_NAME};\n" \
+        "\t\t};\n"
+    end.join
+
+    package_sections =
+      "\n/* Begin XCRemoteSwiftPackageReference section */\n" \
+      "\t\t#{PACKAGE_REF_ID} /* XCRemoteSwiftPackageReference \"frontegg-ios-swift.git\" */ = {\n" \
+      "\t\t\tisa = XCRemoteSwiftPackageReference;\n" \
+      "\t\t\trepositoryURL = \"#{PACKAGE_URL}\";\n" \
+      "\t\t\trequirement = {\n" \
+      "\t\t\t\tkind = exactVersion;\n" \
+      "\t\t\t\tversion = #{PACKAGE_VERSION};\n" \
+      "\t\t\t};\n" \
+      "\t\t};\n" \
+      "/* End XCRemoteSwiftPackageReference section */\n\n" \
+      "/* Begin XCSwiftPackageProductDependency section */\n" \
+      "#{product_deps}" \
+      "/* End XCSwiftPackageProductDependency section */\n"
+
+    content.sub(/\n\t\};\n\trootObject = /, "#{package_sections}\n\t};\n\trootObject = ")
+  end
+
+  # Attach a FronteggSwift product dependency to a specific target so Xcode links it into that binary.
+  def add_target_product_dependency(content, target_id, product_dep_id)
+    block_re = /#{Regexp.escape(target_id)} \/\* [^*]+ \*\/ = \{\n\t\t\tisa = PBXNativeTarget;[\s\S]*?\n\t\t\};/
+    block = content[block_re]
+    return content if block.nil? || block.include?('packageProductDependencies = (')
+
+    content.sub(
+      /(#{Regexp.escape(target_id)} \/\* [^*]+ \*\/ = \{\n\t\t\tisa = PBXNativeTarget;[\s\S]*?\n)(\t\t\tproductType = )/m,
+      "\\1\t\t\tpackageProductDependencies = (\n\t\t\t\t#{product_dep_id} /* #{PRODUCT_NAME} */,\n\t\t\t);\n\\2"
+    )
+  end
+
+  # Add a FronteggSwift build file to a specific Frameworks (link binary) build phase.
+  def add_target_framework_build_file(content, phase_id, build_id, product_dep_id)
+    return content unless phase_id
+    return content if content.include?("#{build_id} /* #{PRODUCT_NAME} in Frameworks */")
+
+    build_file = "\t\t#{build_id} /* #{PRODUCT_NAME} in Frameworks */ = {isa = PBXBuildFile; productRef = #{product_dep_id} /* #{PRODUCT_NAME} */; };\n"
+    content = content.sub('/* Begin PBXBuildFile section */', "/* Begin PBXBuildFile section */\n#{build_file}")
+
+    content.sub(
+      /(#{Regexp.escape(phase_id)} \/\* Frameworks \*\/ = \{[\s\S]*?files = \(\n)/m,
+      "\\1\t\t\t\t#{build_id} /* #{PRODUCT_NAME} in Frameworks */,\n"
+    )
   end
 
   def patch_frontegg_rn_xcconfigs(pods_root)
