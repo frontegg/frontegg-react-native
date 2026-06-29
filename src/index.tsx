@@ -14,4 +14,8 @@ export {
   isSteppedUp,
   stepUp,
   openAdminPortal,
+  loadEntitlements,
+  getFeatureEntitlement,
+  getPermissionEntitlement,
 } from './FronteggNative';
+export type { Entitlement } from './FronteggNative';
