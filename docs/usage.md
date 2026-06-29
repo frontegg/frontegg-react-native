@@ -18,11 +18,11 @@ def fronteggDomain = "{{FRONTEGG_BASE_URL}}" // without https://
 def fronteggClientId = "{{FRONTEGG_CLIENT_ID}}"
 ```
 
-3. Within the `android { defaultConfig { ... } }` section, add the following:
+3. Within the `android { defaultConfig { ... } }` section, **below your existing `applicationId` line**, add the following. The `package_name` placeholder reads `applicationId`, so `applicationId` must already be declared above it — otherwise it resolves to `null` and the AAR manifest merge fails:
 
 ```groovy
 manifestPlaceholders = [
-    "package_name"        : applicationId,
+    "package_name"        : applicationId,   // your app's applicationId (declared above)
     "frontegg_domain"     : fronteggDomain,
     "frontegg_client_id"  : fronteggClientId
 ]
