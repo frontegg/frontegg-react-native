@@ -20,14 +20,19 @@ class UITestCase: XCTestCase {
 
     override class func setUp() {
         super.setUp()
+        // Bind the mock server once for the whole (serial) test run. Re-creating it per test
+        // class rebinds the same fixed port while the previous NWListener.cancel() is still in
+        // flight, which intermittently fails with EADDRINUSE ("Address already in use") — see
+        // LoginViaGoogleTest / PasskeysLoginTest. Per-test state is cleared via reset() in
+        // setUpWithError(), so a single shared server is safe.
         if server == nil {
             server = try! LocalMockAuthServer()
         }
     }
 
     override class func tearDown() {
-        server?.stop()
-        server = nil
+        // Intentionally keep the shared mock server bound for the entire run; the test process
+        // reclaims it on exit. (See setUp for why we don't stop and rebind per class.)
         super.tearDown()
     }
 
