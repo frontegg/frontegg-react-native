@@ -257,6 +257,11 @@ def fronteggClientId = "{{FRONTEGG_CLIENT_ID}}"
 
 android {
     defaultConfig {
+        // Keep your existing applicationId declared above manifestPlaceholders — the
+        // "package_name" placeholder below reads applicationId, so it must be set first.
+        // (If manifestPlaceholders is pasted above applicationId, package_name resolves
+        // to null and the AAR manifest merge fails.)
+        applicationId "com.your.company.app"
 
         manifestPlaceholders = [
                 "package_name" : applicationId,
