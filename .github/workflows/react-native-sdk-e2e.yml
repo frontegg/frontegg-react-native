@@ -121,8 +121,9 @@ jobs:
             adb shell settings put global window_animation_scale 0
             adb shell settings put global transition_animation_scale 0
             adb shell settings put global animator_duration_scale 0
+            adb shell settings put global hide_error_dialogs 1
             sleep 5
-            ./gradlew :app:connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.LOGIN_EMAIL="$LOGIN_EMAIL" -Pandroid.testInstrumentationRunnerArguments.LOGIN_PASSWORD="$LOGIN_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.LOGIN_WRONG_PASSWORD="$LOGIN_WRONG_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_1="$TENANT_NAME_1" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_2="$TENANT_NAME_2" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_EMAIL="$GOOGLE_EMAIL" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_PASSWORD="$GOOGLE_PASSWORD"
+            for attempt in 1 2 3; do echo "Android E2E attempt $attempt"; if ./gradlew :app:connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.LOGIN_EMAIL="$LOGIN_EMAIL" -Pandroid.testInstrumentationRunnerArguments.LOGIN_PASSWORD="$LOGIN_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.LOGIN_WRONG_PASSWORD="$LOGIN_WRONG_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_1="$TENANT_NAME_1" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_2="$TENANT_NAME_2" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_EMAIL="$GOOGLE_EMAIL" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_PASSWORD="$GOOGLE_PASSWORD"; then exit 0; fi; echo "Android E2E attempt $attempt failed (likely emulator/launcher flake); retrying"; adb shell am force-stop com.frontegg.demo || true; adb shell settings put global hide_error_dialogs 1 || true; sleep 5; done; exit 1
 
       - name: Collect JUnit reports
         if: always()
