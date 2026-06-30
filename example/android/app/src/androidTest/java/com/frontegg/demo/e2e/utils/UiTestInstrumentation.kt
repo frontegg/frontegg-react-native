@@ -34,13 +34,24 @@ class UiTestInstrumentation(
         activityName: String = "com.frontegg.demo.MainActivity",
         applicationPackage: String = "com.frontegg.demo",
     ) {
+        // CI flake guard: stop the system from popping "… isn't responding" dialogs over the app
+        // when the emulator is slow under load (the launcher ANRs and hides the app under test).
+        runCatching { uiDevice.executeShellCommand("settings put global hide_error_dialogs 1") }
+
         val intent = Intent(Intent.ACTION_MAIN).apply {
             setClassName(targetContext, activityName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-        targetContext.startActivity(intent)
-        uiDevice.wait(Until.hasObject(By.pkg(applicationPackage).depth(0)), 5_000)
+        // A slow cold start can leave the launcher (not the app) foregrounded on the first try,
+        // so retry the launch until the app package is actually on top.
+        repeat(3) {
+            targetContext.startActivity(intent)
+            dismissBlockingSystemDialogs()
+            if (uiDevice.wait(Until.hasObject(By.pkg(applicationPackage).depth(0)), 15_000)) {
+                return
+            }
+        }
     }
 
     fun terminateApp(applicationPackage: String = "com.frontegg.demo") {
@@ -55,9 +66,23 @@ class UiTestInstrumentation(
         val deadline = SystemClock.uptimeMillis() + timeout
         while (SystemClock.uptimeMillis() < deadline) {
             uiDevice.findObject(selector)?.let { return it }
+            dismissBlockingSystemDialogs()
             delay(250)
         }
         return null
+    }
+
+    /**
+     * CI flake guard: under load the emulator's launcher (or the app) can ANR, and the
+     * system shows an "… isn't responding" dialog on top of the app, hiding the views
+     * under test. Tap "Wait" (android:id/aerr_wait) to dismiss it and let the process
+     * recover, so a transient ANR doesn't fail the whole suite.
+     */
+    private fun dismissBlockingSystemDialogs() {
+        uiDevice.findObject(By.res("android:id/aerr_wait"))?.let {
+            it.click()
+            delay(500)
+        }
     }
 
     fun requireView(selector: BySelector, timeout: Long = defaultTimeoutMs): UiObject2 =

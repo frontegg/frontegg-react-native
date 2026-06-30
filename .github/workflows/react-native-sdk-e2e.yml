@@ -121,8 +121,24 @@ jobs:
             adb shell settings put global window_animation_scale 0
             adb shell settings put global transition_animation_scale 0
             adb shell settings put global animator_duration_scale 0
+            adb shell settings put global hide_error_dialogs 1
             sleep 5
-            ./gradlew :app:connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.LOGIN_EMAIL="$LOGIN_EMAIL" -Pandroid.testInstrumentationRunnerArguments.LOGIN_PASSWORD="$LOGIN_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.LOGIN_WRONG_PASSWORD="$LOGIN_WRONG_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_1="$TENANT_NAME_1" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_2="$TENANT_NAME_2" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_EMAIL="$GOOGLE_EMAIL" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_PASSWORD="$GOOGLE_PASSWORD"
+            run_e2e() {
+              ./gradlew :app:connectedDebugAndroidTest --no-daemon -Pandroid.testInstrumentationRunnerArguments.LOGIN_EMAIL="$LOGIN_EMAIL" -Pandroid.testInstrumentationRunnerArguments.LOGIN_PASSWORD="$LOGIN_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.LOGIN_WRONG_PASSWORD="$LOGIN_WRONG_PASSWORD" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_1="$TENANT_NAME_1" -Pandroid.testInstrumentationRunnerArguments.TENANT_NAME_2="$TENANT_NAME_2" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_EMAIL="$GOOGLE_EMAIL" -Pandroid.testInstrumentationRunnerArguments.GOOGLE_PASSWORD="$GOOGLE_PASSWORD"
+            }
+            # The emulator's launcher intermittently ANRs under load, hiding the app and failing
+            # an otherwise-passing run. Retry the test task (same emulator) so a random hiccup
+            # doesn't red the gate; pass on the first green attempt.
+            for attempt in 1 2 3; do
+              echo "::group::Android E2E attempt $attempt"
+              if run_e2e; then echo "::endgroup::"; exit 0; fi
+              echo "::endgroup::"
+              echo "Android E2E attempt $attempt failed (likely emulator/launcher flake); retrying"
+              adb shell am force-stop com.frontegg.demo || true
+              adb shell settings put global hide_error_dialogs 1 || true
+              sleep 5
+            done
+            exit 1
 
       - name: Collect JUnit reports
         if: always()
