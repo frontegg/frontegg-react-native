@@ -123,6 +123,35 @@ export function MyScreen() {
 }
 ```
 
+## Entitlements
+
+Gate features and permissions on-device. Call `loadEntitlements()` once the user is authenticated, then read feature/permission entitlements from the cache:
+
+```tsx
+import {
+  loadEntitlements,
+  getFeatureEntitlement,
+  getPermissionEntitlement,
+} from '@frontegg/react-native';
+
+// Load (or refresh) the current user's entitlements into the SDK cache.
+await loadEntitlements();
+
+// Check a feature-flag entitlement.
+const feature = await getFeatureEntitlement('my-feature-key');
+if (feature.isEntitled) {
+  // show the gated feature
+} else {
+  console.log('Not entitled:', feature.justification);
+}
+
+// Check a permission entitlement.
+const permission = await getPermissionEntitlement('fe.secure.read.users');
+console.log(permission.isEntitled, permission.justification);
+```
+
+Each call resolves to an `Entitlement` — `{ isEntitled: boolean; justification?: string | null }`. When `isEntitled` is `false`, `justification` explains why (e.g. `"NOT_AUTHENTICATED"`, `"ENTITLEMENTS_NOT_LOADED"`, `"MISSING_FEATURE"`, `"MISSING_PERMISSION"`).
+
 ## Check user authentication state
 
 Use the `useAuth` hook with `showLoader` and `isLoading` to conditionally display your app:

@@ -294,6 +294,42 @@ class FronteggRN: RCTEventEmitter {
         }
     }
 
+    @objc
+    func loadEntitlements(
+        _ forceRefresh: Bool,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) {
+        fronteggApp.auth.loadEntitlements(forceRefresh: forceRefresh) { success in
+            resolver(success)
+        }
+    }
+
+    @objc
+    func getFeatureEntitlement(
+        _ key: String,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) {
+        resolver(Self.entitlementToDict(fronteggApp.auth.getFeatureEntitlements(featureKey: key)))
+    }
+
+    @objc
+    func getPermissionEntitlement(
+        _ key: String,
+        resolver: @escaping RCTPromiseResolveBlock,
+        rejecter: @escaping RCTPromiseRejectBlock
+    ) {
+        resolver(Self.entitlementToDict(fronteggApp.auth.getPermissionEntitlements(permissionKey: key)))
+    }
+
+    private static func entitlementToDict(_ entitlement: Entitlement) -> [String: Any] {
+        return [
+            "isEntitled": entitlement.isEntitled,
+            "justification": entitlement.justification ?? NSNull(),
+        ]
+    }
+
     private static func topViewController() -> UIViewController? {
         let keyWindow = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }

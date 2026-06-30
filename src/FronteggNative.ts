@@ -89,6 +89,39 @@ export async function openAdminPortal(): Promise<void> {
   return FronteggRN.openAdminPortal();
 }
 
+export interface Entitlement {
+  /** Whether the user is entitled to the requested feature/permission. */
+  isEntitled: boolean;
+  /**
+   * Optional reason when `isEntitled` is false — e.g. `"NOT_AUTHENTICATED"`,
+   * `"ENTITLEMENTS_NOT_LOADED"`, `"MISSING_FEATURE"`, `"MISSING_PERMISSION"`.
+   */
+  justification?: string | null;
+}
+
+/**
+ * Loads the current user's entitlements into the SDK cache. Call this after
+ * authentication (and again with `forceRefresh` to refetch) before reading
+ * feature/permission entitlements. Resolves to `true` when entitlements loaded.
+ */
+export async function loadEntitlements(
+  forceRefresh: boolean = false
+): Promise<boolean> {
+  return FronteggRN.loadEntitlements(forceRefresh);
+}
+
+/** Returns the on-device entitlement for a feature-flag key. */
+export async function getFeatureEntitlement(key: string): Promise<Entitlement> {
+  return FronteggRN.getFeatureEntitlement(key);
+}
+
+/** Returns the on-device entitlement for a permission key. */
+export async function getPermissionEntitlement(
+  key: string
+): Promise<Entitlement> {
+  return FronteggRN.getPermissionEntitlement(key);
+}
+
 function debounce<T extends (...args: any[]) => any>(func: T, waitFor: number) {
   let timeout: any;
 

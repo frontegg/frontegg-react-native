@@ -12,6 +12,7 @@ import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.frontegg.android.AdminPortalActivity
 import com.frontegg.android.fronteggAuth
+import com.frontegg.android.models.Entitlement
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlin.time.DurationUnit
@@ -228,6 +229,29 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     AdminPortalActivity.open(activity)
     promise.resolve(null)
   }
+
+  @ReactMethod
+  fun loadEntitlements(forceRefresh: Boolean, promise: Promise) {
+    auth.loadEntitlements(forceRefresh) { success ->
+      promise.resolve(success)
+    }
+  }
+
+  @ReactMethod
+  fun getFeatureEntitlement(key: String, promise: Promise) {
+    promise.resolve(entitlementToMap(auth.getFeatureEntitlements(key)))
+  }
+
+  @ReactMethod
+  fun getPermissionEntitlement(key: String, promise: Promise) {
+    promise.resolve(entitlementToMap(auth.getPermissionEntitlements(key)))
+  }
+
+  private fun entitlementToMap(entitlement: Entitlement): WritableMap =
+    Arguments.createMap().apply {
+      putBoolean("isEntitled", entitlement.isEntitled)
+      putString("justification", entitlement.justification)
+    }
 
   override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()
 
