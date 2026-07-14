@@ -7,6 +7,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -137,8 +138,22 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun directLoginAction(type: String, data: String, ephemeralSession: Boolean, promise: Promise) {
+  fun directLoginAction(
+    type: String,
+    data: String,
+    ephemeralSession: Boolean,
+    additionalQueryParams: ReadableMap?,
+    promise: Promise
+  ) {
     val activity = reactApplicationContext.currentActivity
+    // Parity note: the JS `directLoginAction(type, data, ephemeralSession, additionalQueryParams)`
+    // signature is shared across platforms, so both trailing args must be declared here to keep the
+    // JS↔native argument mapping aligned (otherwise `additionalQueryParams` collides with the
+    // Promise slot). iOS honors both (see ios/FronteggRN.swift), but the native Android SDK's
+    // `directLoginAction(activity, type, data)` does not yet accept them — threading them through
+    // requires native support in frontegg-android-kotlin. Until then they are accepted no-ops on
+    // Android. `ephemeralSession` is inherently iOS-only here (Android runs the flow in the embedded
+    // WebView, not an ASWebAuthenticationSession-style browser session).
     auth.directLoginAction(activity!!, type, data)
     promise.resolve(true)
   }
