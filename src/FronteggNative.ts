@@ -43,6 +43,14 @@ export async function refreshToken() {
   return FronteggRN.refreshToken();
 }
 
+/**
+ * Starts a direct login action (e.g. a specific social provider) in the embedded login flow.
+ *
+ * Note on `ephemeralSession` / `additionalQueryParams`: these are currently honored on **iOS
+ * only**. On Android the underlying native SDK's `directLoginAction` does not yet accept them,
+ * so they are ignored there (tracked upstream in `frontegg-android-kotlin`). `ephemeralSession`
+ * is inherently iOS-specific (it maps to the ASWebAuthenticationSession browser session).
+ */
 export async function directLoginAction(
   type: string,
   data: string,
