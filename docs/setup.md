@@ -64,9 +64,9 @@ yarn ios --simulator "iPhone 17 Pro Max"
 
 If a physical iPhone is connected, React Native may target the device and fail on code signing (`com.your.bundle`). Use `--simulator` or disconnect the device.
 
-The `frontegg_spm` helper pins **FronteggSwift 1.3.10** from `https://github.com/frontegg/frontegg-ios-swift.git`, links it to the **FronteggRN** CocoaPods target, and configures the app Xcode project so SPM resolves without duplicate symbol errors at link time.
+The `frontegg_spm` helper pins **FronteggSwift 1.3.11** from `https://github.com/frontegg/frontegg-ios-swift.git`, links it to the **FronteggRN** CocoaPods target, and configures the app Xcode project so SPM resolves without duplicate symbol errors at link time.
 
-> **Embedded mode step-up:** `FronteggSwift` **1.3.10** routes `stepUp()` through the embedded `WKWebView` when `embeddedMode` is enabled (instead of `ASWebAuthenticationSession`), so MFA/step-up reuses the existing web session. Set `<key>embeddedMode</key><true/>` in `Frontegg.plist` if you use the embedded login box.
+> **Embedded mode step-up:** `FronteggSwift` **1.3.11** routes `stepUp()` through the embedded `WKWebView` when `embeddedMode` is enabled (instead of `ASWebAuthenticationSession`), so MFA/step-up reuses the existing web session. Set `<key>embeddedMode</key><true/>` in `Frontegg.plist` if you use the embedded login box.
 
 #### Step-up from JavaScript
 

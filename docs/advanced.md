@@ -53,7 +53,7 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
 
 1. **iOS Version**:  Ensure your project targets iOS 15 or later to support the necessary WebAuthn APIs.
 2. **Android**: Use Android SDK 26+.
-3. **Frontegg SDK Version**: Use Frontegg iOS SDK version 1.3.10 or later.
+3. **Frontegg SDK Version**: Use Frontegg iOS SDK version 1.3.11 or later.
 
 #### Android setup
 
@@ -63,7 +63,7 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
    ```groovy
       dependencies {
        implementation 'androidx.browser:browser:1.8.0'
-       implementation 'com.frontegg.sdk:android:1.3.34'
+       implementation 'com.frontegg.sdk:android:1.3.35'
    }
    ```
 
