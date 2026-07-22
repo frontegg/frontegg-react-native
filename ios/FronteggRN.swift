@@ -34,9 +34,16 @@ class FronteggRN: RCTEventEmitter {
     }
     @objc
     func subscribe() -> [AnyHashable : Any]! {
-        
+
+        // FR-25940: cancel any prior subscriptions before re-subscribing. Each FronteggWrapper mount
+        // calls subscribe(), and without clearing, the two sinks below accumulated on `cancellables`
+        // on every call and were never cancelled (stopObserving only flips a flag) — so every state
+        // change fired N× duplicate native work. Mirrors Android, which disposes before re-subscribing.
+        cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
+
         let auth = fronteggApp.auth
-        
+
         var stateChange: AnyPublisher<Void, Never> {
             return Publishers.Merge5 (
                 auth.$refreshingToken.map { _ in },
