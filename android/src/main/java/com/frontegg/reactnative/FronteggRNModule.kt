@@ -112,8 +112,12 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun logout() {
-    auth.logout()
+  fun logout(promise: Promise) {
+    // Resolve only after the SDK reports the logout finished, so JS can
+    // await the actual end of the session (parity with the iOS bridge).
+    auth.logout {
+      promise.resolve("Success")
+    }
   }
 
   @ReactMethod
