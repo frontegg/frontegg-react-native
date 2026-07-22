@@ -126,16 +126,16 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun login(loginHint: String?, promise: Promise) {
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
-      auth.login(activity, loginHint) {
-        promise.resolve("")
+      auth.login(activity, loginHint) { error ->
+        resolveOrRejectLogin(error, promise)
       }
     }
   }
 
   @ReactMethod
   fun switchTenant(tenantId: String, promise: Promise) {
-    auth.switchTenant(tenantId) {
-      promise.resolve(tenantId)
+    auth.switchTenant(tenantId) { success ->
+      resolveTenantSwitch(success, tenantId, promise)
     }
   }
 
@@ -298,4 +298,30 @@ internal inline fun withActivityOrReject(
     return
   }
   block(activity)
+}
+
+/**
+ * Completes [promise] for the native login callback (FR-25938). The SDK callback is
+ * `((Exception?) -> Unit)?`; the module used to ignore the error and always resolve, so a
+ * cancelled/failed login looked like success to JS. Reject on a non-null [error], resolve otherwise.
+ */
+internal fun resolveOrRejectLogin(error: Exception?, promise: Promise) {
+  if (error != null) {
+    promise.reject("LOGIN_ERROR", error.message ?: "Login failed", error)
+  } else {
+    promise.resolve("")
+  }
+}
+
+/**
+ * Completes [promise] for the native switchTenant callback (FR-25938). The SDK callback yields a
+ * `Boolean`; the module used to ignore it and always resolve the tenant id, so a failed switch
+ * looked like success. Reject when [success] is false, otherwise resolve [tenantId].
+ */
+internal fun resolveTenantSwitch(success: Boolean, tenantId: String, promise: Promise) {
+  if (success) {
+    promise.resolve(tenantId)
+  } else {
+    promise.reject("SWITCH_TENANT_ERROR", "Failed to switch tenant")
+  }
 }
