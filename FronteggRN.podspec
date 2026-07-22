@@ -19,7 +19,24 @@ Pod::Spec.new do |s|
 
   # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.
   # See https://github.com/facebook/react-native/blob/febf6b7f33fdb4904669f99d795eba4c0f95d7bf/scripts/cocoapods/new_architecture.rb#L79.
-  # FronteggSwift via SPM — linked in post_integrate by ios/frontegg_spm.rb (see docs/setup.md).
+  # FronteggSwift via SPM. On React Native >= 0.75 the official
+  # `spm_dependency` helper (react_native_pods.rb) declares the package here
+  # and `react_native_post_install` injects it into the Pods project for
+  # EVERY app target — no ID guessing, works for multi-target workspaces
+  # (white-label apps) where a single hardcoded-target script cannot.
+  # Keep the version in sync with ios/Package.swift.
+  # The `defined?` guard: autolinking evaluates this spec via `pod ipc spec`
+  # in a subprocess where react_native_pods.rb isn't loaded; the install-time
+  # evaluation (the one that matters) has the helper. On older RN without the
+  # helper, ios/frontegg_spm.rb (post_integrate) remains the fallback — see
+  # docs/setup.md.
+  if defined?(spm_dependency)
+    spm_dependency(s,
+      url: 'https://github.com/frontegg/frontegg-ios-swift.git',
+      requirement: { kind: 'exactVersion', version: '1.3.11' },
+      products: ['FronteggSwift']
+    )
+  end
 
   if respond_to?(:install_modules_dependencies, true)
     install_modules_dependencies(s)
