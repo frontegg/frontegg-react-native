@@ -31,7 +31,7 @@ export function login(loginHint?: string) {
     });
 }
 
-export function logout() {
+export function logout(): Promise<void> {
   return FronteggRN.logout();
 }
 
