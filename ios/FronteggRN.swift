@@ -116,11 +116,29 @@ class FronteggRN: RCTEventEmitter {
     }
     
     @objc
-    func logout() -> [AnyHashable : Any]! {
-        DispatchQueue.main.sync {
-            fronteggApp.auth.logout()
+    func logout(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
+        DispatchQueue.main.async {
+            // Use the completion overload so JS can await the actual end of
+            // the session, and push the final state when it lands. The
+            // fire-and-forget call relies solely on Combine-driven events,
+            // which can be lost when logout coincides with app-level
+            // teardown — leaving the JS state authenticated forever and
+            // breaking the next login's state-transition detection. The SDK
+            // completion is success-only, so there is no reject path.
+            self.fronteggApp.auth.logout { _ in
+                // Read/write hasListeners + pendingObservingState on main —
+                // RCTEventEmitter mutates them on main (start/stopObserving),
+                // so touching them off-main would be a data race.
+                DispatchQueue.main.async {
+                    if self.hasListeners {
+                        self.sendEventToJS()
+                    } else {
+                        self.pendingObservingState = true
+                    }
+                    resolve("Success")
+                }
+            }
         }
-        return ["status": "OK"]
     }
     
     @objc
