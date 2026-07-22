@@ -23,10 +23,14 @@ class FronteggRN: RCTEventEmitter {
     }
     override func startObserving() {
         self.hasListeners = true
-        if(self.pendingObservingState){
-            self.pendingObservingState = false
-            self.sendEventToJS()
-        }
+        // Always replay the current auth state when a JS listener attaches,
+        // not only when a change was missed while unobserved. The JS-side
+        // state copy starts from a default and is only ever corrected by
+        // events; without an unconditional replay, a (re)subscribe that
+        // races a native state change leaves JS permanently stale (observed
+        // on-device: logout events lost during app-level teardown).
+        self.pendingObservingState = false
+        self.sendEventToJS()
     }
     
     override func stopObserving() {
@@ -34,7 +38,12 @@ class FronteggRN: RCTEventEmitter {
     }
     @objc
     func subscribe() -> [AnyHashable : Any]! {
-        
+
+        // Dispose previous sinks before resubscribing (parity with the
+        // Android module, which disposes before it resubscribes) so repeated
+        // subscribe() calls don't multiply event sends.
+        cancellables.removeAll()
+
         let auth = fronteggApp.auth
         
         var stateChange: AnyPublisher<Void, Never> {
@@ -82,7 +91,13 @@ class FronteggRN: RCTEventEmitter {
             }
             
         }).store(in: &cancellables)
-        
+
+        // Push the current state after (re)subscribing (Android parity) so a
+        // subscribe() call acts as an on-demand state resync for JS.
+        if(self.hasListeners){
+            self.sendEventToJS()
+        }
+
         return ["status": "OK"]
     }
     
