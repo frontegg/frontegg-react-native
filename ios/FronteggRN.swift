@@ -123,20 +123,29 @@ class FronteggRN: RCTEventEmitter {
             // fire-and-forget call relies solely on Combine-driven events,
             // which can be lost when logout coincides with app-level
             // teardown — leaving the JS state authenticated forever and
-            // breaking the next login's state-transition detection. The SDK
-            // completion is success-only, so there is no reject path.
-            self.fronteggApp.auth.logout { _ in
+            // breaking the next login's state-transition detection.
+            //
+            // `settle` runs once, on main. A timeout fallback guarantees the
+            // promise always settles so `await logout()` can never hang if the
+            // SDK completion never fires. The SDK completion is success-only,
+            // so settle resolves (never rejects), preserving Promise<void>.
+            var settled = false
+            let settle: () -> Void = {
+                guard !settled else { return }
+                settled = true
                 // Read/write hasListeners + pendingObservingState on main —
                 // RCTEventEmitter mutates them on main (start/stopObserving),
                 // so touching them off-main would be a data race.
-                DispatchQueue.main.async {
-                    if self.hasListeners {
-                        self.sendEventToJS()
-                    } else {
-                        self.pendingObservingState = true
-                    }
-                    resolve("Success")
+                if self.hasListeners {
+                    self.sendEventToJS()
+                } else {
+                    self.pendingObservingState = true
                 }
+                resolve("Success")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) { settle() }
+            self.fronteggApp.auth.logout { _ in
+                DispatchQueue.main.async { settle() }
             }
         }
     }
