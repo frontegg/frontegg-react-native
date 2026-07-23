@@ -17,6 +17,7 @@ import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -115,8 +116,23 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   fun logout(promise: Promise) {
     // Resolve only after the SDK reports the logout finished, so JS can
     // await the actual end of the session (parity with the iOS bridge).
+    //
+    // A timeout fallback guarantees the promise always settles, so
+    // `await logout()` can never hang if the SDK callback never fires
+    // (parity with the iOS bridge's 10s settle). `settled` (compare-and-set)
+    // guarantees we resolve exactly once — resolving a React Native Promise
+    // twice is an illegal callback invocation. The SDK callback may arrive on
+    // a background thread while the timeout runs on the main looper, so the
+    // guard must be atomic.
+    val settled = AtomicBoolean(false)
+    val settle = {
+      if (settled.compareAndSet(false, true)) {
+        promise.resolve("Success")
+      }
+    }
+    handler.postDelayed({ settle() }, LOGOUT_TIMEOUT_MS)
     auth.logout {
-      promise.resolve("Success")
+      settle()
     }
   }
 
@@ -294,6 +310,10 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   companion object {
     const val NAME = "FronteggRN"
 
+    // Fallback deadline for logout(): if the SDK completion never fires,
+    // resolve the promise anyway so `await logout()` cannot hang. Matches
+    // the iOS bridge's 10s settle.
+    private const val LOGOUT_TIMEOUT_MS = 10_000L
   }
 }
 
