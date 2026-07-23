@@ -16,6 +16,9 @@ import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -160,8 +163,17 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun refreshToken(promise: Promise) {
-    auth.refreshTokenIfNeeded()
-    promise.resolve("")
+    // FR-25937: refreshTokenIfNeeded() starts the refresh in the background and returns
+    // immediately, so resolving here handed JS a stale token. refreshTokenAndWait() suspends
+    // until the refresh finishes; resolve its Boolean result to match iOS (which awaits a Bool).
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        val success = auth.refreshTokenAndWait()
+        promise.resolve(success)
+      } catch (e: Exception) {
+        promise.reject("REFRESH_TOKEN_ERROR", e.message, e)
+      }
+    }
   }
 
   @ReactMethod
