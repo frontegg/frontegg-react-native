@@ -1,5 +1,6 @@
 package com.frontegg.reactnative
 
+import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.bridge.Arguments
@@ -16,6 +17,9 @@ import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -124,16 +128,17 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun login(loginHint: String?, promise: Promise) {
-    val activity = reactApplicationContext.currentActivity
-    auth.login(activity!!, loginHint) {
-      promise.resolve("")
+    withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      auth.login(activity, loginHint) { error ->
+        resolveOrRejectLogin(error, promise)
+      }
     }
   }
 
   @ReactMethod
   fun switchTenant(tenantId: String, promise: Promise) {
-    auth.switchTenant(tenantId) {
-      promise.resolve(tenantId)
+    auth.switchTenant(tenantId) { success ->
+      resolveTenantSwitch(success, tenantId, promise)
     }
   }
 
@@ -145,7 +150,6 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     additionalQueryParams: ReadableMap?,
     promise: Promise
   ) {
-    val activity = reactApplicationContext.currentActivity
     // Parity note: the JS `directLoginAction(type, data, ephemeralSession, additionalQueryParams)`
     // signature is shared across platforms, so both trailing args must be declared here to keep the
     // JS↔native argument mapping aligned (otherwise `additionalQueryParams` collides with the
@@ -154,24 +158,36 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     // requires native support in frontegg-android-kotlin. Until then they are accepted no-ops on
     // Android. `ephemeralSession` is inherently iOS-only here (Android runs the flow in the embedded
     // WebView, not an ASWebAuthenticationSession-style browser session).
-    auth.directLoginAction(activity!!, type, data)
-    promise.resolve(true)
+    withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      auth.directLoginAction(activity, type, data)
+      promise.resolve(true)
+    }
   }
 
   @ReactMethod
   fun refreshToken(promise: Promise) {
-    auth.refreshTokenIfNeeded()
-    promise.resolve("")
+    // FR-25937: refreshTokenIfNeeded() starts the refresh in the background and returns
+    // immediately, so resolving here handed JS a stale token. refreshTokenAndWait() suspends
+    // until the refresh finishes; resolve its Boolean result to match iOS (which awaits a Bool).
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        val success = auth.refreshTokenAndWait()
+        promise.resolve(success)
+      } catch (e: Exception) {
+        promise.reject("REFRESH_TOKEN_ERROR", e.message, e)
+      }
+    }
   }
 
   @ReactMethod
   fun loginWithPasskeys(promise: Promise) {
-    val activity = reactApplicationContext.currentActivity
-    auth.loginWithPasskeys(activity!!) { error ->
-      if (error != null) {
-        promise.reject(error)
-      } else {
-        promise.resolve("")
+    withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      auth.loginWithPasskeys(activity) { error ->
+        if (error != null) {
+          promise.reject(error)
+        } else {
+          promise.resolve("")
+        }
       }
     }
   }
@@ -223,12 +239,13 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun registerPasskeys(promise: Promise) {
-    val activity = reactApplicationContext.currentActivity
-    auth.registerPasskeys(activity!!) { error ->
-      if (error != null) {
-        promise.reject(error)
-      } else {
-        promise.resolve("")
+    withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      auth.registerPasskeys(activity) { error ->
+        if (error != null) {
+          promise.reject(error)
+        } else {
+          promise.resolve("")
+        }
       }
     }
   }
@@ -273,5 +290,50 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   companion object {
     const val NAME = "FronteggRN"
 
+  }
+}
+
+/**
+ * Runs [block] with the current [activity], or rejects [promise] with NO_ACTIVITY when it is null
+ * (FR-25939). login/directLoginAction/loginWithPasskeys/registerPasskeys previously used
+ * `currentActivity!!`, which threw a KotlinNullPointerException (crashing the app) when the app was
+ * backgrounded or the activity had been recreated. Top-level so it can be unit-tested without the
+ * ReactApplicationContext, matching stepUp/openAdminPortal which already null-check inline.
+ */
+internal inline fun withActivityOrReject(
+  activity: Activity?,
+  promise: Promise,
+  block: (Activity) -> Unit,
+) {
+  if (activity == null) {
+    promise.reject("NO_ACTIVITY", "Current activity is null")
+    return
+  }
+  block(activity)
+}
+
+/**
+ * Completes [promise] for the native login callback (FR-25938). The SDK callback is
+ * `((Exception?) -> Unit)?`; the module used to ignore the error and always resolve, so a
+ * cancelled/failed login looked like success to JS. Reject on a non-null [error], resolve otherwise.
+ */
+internal fun resolveOrRejectLogin(error: Exception?, promise: Promise) {
+  if (error != null) {
+    promise.reject("LOGIN_ERROR", error.message ?: "Login failed", error)
+  } else {
+    promise.resolve("")
+  }
+}
+
+/**
+ * Completes [promise] for the native switchTenant callback (FR-25938). The SDK callback yields a
+ * `Boolean`; the module used to ignore it and always resolve the tenant id, so a failed switch
+ * looked like success. Reject when [success] is false, otherwise resolve [tenantId].
+ */
+internal fun resolveTenantSwitch(success: Boolean, tenantId: String, promise: Promise) {
+  if (success) {
+    promise.resolve(tenantId)
+  } else {
+    promise.reject("SWITCH_TENANT_ERROR", "Failed to switch tenant")
   }
 }

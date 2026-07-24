@@ -21,14 +21,11 @@ export function getConstants() {
   return FronteggRN.getConstants();
 }
 
-export function login(loginHint?: string) {
-  FronteggRN.login(loginHint)
-    .then((data: any) => {
-      console.log(data);
-    })
-    .catch((e: any) => {
-      console.log(e);
-    });
+export async function login(loginHint?: string): Promise<void> {
+  // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
+  // neither await completion nor observe a cancelled/failed login. Return the promise so it is
+  // awaitable and rejections propagate.
+  return FronteggRN.login(loginHint);
 }
 
 export function logout() {

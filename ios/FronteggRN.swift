@@ -34,9 +34,16 @@ class FronteggRN: RCTEventEmitter {
     }
     @objc
     func subscribe() -> [AnyHashable : Any]! {
-        
+
+        // FR-25940: cancel any prior subscriptions before re-subscribing. Each FronteggWrapper mount
+        // calls subscribe(), and without clearing, the two sinks below accumulated on `cancellables`
+        // on every call and were never cancelled (stopObserving only flips a flag) — so every state
+        // change fired N× duplicate native work. Mirrors Android, which disposes before re-subscribing.
+        cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
+
         let auth = fronteggApp.auth
-        
+
         var stateChange: AnyPublisher<Void, Never> {
             return Publishers.Merge5 (
                 auth.$refreshingToken.map { _ in },
@@ -119,17 +126,18 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func login(
         _ loginHint: String?,
-        resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        
+
         DispatchQueue.main.sync {
             let completion: FronteggAuth.CompletionHandler = { result in
                 switch(result) {
                 case .success(_):
                     resolver("Success")
                 case .failure(let error):
-                    resolver("Failed: \(error.failureReason ?? "")")
-                    
+                    // FR-25938: previously resolved "Failed: …", so a cancelled/failed login looked
+                    // like success to JS. Reject so the awaited login() rejects.
+                    rejecter(error.failureReason, error.localizedDescription, error)
                 }
             }
             fronteggApp.auth.login(completion, loginHint:loginHint)
@@ -140,10 +148,17 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func switchTenant(
         _ tenantId: String,
-        resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        fronteggApp.auth.switchTenant(tenantId: tenantId) { _ in
-            resolver(tenantId)
+        fronteggApp.auth.switchTenant(tenantId: tenantId) { result in
+            switch result {
+            case .success(_):
+                resolver(tenantId)
+            case .failure(let error):
+                // FR-25938: previously ignored the result and always resolved, so a failed switch
+                // looked like success.
+                rejecter(error.failureReason, error.localizedDescription, error)
+            }
         }
     }
     
