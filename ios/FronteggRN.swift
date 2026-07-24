@@ -23,10 +23,14 @@ class FronteggRN: RCTEventEmitter {
     }
     override func startObserving() {
         self.hasListeners = true
-        if(self.pendingObservingState){
-            self.pendingObservingState = false
-            self.sendEventToJS()
-        }
+        // Always replay the current auth state when a JS listener attaches, not
+        // only when a change was missed while unobserved. The JS-side state copy
+        // starts from a default and is only ever corrected by events; without an
+        // unconditional replay, a (re)subscribe that races a native state change
+        // leaves JS permanently stale (observed on-device: logout events lost
+        // during app-level teardown). Carried from #97.
+        self.pendingObservingState = false
+        self.sendEventToJS()
     }
     
     override func stopObserving() {
@@ -116,11 +120,38 @@ class FronteggRN: RCTEventEmitter {
     }
     
     @objc
-    func logout() -> [AnyHashable : Any]! {
-        DispatchQueue.main.sync {
-            fronteggApp.auth.logout()
+    func logout(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
+        DispatchQueue.main.async {
+            // Use the completion overload so JS can await the actual end of
+            // the session, and push the final state when it lands. The
+            // fire-and-forget call relies solely on Combine-driven events,
+            // which can be lost when logout coincides with app-level
+            // teardown — leaving the JS state authenticated forever and
+            // breaking the next login's state-transition detection.
+            //
+            // `settle` runs once, on main. A timeout fallback guarantees the
+            // promise always settles so `await logout()` can never hang if the
+            // SDK completion never fires. The SDK completion is success-only,
+            // so settle resolves (never rejects), preserving Promise<void>.
+            var settled = false
+            let settle: () -> Void = {
+                guard !settled else { return }
+                settled = true
+                // Read/write hasListeners + pendingObservingState on main —
+                // RCTEventEmitter mutates them on main (start/stopObserving),
+                // so touching them off-main would be a data race.
+                if self.hasListeners {
+                    self.sendEventToJS()
+                } else {
+                    self.pendingObservingState = true
+                }
+                resolve("Success")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) { settle() }
+            self.fronteggApp.auth.logout { _ in
+                DispatchQueue.main.async { settle() }
+            }
         }
-        return ["status": "OK"]
     }
     
     @objc

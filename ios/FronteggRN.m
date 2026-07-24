@@ -5,7 +5,10 @@
 @interface RCT_EXTERN_MODULE(FronteggRN, RCTEventEmitter)
 
 RCT_EXTERN_METHOD(subscribe)
-RCT_EXTERN_METHOD(logout)
+RCT_EXTERN_METHOD(
+                  logout: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
 RCT_EXTERN_METHOD(
                   login: (NSString *)loginHint
                   resolver: (RCTPromiseResolveBlock)resolve

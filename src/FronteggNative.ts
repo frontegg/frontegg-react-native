@@ -28,7 +28,7 @@ export async function login(loginHint?: string): Promise<void> {
   return FronteggRN.login(loginHint);
 }
 
-export function logout() {
+export function logout(): Promise<void> {
   return FronteggRN.logout();
 }
 
