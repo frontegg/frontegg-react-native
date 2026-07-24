@@ -11,7 +11,7 @@ let package = Package(
     ],
     products: [],
     dependencies: [
-        .package(url: "https://github.com/frontegg/frontegg-ios-swift.git", exact: "1.3.12"),
+        .package(url: "https://github.com/frontegg/frontegg-ios-swift.git", exact: "1.3.13"),
     ],
     targets: []
 )
