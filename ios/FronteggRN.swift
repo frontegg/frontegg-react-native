@@ -23,10 +23,14 @@ class FronteggRN: RCTEventEmitter {
     }
     override func startObserving() {
         self.hasListeners = true
-        if(self.pendingObservingState){
-            self.pendingObservingState = false
-            self.sendEventToJS()
-        }
+        // Always replay the current auth state when a JS listener attaches, not
+        // only when a change was missed while unobserved. The JS-side state copy
+        // starts from a default and is only ever corrected by events; without an
+        // unconditional replay, a (re)subscribe that races a native state change
+        // leaves JS permanently stale (observed on-device: logout events lost
+        // during app-level teardown). Carried from #97.
+        self.pendingObservingState = false
+        self.sendEventToJS()
     }
     
     override func stopObserving() {
