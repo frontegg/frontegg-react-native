@@ -104,6 +104,16 @@ See the [example `HomeScreen`](https://github.com/frontegg/frontegg-react-native
 - Replace `{{FRONTEGG_BASE_URL}}` with the domain name from your Frontegg Portal.
 - Replace `{{FRONTEGG_CLIENT_ID}}` with your Frontegg client ID.
 
+> **Plist keys are forwarded as-is.** iOS configuration is plist-driven: the native
+> `FronteggSwift` SDK reads `Frontegg.plist` directly, so every key you set there reaches the
+> native SDK without any wrapper involvement. In particular, the proposed
+> `<key>useAssetLinks</key><true/>` option
+> ([frontegg-ios-swift#293](https://github.com/frontegg/frontegg-ios-swift/issues/293)) can be
+> set today — the currently pinned `FronteggSwift` ignores unknown plist keys, so it is a safe
+> no-op until a SDK version that supports it ships, at which point it takes effect with no
+> wrapper change. The wrapper also surfaces the key's value to JS via `getConstants().useAssetLinks`
+> (mirroring Android's `useAssetsLinks` BuildConfig constant) so you can verify your configuration.
+
 ### Handle open app with URL
 
 To support login via magic link and other authentication methods that require your app to open from a URL, add the following code to your app.

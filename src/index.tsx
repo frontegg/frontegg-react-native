@@ -20,6 +20,7 @@ export {
 } from './FronteggNative';
 export type {
   Entitlement,
+  FronteggConstants,
   FronteggLoginError,
   FronteggLoginErrorCode,
 } from './FronteggNative';

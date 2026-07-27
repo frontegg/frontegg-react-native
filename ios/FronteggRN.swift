@@ -18,8 +18,29 @@ class FronteggRN: RCTEventEmitter {
             "baseUrl": fronteggApp.baseUrl,
             "clientId": fronteggApp.clientId,
             "applicationId": fronteggApp.applicationId as Any,
-            "bundleId": Bundle.main.bundleIdentifier as Any
+            "bundleId": Bundle.main.bundleIdentifier as Any,
+            "useAssetLinks": Self.plistUseAssetLinks() as Any
         ]
+    }
+
+    /// `useAssetLinks` passthrough (companion to frontegg-ios-swift#293).
+    ///
+    /// iOS configuration is plist-driven: FronteggSwift decodes Frontegg.plist itself, so the
+    /// wrapper has no code path that hands config to native init — the plist *is* the passthrough.
+    /// Unknown keys are ignored by the SDK's Codable decode, so apps can set
+    /// `<key>useAssetLinks</key>` today as a safe no-op; once the pinned FronteggSwift supports
+    /// the key it takes effect with no wrapper change. This reads the same key from the same
+    /// plist so JS can introspect it via getConstants() (parity with Android's `useAssetsLinks`
+    /// BuildConfig constant). Returns nil when the plist or key is absent.
+    private static func plistUseAssetLinks() -> Bool? {
+        guard
+            let url = Bundle.main.url(forResource: "Frontegg", withExtension: "plist"),
+            let data = try? Data(contentsOf: url),
+            let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any]
+        else {
+            return nil
+        }
+        return plist["useAssetLinks"] as? Bool
     }
     override func startObserving() {
         self.hasListeners = true

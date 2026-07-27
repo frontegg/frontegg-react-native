@@ -17,7 +17,25 @@ const FronteggRN = NativeModules.FronteggRN
       }
     );
 
-export function getConstants() {
+export interface FronteggConstants {
+  baseUrl: string;
+  clientId: string;
+  applicationId?: string | null;
+  bundleId?: string | null;
+  /**
+   * iOS only: the `useAssetLinks` key from `Frontegg.plist`, when present
+   * (companion to frontegg-ios-swift#293 — the wrapper forwards the plist as-is,
+   * so the key reaches the native SDK once it supports it). `null`/`undefined`
+   * when the key is not set or on Android.
+   */
+  useAssetLinks?: boolean | null;
+  /** Android only: `FRONTEGG_USE_ASSETS_LINKS` from the host app's BuildConfig. */
+  useAssetsLinks?: boolean;
+  /** Android only: `FRONTEGG_USE_CHROME_CUSTOM_TABS` from the host app's BuildConfig. */
+  useChromeCustomTabs?: boolean;
+}
+
+export function getConstants(): FronteggConstants {
   return FronteggRN.getConstants();
 }
 
