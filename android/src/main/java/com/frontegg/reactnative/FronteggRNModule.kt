@@ -13,8 +13,11 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.frontegg.android.AdminPortalActivity
+import com.frontegg.android.exceptions.CanceledByUserException
+import com.frontegg.android.exceptions.FailedToAuthenticateException
 import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
+import java.io.IOException
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import java.util.concurrent.atomic.AtomicBoolean
@@ -340,13 +343,41 @@ internal inline fun withActivityOrReject(
  * Completes [promise] for the native login callback (FR-25938). The SDK callback is
  * `((Exception?) -> Unit)?`; the module used to ignore the error and always resolve, so a
  * cancelled/failed login looked like success to JS. Reject on a non-null [error], resolve otherwise.
+ *
+ * Issue #110: rejects with the stable cross-platform codes documented for the JS `login()`
+ * (see [normalizedLoginCode]); the raw platform details are preserved in the rejection's
+ * `userInfo` (`nativeCode` = exception class name, `nativeMessage` = exception message).
+ *
+ * [createMap] is injectable so JVM unit tests can substitute [Arguments.createMap], which
+ * requires the native RN libraries.
  */
-internal fun resolveOrRejectLogin(error: Exception?, promise: Promise) {
+internal fun resolveOrRejectLogin(
+  error: Exception?,
+  promise: Promise,
+  createMap: () -> WritableMap = Arguments::createMap,
+) {
   if (error != null) {
-    promise.reject("LOGIN_ERROR", error.message ?: "Login failed", error)
+    val userInfo = createMap().apply {
+      putString("nativeCode", error.javaClass.simpleName)
+      putString("nativeMessage", error.message)
+    }
+    promise.reject(normalizedLoginCode(error), error.message ?: "Login failed", error, userInfo)
   } else {
     promise.resolve("")
   }
+}
+
+/**
+ * Maps a login failure onto the stable, cross-platform rejection codes (issue #110). Keep in
+ * sync with `FronteggLoginErrorCode` in src/FronteggNative.ts and the iOS bridge. Mapping is
+ * conservative: only positively identified failures get a specific code; everything else is
+ * "unknown" with the raw exception preserved by the caller.
+ */
+internal fun normalizedLoginCode(error: Exception): String = when (error) {
+  is CanceledByUserException -> "user_cancelled"
+  is FailedToAuthenticateException -> "oauth_failed"
+  is IOException -> "network"
+  else -> "unknown"
 }
 
 /**

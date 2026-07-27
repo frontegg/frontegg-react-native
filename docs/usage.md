@@ -90,6 +90,41 @@ export function MyScreen() {
 }
 ```
 
+### Handling login errors
+
+`login()` returns a promise that resolves when login completes, and rejects with a
+`FronteggLoginError` when it fails or the user cancels:
+
+```tsx
+import { login } from '@frontegg/react-native';
+import type { FronteggLoginError } from '@frontegg/react-native';
+
+try {
+  await login();
+} catch (e) {
+  const error = e as FronteggLoginError;
+  if (error.userCancelled) {
+    // the user dismissed the login flow — usually not worth surfacing
+    return;
+  }
+  console.warn(`Login failed (${error.code}): ${error.message}`, error.nativeCode);
+}
+```
+
+The rejection shape is stable across iOS and Android:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | `'user_cancelled' \| 'oauth_failed' \| 'network' \| 'unknown'` | Normalized cross-platform error code. |
+| `message` | `string` | Human-readable message from the native SDK. |
+| `userCancelled` | `boolean` | Convenience flag, `true` when `code === 'user_cancelled'`. |
+| `nativeCode` | `string \| undefined` | Raw platform code — iOS `FronteggError` failure reason (e.g. `operationCanceled`), Android SDK exception class name (e.g. `CanceledByUserException`). |
+| `nativeMessage` | `string \| undefined` | Raw platform message. |
+
+The mapping is conservative: only failures the native layer positively identifies get a
+specific code (`user_cancelled`, `oauth_failed`, `network`); anything else rejects as
+`unknown` with the raw platform details preserved in `nativeCode` / `nativeMessage`.
+
 ## Switch account (tenant)
 
 Use the `switchTenant` function from `useAuth`:
