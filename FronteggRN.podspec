@@ -38,6 +38,24 @@ Pod::Spec.new do |s|
     )
   end
 
+  # Xcode 26 archive fix (see #108). FronteggSwift transitively links
+  # sentry-cocoa, so with `use_frameworks!` Sentry.xcframework's signature is
+  # collected twice — once at the app product level and once under this pod —
+  # and the archive's signature-collection step fails:
+  #
+  #   "Sentry.xcframework-ios.signature" couldn't be copied to "Signatures"
+  #   because an item with the same name already exists.
+  #
+  # Remove this pod's duplicate copy after it builds (before the app archive
+  # collects signatures); the app-level copy is untouched, so Sentry stays
+  # signed. Harmless no-op when Sentry isn't present or on pre-Xcode-26
+  # toolchains. Mirrors maplibre-react-native#1490.
+  s.script_phase = {
+    :name => '[Frontegg] Remove duplicate Sentry.xcframework-ios.signature',
+    :script => 'rm -rf "$CONFIGURATION_BUILD_DIR/Sentry.xcframework-ios.signature"',
+    :execution_position => :after_compile
+  }
+
   if respond_to?(:install_modules_dependencies, true)
     install_modules_dependencies(s)
   else
