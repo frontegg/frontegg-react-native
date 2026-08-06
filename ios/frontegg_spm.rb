@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-# Links FronteggSwift (SPM 1.3.14) to the FronteggRN CocoaPods target after `pod install`.
+# Links FronteggSwift (SPM 1.3.17) to the FronteggRN CocoaPods target after `pod install`.
 # Patches Pods.xcodeproj/project.pbxproj as text — xcodeproj gem save() breaks Xcode 26.
 module FronteggSPM
   PACKAGE_URL = 'https://github.com/frontegg/frontegg-ios-swift.git'
-  PACKAGE_VERSION = '1.3.14'
+  PACKAGE_VERSION = '1.3.17'
   PRODUCT_NAME = 'FronteggSwift'
 
   PACKAGE_REF_ID = '2F0A5C48A15A74750BE517A0'

@@ -33,7 +33,7 @@ Pod::Spec.new do |s|
   if defined?(spm_dependency)
     spm_dependency(s,
       url: 'https://github.com/frontegg/frontegg-ios-swift.git',
-      requirement: { kind: 'exactVersion', version: '1.3.14' },
+      requirement: { kind: 'exactVersion', version: '1.3.17' },
       products: ['FronteggSwift']
     )
   end
