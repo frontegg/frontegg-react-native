@@ -1,7 +1,6 @@
 package com.frontegg.reactnative
 
 import android.app.Activity
-import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.bridge.Arguments
@@ -18,6 +17,7 @@ import com.frontegg.android.exceptions.CanceledByUserException
 import com.frontegg.android.exceptions.FailedToAuthenticateException
 import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
+import com.frontegg.android.services.FronteggInnerStorage
 import java.io.IOException
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -151,21 +151,31 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   /**
-   * @param customization issue #127 login-box theme/copy overrides. Accepted so the
-   *   JS API is identical across platforms, but not yet applied: the Android SDK has
-   *   no equivalent of the iOS `FronteggApp.loginBoxThemeOptions`. Wiring it needs a
-   *   matching change in frontegg-android-kotlin's EmbeddedAuthActivity.
+   * @param customization issue #127 login-box theme/copy overrides, forwarded to the
+   *   native SDK and deep-merged over the environment's login-box configuration.
+   *   Requires frontegg-android-kotlin#286.
    */
   @ReactMethod
   fun login(loginHint: String?, customization: ReadableMap?, promise: Promise) {
-    if (customization != null) {
-      Log.w("FronteggRN", "loginBox customization is not yet supported on Android; ignoring")
-    }
+    applyLoginBoxCustomization(customization)
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       auth.login(activity, loginHint) { error ->
         resolveOrRejectLogin(error, promise)
       }
     }
+  }
+
+  /**
+   * Forwards issue #127 login-box overrides to the native SDK. Only assigns when a key is
+   * present, so a caller passing just `themeOptions` does not clear previously set
+   * localizations.
+   */
+  private fun applyLoginBoxCustomization(customization: ReadableMap?) {
+    if (customization == null) return
+
+    val storage = FronteggInnerStorage()
+    customization.getMap("themeOptions")?.let { storage.loginBoxThemeOptions = it.toHashMap() }
+    customization.getMap("localizations")?.let { storage.loginBoxLocalizations = it.toHashMap() }
   }
 
   @ReactMethod
