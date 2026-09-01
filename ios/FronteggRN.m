@@ -11,6 +11,7 @@ RCT_EXTERN_METHOD(
                   )
 RCT_EXTERN_METHOD(
                   login: (NSString *)loginHint
+                  customization: (NSDictionary *)customization
                   resolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )

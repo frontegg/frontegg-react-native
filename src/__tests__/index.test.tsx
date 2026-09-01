@@ -67,8 +67,63 @@ describe('login', () => {
     (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
     await expect(login('hint@example.com')).resolves.toBe('Success');
     expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
-      'hint@example.com'
+      'hint@example.com',
+      undefined
     );
+  });
+
+  it('accepts no arguments', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+    await login();
+    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
+      undefined,
+      undefined
+    );
+  });
+
+  // Issue #127: login-box theme/copy overrides.
+  it('accepts an options object with a login hint', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+    await login({ loginHint: 'hint@example.com' });
+    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
+      'hint@example.com',
+      undefined
+    );
+  });
+
+  it('forwards themeOptions and localizations as a customization payload', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+    const themeOptions = {
+      loginBox: { palette: { primary: { main: '#3F6655' } } },
+    };
+    const localizations = { en: { loginBox: { login: { title: 'Sign-in' } } } };
+
+    await login({ loginHint: 'hint@example.com', themeOptions, localizations });
+
+    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
+      'hint@example.com',
+      { themeOptions, localizations }
+    );
+  });
+
+  it('forwards a partial customization without inventing the other key', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+    const themeOptions = { loginBox: { themeName: 'modern' } };
+
+    await login({ themeOptions });
+
+    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(undefined, {
+      themeOptions,
+      localizations: undefined,
+    });
+  });
+
+  it('omits the customization payload entirely when nothing is customized', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+    await login({ loginHint: 'hint@example.com' });
+    const [, customization] = (NativeModules.FronteggRN.login as jest.Mock).mock
+      .calls[0];
+    expect(customization).toBeUndefined();
   });
 
   it('rejects with a normalized FronteggLoginError carrying the native details', async () => {

@@ -178,10 +178,12 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func login(
         _ loginHint: String?,
+        customization: NSDictionary?,
         resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
     ) -> Void {
 
         DispatchQueue.main.sync {
+            Self.applyLoginBoxCustomization(customization)
             let completion: FronteggAuth.CompletionHandler = { result in
                 switch(result) {
                 case .success(_):
@@ -208,6 +210,20 @@ class FronteggRN: RCTEventEmitter {
                 }
             }
             fronteggApp.auth.login(completion, loginHint:loginHint)
+        }
+    }
+
+    /// Forwards issue #127 login-box overrides to the native SDK. Only assigns
+    /// when a key is present, so a caller passing just `themeOptions` does not
+    /// clear previously set localizations.
+    private static func applyLoginBoxCustomization(_ customization: NSDictionary?) {
+        guard let customization else { return }
+
+        if let themeOptions = customization["themeOptions"] as? [String: Any] {
+            FronteggApp.shared.loginBoxThemeOptions = themeOptions
+        }
+        if let localizations = customization["localizations"] as? [String: Any] {
+            FronteggApp.shared.loginBoxLocalizations = localizations
         }
     }
 

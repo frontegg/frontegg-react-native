@@ -1,6 +1,7 @@
 package com.frontegg.reactnative
 
 import android.app.Activity
+import android.util.Log
 import android.os.Handler
 import android.os.Looper
 import com.facebook.react.bridge.Arguments
@@ -149,8 +150,17 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   }
 
+  /**
+   * @param customization issue #127 login-box theme/copy overrides. Accepted so the
+   *   JS API is identical across platforms, but not yet applied: the Android SDK has
+   *   no equivalent of the iOS `FronteggApp.loginBoxThemeOptions`. Wiring it needs a
+   *   matching change in frontegg-android-kotlin's EmbeddedAuthActivity.
+   */
   @ReactMethod
-  fun login(loginHint: String?, promise: Promise) {
+  fun login(loginHint: String?, customization: ReadableMap?, promise: Promise) {
+    if (customization != null) {
+      Log.w("FronteggRN", "loginBox customization is not yet supported on Android; ignoring")
+    }
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       auth.login(activity, loginHint) { error ->
         resolveOrRejectLogin(error, promise)

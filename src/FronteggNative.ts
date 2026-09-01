@@ -121,15 +121,70 @@ export function normalizeLoginError(e: unknown): FronteggLoginError {
 }
 
 /**
+ * Runtime overrides for the embedded login box (issue #127).
+ *
+ * Login-box configuration is scoped to a Frontegg environment, which cannot
+ * express appearance that is only known at runtime — for example a multi-brand
+ * app that resolves each brand's logo and colours from its own backend. These
+ * options are deep-merged over the environment's configuration, so keys left
+ * unset keep whatever the environment already defines.
+ *
+ * Embedded mode only; hosted mode runs outside the app's WebView.
+ */
+export interface LoginBoxCustomization {
+  /**
+   * Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`,
+   * e.g. `{ loginBox: { palette: { primary: { main: '#3F6655' } } } }`.
+   */
+  themeOptions?: Record<string, unknown>;
+  /**
+   * Same shape as `localizations` from `/frontegg/metadata?entityName=adminBox`,
+   * e.g. `{ en: { loginBox: { login: { title: 'Sign-in' } } } }`.
+   */
+  localizations?: Record<string, unknown>;
+}
+
+/** Options accepted by {@link login}. */
+export interface LoginOptions extends LoginBoxCustomization {
+  /** Pre-fills the email field on the login box. */
+  loginHint?: string;
+}
+
+/**
  * Opens the Frontegg login flow. Resolves when login completes successfully;
  * rejects with a {@link FronteggLoginError} when it fails or is cancelled.
+ *
+ * Accepts either a login hint (the original signature) or a {@link LoginOptions}
+ * object:
+ *
+ * ```ts
+ * await login('user@example.com');
+ * await login({
+ *   loginHint: 'user@example.com',
+ *   themeOptions: { loginBox: { palette: { primary: { main: '#3F6655' } } } },
+ * });
+ * ```
  */
-export async function login(loginHint?: string): Promise<void> {
+export async function login(
+  loginHintOrOptions?: string | LoginOptions
+): Promise<void> {
+  const options: LoginOptions =
+    typeof loginHintOrOptions === 'string'
+      ? { loginHint: loginHintOrOptions }
+      : loginHintOrOptions ?? {};
+
+  const { loginHint, themeOptions, localizations } = options;
+
+  // Omitted entirely when unset, so the native side can skip the work and
+  // behaviour is unchanged for callers that don't customize.
+  const customization =
+    themeOptions || localizations ? { themeOptions, localizations } : undefined;
+
   // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
   // neither await completion nor observe a cancelled/failed login. Return the promise so it is
   // awaitable and rejections propagate.
   try {
-    return await FronteggRN.login(loginHint);
+    return await FronteggRN.login(loginHint, customization);
   } catch (e) {
     throw normalizeLoginError(e);
   }
