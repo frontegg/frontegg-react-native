@@ -129,6 +129,9 @@ export function normalizeLoginError(e: unknown): FronteggLoginError {
  * options are deep-merged over the environment's configuration, so keys left
  * unset keep whatever the environment already defines.
  *
+ * Pass `null` for either key to clear a previously set override and fall back to
+ * the environment's own configuration. Omitting a key leaves it unchanged.
+ *
  * Embedded mode only; hosted mode runs outside the app's WebView.
  */
 export interface LoginBoxCustomization {
@@ -136,12 +139,12 @@ export interface LoginBoxCustomization {
    * Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`,
    * e.g. `{ loginBox: { palette: { primary: { main: '#3F6655' } } } }`.
    */
-  themeOptions?: Record<string, unknown>;
+  themeOptions?: Record<string, unknown> | null;
   /**
    * Same shape as `localizations` from `/frontegg/metadata?entityName=adminBox`,
    * e.g. `{ en: { loginBox: { login: { title: 'Sign-in' } } } }`.
    */
-  localizations?: Record<string, unknown>;
+  localizations?: Record<string, unknown> | null;
 }
 
 /** Options accepted by {@link login}. */
@@ -173,18 +176,28 @@ export async function login(
       ? { loginHint: loginHintOrOptions }
       : loginHintOrOptions ?? {};
 
-  const { loginHint, themeOptions, localizations } = options;
+  const { loginHint } = options;
 
-  // Omitted entirely when unset, so the native side can skip the work and
-  // behaviour is unchanged for callers that don't customize.
-  const customization =
-    themeOptions || localizations ? { themeOptions, localizations } : undefined;
+  // Present-vs-absent is meaningful: a key that is present (including `null`)
+  // is applied, and `null` clears a previously set override back to the
+  // environment's own configuration. A key that is absent leaves it untouched.
+  // The whole payload is omitted when neither key is given, so behaviour is
+  // unchanged for callers that don't customize.
+  const customization: Record<string, unknown> = {};
+  if ('themeOptions' in options) {
+    customization.themeOptions = options.themeOptions ?? null;
+  }
+  if ('localizations' in options) {
+    customization.localizations = options.localizations ?? null;
+  }
+  const payload =
+    Object.keys(customization).length > 0 ? customization : undefined;
 
   // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
   // neither await completion nor observe a cancelled/failed login. Return the promise so it is
   // awaitable and rejections propagate.
   try {
-    return await FronteggRN.login(loginHint, customization);
+    return await FronteggRN.login(loginHint, payload);
   } catch (e) {
     throw normalizeLoginError(e);
   }

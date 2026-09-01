@@ -37,7 +37,7 @@ const { isAuthenticated, user, isLoading } = useAuth();
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `login` | `loginHint?: string` | `Promise<void>` | Opens the login flow. `loginHint` pre-fills the identifier field. Resolves when login completes; rejects with a `FronteggLoginError`. |
+| `login` | `loginHint?: string`<br>or `options?: LoginOptions` | `Promise<void>` | Opens the login flow. `loginHint` pre-fills the identifier field. Resolves when login completes; rejects with a `FronteggLoginError`. See [Login box customization](#login-box-customization) for `LoginOptions`. |
 | `logout` | None | `Promise<void>` | Signs the user out and clears stored credentials. |
 | `loginWithPasskeys` | None | `Promise<void>` | Signs in with a passkey. Needs iOS 15+ or Android API 26+. |
 | `registerPasskeys` | None | `Promise<void>` | Registers a passkey for the signed-in user. |
@@ -53,6 +53,42 @@ const { isAuthenticated, user, isLoading } = useAuth();
 > `ephemeralSession` and `additionalQueryParams` are honoured on **iOS only**. Android's native
 > `directLoginAction` does not accept them yet and ignores them. `ephemeralSession` is inherently
 > iOS-specific — it maps to the `ASWebAuthenticationSession` browser session.
+
+
+## Login box customization
+
+`login()` accepts a `LoginOptions` object instead of a bare login hint, letting the app
+theme and re-word the embedded login box at runtime — for a multi-brand app whose
+appearance is resolved per brand and so cannot be expressed as static per-environment
+configuration.
+
+```ts
+await login({
+  loginHint: 'user@example.com',
+  themeOptions: {
+    loginBox: {
+      palette: { primary: { main: '#3F6655' } },
+      logo: { image: 'https://example.com/logo.png' },
+    },
+  },
+  localizations: {
+    en: { loginBox: { login: { title: 'Sign-in', continue: 'Log In' } } },
+  },
+});
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `loginHint` | `string` | Pre-fills the identifier field. |
+| `themeOptions` | `Record<string, unknown> \| null` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. |
+| `localizations` | `Record<string, unknown> \| null` | Same shape as `localizations` from the same endpoint. |
+
+Values are deep-merged over the environment's configuration, so keys left unset keep
+whatever the environment defines. Pass `null` to clear a previously set override; omit a
+key to leave it unchanged.
+
+Embedded mode only — hosted mode runs outside the app's WebView, so there is no
+injection point.
 
 ## Step-up authentication
 

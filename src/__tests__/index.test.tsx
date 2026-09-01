@@ -106,7 +106,7 @@ describe('login', () => {
     );
   });
 
-  it('forwards a partial customization without inventing the other key', async () => {
+  it('forwards only the key that was provided', async () => {
     (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
     const themeOptions = { loginBox: { themeName: 'modern' } };
 
@@ -114,7 +114,17 @@ describe('login', () => {
 
     expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(undefined, {
       themeOptions,
-      localizations: undefined,
+    });
+  });
+
+  it('treats an explicit null as a reset rather than an omission', async () => {
+    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+
+    await login({ themeOptions: null });
+
+    // Present-with-null clears the override; absent would leave it untouched.
+    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(undefined, {
+      themeOptions: null,
     });
   });
 

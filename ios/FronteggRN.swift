@@ -213,17 +213,19 @@ class FronteggRN: RCTEventEmitter {
         }
     }
 
-    /// Forwards issue #127 login-box overrides to the native SDK. Only assigns
-    /// when a key is present, so a caller passing just `themeOptions` does not
-    /// clear previously set localizations.
+    /// Forwards issue #127 login-box overrides to the native SDK. Only assigns when a
+    /// key is present, so a caller passing just `themeOptions` does not clear previously
+    /// set localizations; passing an explicit null clears that key.
     private static func applyLoginBoxCustomization(_ customization: NSDictionary?) {
         guard let customization else { return }
 
-        if let themeOptions = customization["themeOptions"] as? [String: Any] {
-            FronteggApp.shared.loginBoxThemeOptions = themeOptions
+        // Present-vs-absent is meaningful: NSNull clears the override, an absent key
+        // leaves whatever was set before.
+        if customization.object(forKey: "themeOptions") != nil {
+            FronteggApp.shared.loginBoxThemeOptions = customization["themeOptions"] as? [String: Any]
         }
-        if let localizations = customization["localizations"] as? [String: Any] {
-            FronteggApp.shared.loginBoxLocalizations = localizations
+        if customization.object(forKey: "localizations") != nil {
+            FronteggApp.shared.loginBoxLocalizations = customization["localizations"] as? [String: Any]
         }
     }
 

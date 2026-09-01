@@ -157,8 +157,10 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
    */
   @ReactMethod
   fun login(loginHint: String?, customization: ReadableMap?, promise: Promise) {
-    applyLoginBoxCustomization(customization)
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      // Inside the guard: with no activity the promise rejects and no WebView opens, so
+      // the overrides must not be left installed for whatever opens one next.
+      applyLoginBoxCustomization(customization)
       auth.login(activity, loginHint) { error ->
         resolveOrRejectLogin(error, promise)
       }
@@ -168,14 +170,20 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   /**
    * Forwards issue #127 login-box overrides to the native SDK. Only assigns when a key is
    * present, so a caller passing just `themeOptions` does not clear previously set
-   * localizations.
+   * localizations; passing an explicit null clears that key.
    */
   private fun applyLoginBoxCustomization(customization: ReadableMap?) {
     if (customization == null) return
 
     val storage = FronteggInnerStorage()
-    customization.getMap("themeOptions")?.let { storage.loginBoxThemeOptions = it.toHashMap() }
-    customization.getMap("localizations")?.let { storage.loginBoxLocalizations = it.toHashMap() }
+    // Present-vs-absent is meaningful: an explicit null clears the override, an absent
+    // key leaves whatever was set before.
+    if (customization.hasKey("themeOptions")) {
+      storage.loginBoxThemeOptions = customization.getMap("themeOptions")?.toHashMap()
+    }
+    if (customization.hasKey("localizations")) {
+      storage.loginBoxLocalizations = customization.getMap("localizations")?.toHashMap()
+    }
   }
 
   @ReactMethod
