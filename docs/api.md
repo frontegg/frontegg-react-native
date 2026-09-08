@@ -80,15 +80,32 @@ await login({
 | Field | Type | Description |
 |-------|------|-------------|
 | `loginHint` | `string` | Pre-fills the identifier field. |
-| `themeOptions` | `Record<string, unknown> \| null` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. |
-| `localizations` | `Record<string, unknown> \| null` | Same shape as `localizations` from the same endpoint. |
+| `themeOptions` | `Record<string, unknown>` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. Omitted means cleared. |
+| `localizations` | `Record<string, unknown>` | Same shape as `localizations` from the same endpoint. Omitted means cleared. |
 
-Values are deep-merged over the environment's configuration, so keys left unset keep
-whatever the environment defines. Pass `null` to clear a previously set override; omit a
-key to leave it unchanged.
+Values are deep-merged over the environment's configuration, so keys the override does not
+mention keep whatever the environment defines.
+
+Each `login()` call fully determines the login box appearance: a field you omit is cleared
+rather than carried over, so one brand's theme cannot appear on another brand's login. Pass
+both fields every time you want both applied.
 
 Embedded mode only — hosted mode runs outside the app's WebView, so there is no
 injection point.
+
+Android WebView providers without `DOCUMENT_START_SCRIPT` cannot apply overrides, and the
+box falls back to the environment's own branding. Call `isLoginBoxCustomizationSupported()`
+before relying on per-brand appearance:
+
+```ts
+if (!(await isLoginBoxCustomizationSupported())) {
+  // fall back to hosted login, or to your own branded screen
+}
+```
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `isLoginBoxCustomizationSupported` | None | `Promise<boolean>` | Whether this device can apply login box overrides. Always `true` on iOS; `false` on Android WebViews lacking `DOCUMENT_START_SCRIPT`, and on native binaries older than this feature. |
 
 ## Step-up authentication
 

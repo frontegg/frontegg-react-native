@@ -178,29 +178,47 @@ export async function login(
 
   const { loginHint } = options;
 
-  // Present-vs-absent is meaningful: a key that is present (including `null`)
-  // is applied, and `null` clears a previously set override back to the
-  // environment's own configuration. A key that is absent leaves it untouched.
-  // The whole payload is omitted when neither key is given, so behaviour is
-  // unchanged for callers that don't customize.
-  const customization: Record<string, unknown> = {};
-  if ('themeOptions' in options) {
-    customization.themeOptions = options.themeOptions ?? null;
-  }
-  if ('localizations' in options) {
-    customization.localizations = options.localizations ?? null;
-  }
-  const payload =
-    Object.keys(customization).length > 0 ? customization : undefined;
+  // Every call fully determines the login box appearance. A key the caller omitted is
+  // sent as null and clears any previous value, so one brand's theme cannot leak into
+  // the next brand's login.
+  const customization = {
+    themeOptions: options.themeOptions ?? null,
+    localizations: options.localizations ?? null,
+  };
+  const customized =
+    customization.themeOptions !== null || customization.localizations !== null;
 
   // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
   // neither await completion nor observe a cancelled/failed login. Return the promise so it is
   // awaitable and rejections propagate.
   try {
-    return await FronteggRN.login(loginHint, payload);
+    if (typeof FronteggRN.loginWithOptions === 'function') {
+      return await FronteggRN.loginWithOptions(loginHint, customization);
+    }
+
+    // Older native binary (a JS-only update). Sign-in still works; only the overrides
+    // are unavailable, so say so rather than failing the login.
+    if (customized) {
+      console.warn(
+        '[frontegg] login box customization needs a newer native SDK; signing in without it'
+      );
+    }
+    return await FronteggRN.login(loginHint);
   } catch (e) {
     throw normalizeLoginError(e);
   }
+}
+
+/**
+ * Whether this device can apply login box overrides. Android WebView providers without
+ * `DOCUMENT_START_SCRIPT` cannot, and the box then renders the environment's own
+ * branding — check this before relying on per-brand appearance. Always true on iOS.
+ */
+export async function isLoginBoxCustomizationSupported(): Promise<boolean> {
+  if (typeof FronteggRN.isLoginBoxCustomizationSupported !== 'function') {
+    return false;
+  }
+  return FronteggRN.isLoginBoxCustomizationSupported();
 }
 
 export function logout(): Promise<void> {

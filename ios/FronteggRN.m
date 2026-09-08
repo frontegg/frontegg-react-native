@@ -11,8 +11,17 @@ RCT_EXTERN_METHOD(
                   )
 RCT_EXTERN_METHOD(
                   login: (NSString *)loginHint
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
+RCT_EXTERN_METHOD(
+                  loginWithOptions: (NSString *)loginHint
                   customization: (NSDictionary *)customization
                   resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
+RCT_EXTERN_METHOD(
+                  isLoginBoxCustomizationSupported: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(
