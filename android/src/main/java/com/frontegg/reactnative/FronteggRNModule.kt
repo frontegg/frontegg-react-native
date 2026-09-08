@@ -17,6 +17,8 @@ import com.frontegg.android.exceptions.CanceledByUserException
 import com.frontegg.android.exceptions.FailedToAuthenticateException
 import com.frontegg.android.fronteggAuth
 import com.frontegg.android.models.Entitlement
+import com.frontegg.android.embedded.LoginBoxCustomization
+import com.frontegg.android.services.FronteggInnerStorage
 import java.io.IOException
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -156,6 +158,37 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
         resolveOrRejectLogin(error, promise)
       }
     }
+  }
+
+  /**
+   * Login with runtime login-box overrides. Kept separate from [login] so a JS bundle
+   * carrying this feature still runs against an older native binary: the JS falls back to
+   * [login] when this method is absent, losing the theming rather than the sign-in.
+   */
+  @ReactMethod
+  fun loginWithOptions(loginHint: String?, customization: ReadableMap?, promise: Promise) {
+    withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
+      applyLoginBoxCustomization(customization)
+      auth.login(activity, loginHint) { error ->
+        resolveOrRejectLogin(error, promise)
+      }
+    }
+  }
+
+  @ReactMethod
+  fun isLoginBoxCustomizationSupported(promise: Promise) {
+    promise.resolve(LoginBoxCustomization.isSupported())
+  }
+
+  /**
+   * Every call fully determines the login box appearance: a key the caller omitted is
+   * cleared rather than inherited, so one brand's theme cannot leak into another brand's
+   * login.
+   */
+  private fun applyLoginBoxCustomization(customization: ReadableMap?) {
+    val storage = FronteggInnerStorage()
+    storage.loginBoxThemeOptions = customization?.getMap("themeOptions")?.toHashMap()
+    storage.loginBoxLocalizations = customization?.getMap("localizations")?.toHashMap()
   }
 
   @ReactMethod

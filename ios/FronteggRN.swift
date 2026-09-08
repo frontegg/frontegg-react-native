@@ -180,8 +180,39 @@ class FronteggRN: RCTEventEmitter {
         _ loginHint: String?,
         resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
     ) -> Void {
+        performLogin(loginHint, customization: nil, applyCustomization: false, resolver: resolver, rejecter: rejecter)
+    }
+
+    /// Login with runtime login-box overrides. Kept separate from ``login`` so a JS bundle
+    /// carrying this feature still runs against an older native binary: the JS falls back
+    /// to ``login`` when this method is absent, losing the theming rather than the sign-in.
+    @objc
+    func loginWithOptions(
+        _ loginHint: String?,
+        customization: NSDictionary?,
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        performLogin(loginHint, customization: customization, applyCustomization: true, resolver: resolver, rejecter: rejecter)
+    }
+
+    @objc
+    func isLoginBoxCustomizationSupported(
+        _ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        resolve(true)
+    }
+
+    private func performLogin(
+        _ loginHint: String?,
+        customization: NSDictionary?,
+        applyCustomization: Bool,
+        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+    ) -> Void {
 
         DispatchQueue.main.sync {
+            if applyCustomization {
+                Self.applyLoginBoxCustomization(customization)
+            }
             let completion: FronteggAuth.CompletionHandler = { result in
                 switch(result) {
                 case .success(_):
@@ -209,6 +240,14 @@ class FronteggRN: RCTEventEmitter {
             }
             fronteggApp.auth.login(completion, loginHint:loginHint)
         }
+    }
+
+    /// Every call fully determines the login box appearance: a key the caller omitted is
+    /// cleared rather than inherited, so one brand's theme cannot leak into another
+    /// brand's login.
+    private static func applyLoginBoxCustomization(_ customization: NSDictionary?) {
+        FronteggApp.shared.loginBoxThemeOptions = customization?["themeOptions"] as? [String: Any]
+        FronteggApp.shared.loginBoxLocalizations = customization?["localizations"] as? [String: Any]
     }
 
     /// Maps a FronteggError from login() onto the stable, cross-platform rejection codes

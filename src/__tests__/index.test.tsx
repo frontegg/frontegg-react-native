@@ -59,37 +59,106 @@ describe('directLoginAction', () => {
 
 // Issue #110: login() rejects with a typed, cross-platform FronteggLoginError.
 describe('login', () => {
+  const NONE = { themeOptions: null, localizations: null };
+
   beforeEach(() => {
-    (NativeModules.FronteggRN.login as jest.Mock).mockReset();
+    (NativeModules.FronteggRN.login as jest.Mock).mockClear();
+    NativeModules.FronteggRN.loginWithOptions = jest.fn(() =>
+      Promise.resolve('Success')
+    );
   });
 
-  it('resolves when the native login succeeds', async () => {
-    (NativeModules.FronteggRN.login as jest.Mock).mockResolvedValue('Success');
+  it('bridges a login hint', async () => {
     await expect(login('hint@example.com')).resolves.toBe('Success');
-    expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
-      'hint@example.com'
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      'hint@example.com',
+      NONE
     );
   });
 
-  it('rejects with a normalized FronteggLoginError carrying the native details', async () => {
-    const nativeError = Object.assign(new Error('Operation canceled by user'), {
-      code: 'user_cancelled',
-      userInfo: {
-        nativeCode: 'operationCanceled',
-        nativeMessage: 'Operation canceled by user',
-      },
-    });
-    (NativeModules.FronteggRN.login as jest.Mock).mockRejectedValue(
-      nativeError
+  it('accepts no arguments', async () => {
+    await login();
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      undefined,
+      NONE
+    );
+  });
+
+  it('accepts an options object with a login hint', async () => {
+    await login({ loginHint: 'hint@example.com' });
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      'hint@example.com',
+      NONE
+    );
+  });
+
+  it('forwards themeOptions and localizations', async () => {
+    const themeOptions = {
+      loginBox: { palette: { primary: { main: '#3F6655' } } },
+    };
+    const localizations = { en: { loginBox: { login: { title: 'Sign-in' } } } };
+
+    await login({ loginHint: 'hint@example.com', themeOptions, localizations });
+
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      'hint@example.com',
+      { themeOptions, localizations }
+    );
+  });
+
+  // A key the caller omitted must be cleared, not inherited, so the previous brand's
+  // theme cannot render on the next brand's login.
+  it('clears an override the caller did not supply', async () => {
+    const themeOptions = {
+      loginBox: { logo: { image: 'https://a/logo.png' } },
+    };
+
+    await login({ themeOptions });
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenLastCalledWith(
+      undefined,
+      { themeOptions, localizations: null }
     );
 
-    await expect(login()).rejects.toMatchObject({
-      name: 'FronteggLoginError',
-      code: 'user_cancelled',
-      userCancelled: true,
-      message: 'Operation canceled by user',
-      nativeCode: 'operationCanceled',
-      nativeMessage: 'Operation canceled by user',
+    await login();
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenLastCalledWith(
+      undefined,
+      NONE
+    );
+  });
+
+  // `{ themeOptions: brand?.theme }` with an unresolved brand must not be read as an
+  // instruction to keep whatever was set before.
+  it('treats an explicitly undefined override as cleared', async () => {
+    await login({ loginHint: 'hint@example.com', themeOptions: undefined });
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      'hint@example.com',
+      NONE
+    );
+  });
+
+  describe('against a native binary without loginWithOptions', () => {
+    beforeEach(() => {
+      delete (NativeModules.FronteggRN as Record<string, unknown>)
+        .loginWithOptions;
+    });
+
+    it('still signs in, using the legacy method', async () => {
+      await expect(login('hint@example.com')).resolves.toBe('Success');
+      expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(
+        'hint@example.com'
+      );
+    });
+
+    it('warns when overrides were requested but cannot be applied', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await login({ themeOptions: { loginBox: {} } });
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('needs a newer native SDK')
+      );
+      expect(NativeModules.FronteggRN.login).toHaveBeenCalledWith(undefined);
+      warn.mockRestore();
     });
   });
 });
