@@ -64,7 +64,7 @@ yarn ios --simulator "iPhone 17 Pro Max"
 
 If a physical iPhone is connected, React Native may target the device and fail on code signing (`com.your.bundle`). Use `--simulator` or disconnect the device.
 
-The `frontegg_spm` helper pins **FronteggSwift 1.3.11** from `https://github.com/frontegg/frontegg-ios-swift.git`, links it to the **FronteggRN** CocoaPods target, and configures the app Xcode project so SPM resolves without duplicate symbol errors at link time.
+The `frontegg_spm` helper pins **FronteggSwift 1.3.21** from `https://github.com/frontegg/frontegg-ios-swift.git`, links it to the **FronteggRN** CocoaPods target, and configures the app Xcode project so SPM resolves without duplicate symbol errors at link time.
 
 > **Embedded mode step-up:** `FronteggSwift` **1.3.11** routes `stepUp()` through the embedded `WKWebView` when `embeddedMode` is enabled (instead of `ASWebAuthenticationSession`), so MFA/step-up reuses the existing web session. Set `<key>embeddedMode</key><true/>` in `Frontegg.plist` if you use the embedded login box.
 
@@ -106,13 +106,20 @@ See the [example `HomeScreen`](https://github.com/frontegg/frontegg-react-native
 
 > **Plist keys are forwarded as-is.** iOS configuration is plist-driven: the native
 > `FronteggSwift` SDK reads `Frontegg.plist` directly, so every key you set there reaches the
-> native SDK without any wrapper involvement. In particular, the proposed
-> `<key>useAssetLinks</key><true/>` option
-> ([frontegg-ios-swift#293](https://github.com/frontegg/frontegg-ios-swift/issues/293)) can be
-> set today — the currently pinned `FronteggSwift` ignores unknown plist keys, so it is a safe
-> no-op until a SDK version that supports it ships, at which point it takes effect with no
-> wrapper change. The wrapper also surfaces the key's value to JS via `getConstants().useAssetLinks`
-> (mirroring Android's `useAssetsLinks` BuildConfig constant) so you can verify your configuration.
+> native SDK without any wrapper involvement. The wrapper also surfaces
+> `useAssetLinks` to JS via `getConstants().useAssetLinks` (mirroring Android's
+> `useAssetsLinks` BuildConfig constant) so you can verify your configuration.
+
+#### App-Link (https) OAuth redirect
+
+By default iOS returns from sign-in through a custom URL scheme. Setting
+`<key>useAssetLinks</key><true/>` in `Frontegg.plist` routes the callback through
+`https://{your-frontegg-domain}/oauth/account/redirect/ios/{bundleId}` instead, matching
+Android's `useAssetsLinks`.
+
+Requires iOS 17.4+; below that the SDK falls back to the custom-scheme callback, so keep
+both redirect URIs registered in your Frontegg environment. The https callback must also be
+allow-listed as a redirect URI, or authorization fails after the user has already signed in.
 
 ### Handle open app with URL
 
