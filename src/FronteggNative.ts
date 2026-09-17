@@ -121,18 +121,104 @@ export function normalizeLoginError(e: unknown): FronteggLoginError {
 }
 
 /**
+ * Runtime overrides for the embedded login box (issue #127).
+ *
+ * Login-box configuration is scoped to a Frontegg environment, which cannot
+ * express appearance that is only known at runtime — for example a multi-brand
+ * app that resolves each brand's logo and colours from its own backend. These
+ * options are deep-merged over the environment's configuration, so keys left
+ * unset keep whatever the environment already defines.
+ *
+ * Pass `null` for either key to clear a previously set override and fall back to
+ * the environment's own configuration. Omitting a key leaves it unchanged.
+ *
+ * Embedded mode only; hosted mode runs outside the app's WebView.
+ */
+export interface LoginBoxCustomization {
+  /**
+   * Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`,
+   * e.g. `{ loginBox: { palette: { primary: { main: '#3F6655' } } } }`.
+   */
+  themeOptions?: Record<string, unknown> | null;
+  /**
+   * Same shape as `localizations` from `/frontegg/metadata?entityName=adminBox`,
+   * e.g. `{ en: { loginBox: { login: { title: 'Sign-in' } } } }`.
+   */
+  localizations?: Record<string, unknown> | null;
+}
+
+/** Options accepted by {@link login}. */
+export interface LoginOptions extends LoginBoxCustomization {
+  /** Pre-fills the email field on the login box. */
+  loginHint?: string;
+}
+
+/**
  * Opens the Frontegg login flow. Resolves when login completes successfully;
  * rejects with a {@link FronteggLoginError} when it fails or is cancelled.
+ *
+ * Accepts either a login hint (the original signature) or a {@link LoginOptions}
+ * object:
+ *
+ * ```ts
+ * await login('user@example.com');
+ * await login({
+ *   loginHint: 'user@example.com',
+ *   themeOptions: { loginBox: { palette: { primary: { main: '#3F6655' } } } },
+ * });
+ * ```
  */
-export async function login(loginHint?: string): Promise<void> {
+export async function login(
+  loginHintOrOptions?: string | LoginOptions
+): Promise<void> {
+  const options: LoginOptions =
+    typeof loginHintOrOptions === 'string'
+      ? { loginHint: loginHintOrOptions }
+      : loginHintOrOptions ?? {};
+
+  const { loginHint } = options;
+
+  // Every call fully determines the login box appearance. A key the caller omitted is
+  // sent as null and clears any previous value, so one brand's theme cannot leak into
+  // the next brand's login.
+  const customization = {
+    themeOptions: options.themeOptions ?? null,
+    localizations: options.localizations ?? null,
+  };
+  const customized =
+    customization.themeOptions !== null || customization.localizations !== null;
+
   // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
   // neither await completion nor observe a cancelled/failed login. Return the promise so it is
   // awaitable and rejections propagate.
   try {
+    if (typeof FronteggRN.loginWithOptions === 'function') {
+      return await FronteggRN.loginWithOptions(loginHint, customization);
+    }
+
+    // Older native binary (a JS-only update). Sign-in still works; only the overrides
+    // are unavailable, so say so rather than failing the login.
+    if (customized) {
+      console.warn(
+        '[frontegg] login box customization needs a newer native SDK; signing in without it'
+      );
+    }
     return await FronteggRN.login(loginHint);
   } catch (e) {
     throw normalizeLoginError(e);
   }
+}
+
+/**
+ * Whether this device can apply login box overrides. Android WebView providers without
+ * `DOCUMENT_START_SCRIPT` cannot, and the box then renders the environment's own
+ * branding — check this before relying on per-brand appearance. Always true on iOS.
+ */
+export async function isLoginBoxCustomizationSupported(): Promise<boolean> {
+  if (typeof FronteggRN.isLoginBoxCustomizationSupported !== 'function') {
+    return false;
+  }
+  return FronteggRN.isLoginBoxCustomizationSupported();
 }
 
 export function logout(): Promise<void> {

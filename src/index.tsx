@@ -17,10 +17,13 @@ export {
   loadEntitlements,
   getFeatureEntitlement,
   getPermissionEntitlement,
+  isLoginBoxCustomizationSupported,
 } from './FronteggNative';
 export type {
   Entitlement,
   FronteggConstants,
   FronteggLoginError,
   FronteggLoginErrorCode,
+  LoginBoxCustomization,
+  LoginOptions,
 } from './FronteggNative';

@@ -37,7 +37,7 @@ const { isAuthenticated, user, isLoading } = useAuth();
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `login` | `loginHint?: string` | `Promise<void>` | Opens the login flow. `loginHint` pre-fills the identifier field. Resolves when login completes; rejects with a `FronteggLoginError`. |
+| `login` | `loginHint?: string`<br>or `options?: LoginOptions` | `Promise<void>` | Opens the login flow. `loginHint` pre-fills the identifier field. Resolves when login completes; rejects with a `FronteggLoginError`. See [Login box customization](#login-box-customization) for `LoginOptions`. |
 | `logout` | None | `Promise<void>` | Signs the user out and clears stored credentials. |
 | `loginWithPasskeys` | None | `Promise<void>` | Signs in with a passkey. Needs iOS 15+ or Android API 26+. |
 | `registerPasskeys` | None | `Promise<void>` | Registers a passkey for the signed-in user. |
@@ -53,6 +53,59 @@ const { isAuthenticated, user, isLoading } = useAuth();
 > `ephemeralSession` and `additionalQueryParams` are honoured on **iOS only**. Android's native
 > `directLoginAction` does not accept them yet and ignores them. `ephemeralSession` is inherently
 > iOS-specific — it maps to the `ASWebAuthenticationSession` browser session.
+
+
+## Login box customization
+
+`login()` accepts a `LoginOptions` object instead of a bare login hint, letting the app
+theme and re-word the embedded login box at runtime — for a multi-brand app whose
+appearance is resolved per brand and so cannot be expressed as static per-environment
+configuration.
+
+```ts
+await login({
+  loginHint: 'user@example.com',
+  themeOptions: {
+    loginBox: {
+      palette: { primary: { main: '#3F6655' } },
+      logo: { image: 'https://example.com/logo.png' },
+    },
+  },
+  localizations: {
+    en: { loginBox: { login: { title: 'Sign-in', continue: 'Log In' } } },
+  },
+});
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `loginHint` | `string` | Pre-fills the identifier field. |
+| `themeOptions` | `Record<string, unknown>` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. Omitted means cleared. |
+| `localizations` | `Record<string, unknown>` | Same shape as `localizations` from the same endpoint. Omitted means cleared. |
+
+Values are deep-merged over the environment's configuration, so keys the override does not
+mention keep whatever the environment defines.
+
+Each `login()` call fully determines the login box appearance: a field you omit is cleared
+rather than carried over, so one brand's theme cannot appear on another brand's login. Pass
+both fields every time you want both applied.
+
+Embedded mode only — hosted mode runs outside the app's WebView, so there is no
+injection point.
+
+Android WebView providers without `DOCUMENT_START_SCRIPT` cannot apply overrides, and the
+box falls back to the environment's own branding. Call `isLoginBoxCustomizationSupported()`
+before relying on per-brand appearance:
+
+```ts
+if (!(await isLoginBoxCustomizationSupported())) {
+  // fall back to hosted login, or to your own branded screen
+}
+```
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `isLoginBoxCustomizationSupported` | None | `Promise<boolean>` | Whether this device can apply login box overrides. Always `true` on iOS; `false` on Android WebViews lacking `DOCUMENT_START_SCRIPT`, and on native binaries older than this feature. |
 
 ## Step-up authentication
 
