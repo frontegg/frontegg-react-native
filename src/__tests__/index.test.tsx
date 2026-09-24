@@ -59,7 +59,7 @@ describe('directLoginAction', () => {
 
 // Issue #110: login() rejects with a typed, cross-platform FronteggLoginError.
 describe('login', () => {
-  const NONE = { themeOptions: null, localizations: null };
+  const NONE = { themeOptions: null, localizations: null, footer: null };
 
   beforeEach(() => {
     (NativeModules.FronteggRN.login as jest.Mock).mockClear();
@@ -102,7 +102,32 @@ describe('login', () => {
 
     expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
       'hint@example.com',
-      { themeOptions, localizations }
+      { themeOptions, localizations, footer: null }
+    );
+  });
+
+  it('forwards a footer', async () => {
+    const footer = {
+      hideCaptchaBadge: true,
+      rows: [
+        {
+          variant: 'fine' as const,
+          segments: [
+            { text: 'Protected by reCAPTCHA — ' },
+            {
+              label: 'Privacy Policy',
+              url: 'https://policies.google.com/privacy',
+            },
+          ],
+        },
+      ],
+    };
+
+    await login({ footer });
+
+    expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenCalledWith(
+      undefined,
+      { themeOptions: null, localizations: null, footer }
     );
   });
 
@@ -116,7 +141,7 @@ describe('login', () => {
     await login({ themeOptions });
     expect(NativeModules.FronteggRN.loginWithOptions).toHaveBeenLastCalledWith(
       undefined,
-      { themeOptions, localizations: null }
+      { themeOptions, localizations: null, footer: null }
     );
 
     await login();

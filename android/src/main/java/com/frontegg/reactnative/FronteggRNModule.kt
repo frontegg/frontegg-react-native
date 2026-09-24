@@ -189,6 +189,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
     val storage = FronteggInnerStorage()
     storage.loginBoxThemeOptions = customization?.getMap("themeOptions")?.toHashMap()
     storage.loginBoxLocalizations = customization?.getMap("localizations")?.toHashMap()
+    storage.loginBoxFooter = customization?.getMap("footer")?.toHashMap()
   }
 
   @ReactMethod
