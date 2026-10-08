@@ -82,6 +82,7 @@ await login({
 | `loginHint` | `string` | Pre-fills the identifier field. |
 | `themeOptions` | `Record<string, unknown>` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. Omitted means cleared. |
 | `localizations` | `Record<string, unknown>` | Same shape as `localizations` from the same endpoint. Omitted means cleared. |
+| `footer` | `LoginBoxFooter` | Content below the login box's card, on its sign-in and password screens only. See [Login box footer](#login-box-footer). Omitted means cleared. |
 
 Values are deep-merged over the environment's configuration, so keys the override does not
 mention keep whatever the environment defines.
@@ -106,6 +107,46 @@ if (!(await isLoginBoxCustomizationSupported())) {
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `isLoginBoxCustomizationSupported` | None | `Promise<boolean>` | Whether this device can apply login box overrides. Always `true` on iOS; `false` on Android WebViews lacking `DOCUMENT_START_SCRIPT`, and on native binaries older than this feature. |
+
+### Login box footer
+
+The login box's configuration has no slot below the card, which `@frontegg/react` covers with
+its `boxFooter` render prop. `footer` is the embedded-mode equivalent, built from a structured
+payload rather than markup:
+
+```ts
+await login({
+  footer: {
+    hideCaptchaBadge: true,
+    rows: [
+      {
+        variant: 'body',
+        segments: [
+          { text: "Don't have an account? " },
+          { label: 'Sign up now', url: 'myapp://sign-up' },
+        ],
+      },
+      {
+        variant: 'fine',
+        segments: [
+          { text: 'Protected by reCAPTCHA — ' },
+          { label: 'Privacy Policy', url: 'https://policies.google.com/privacy' },
+        ],
+      },
+    ],
+  },
+});
+```
+
+- Strings are always rendered as text, never parsed as markup.
+- `variant` is `'body'` or `'fine'` (small, de-emphasised legal text).
+- Link URLs must be absolute `http(s)` or use one of the app's own registered URL schemes;
+  anything else renders as plain text.
+- `http(s)` links open in the system browser and leave the box in place. A link on the app's
+  own scheme dismisses the box and hands the URL to the app.
+- `hideCaptchaBadge` hides Google's floating reCAPTCHA badge. Google permits this only when the
+  attribution is shown instead, so set it together with a row naming reCAPTCHA and linking
+  Google's Privacy Policy and Terms.
 
 ## Step-up authentication
 

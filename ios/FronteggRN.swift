@@ -248,6 +248,7 @@ class FronteggRN: RCTEventEmitter {
     private static func applyLoginBoxCustomization(_ customization: NSDictionary?) {
         FronteggApp.shared.loginBoxThemeOptions = customization?["themeOptions"] as? [String: Any]
         FronteggApp.shared.loginBoxLocalizations = customization?["localizations"] as? [String: Any]
+        FronteggApp.shared.loginBoxFooter = customization?["footer"] as? [String: Any]
     }
 
     /// Maps a FronteggError from login() onto the stable, cross-platform rejection codes

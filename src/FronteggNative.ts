@@ -145,6 +145,44 @@ export interface LoginBoxCustomization {
    * e.g. `{ en: { loginBox: { login: { title: 'Sign-in' } } } }`.
    */
   localizations?: Record<string, unknown> | null;
+  /**
+   * Content appended below the login box's card, on its sign-in and password screens only.
+   *
+   * The React SDK exposes a `boxFooter` render prop for this; a box served into
+   * a WebView has no equivalent, and the box's own configuration has no slot
+   * for content below the card. Structured rather than HTML — strings are
+   * always rendered as text, never parsed as markup.
+   *
+   * Link URLs must be absolute `http(s)` or use one of the app's own
+   * registered URL schemes; anything else renders as plain text. `http(s)`
+   * links are handed to the OS rather than loaded in the box, which has no
+   * navigation chrome — an app-scheme link instead dismisses the box and hands
+   * off to the app.
+   */
+  footer?: LoginBoxFooter | null;
+}
+
+/** A run of footer content: literal text, or a link. */
+export type LoginBoxFooterSegment =
+  | { text: string }
+  | { label: string; url: string };
+
+/** One centred line of footer content. */
+export interface LoginBoxFooterRow {
+  /** `'fine'` is small, de-emphasised legal text. Defaults to `'body'`. */
+  variant?: 'body' | 'fine';
+  segments: LoginBoxFooterSegment[];
+}
+
+/** See {@link LoginBoxCustomization.footer}. */
+export interface LoginBoxFooter {
+  /**
+   * Hides Google's floating reCAPTCHA badge. Google's terms permit this only
+   * when the attribution it carries is shown instead, so set it together with
+   * a row naming reCAPTCHA and linking Google's Privacy Policy and Terms.
+   */
+  hideCaptchaBadge?: boolean;
+  rows: LoginBoxFooterRow[];
 }
 
 /** Options accepted by {@link login}. */
@@ -184,9 +222,12 @@ export async function login(
   const customization = {
     themeOptions: options.themeOptions ?? null,
     localizations: options.localizations ?? null,
+    footer: options.footer ?? null,
   };
   const customized =
-    customization.themeOptions !== null || customization.localizations !== null;
+    customization.themeOptions !== null ||
+    customization.localizations !== null ||
+    customization.footer !== null;
 
   // FR-25938: previously fire-and-forget (swallowed the result in console.log), so callers could
   // neither await completion nor observe a cancelled/failed login. Return the promise so it is
