@@ -82,7 +82,7 @@ await login({
 | `loginHint` | `string` | Pre-fills the identifier field. |
 | `themeOptions` | `Record<string, unknown>` | Same shape as `themeV2` from `/frontegg/metadata?entityName=adminBox`. Omitted means cleared. |
 | `localizations` | `Record<string, unknown>` | Same shape as `localizations` from the same endpoint. Omitted means cleared. |
-| `footer` | `LoginBoxFooter` | Content below the login box's card, on its login screen only. See [Login box footer](#login-box-footer). Omitted means cleared. |
+| `footer` | `LoginBoxFooter` | Content below the login box's card, on its sign-in and password screens only. See [Login box footer](#login-box-footer). Omitted means cleared. |
 
 Values are deep-merged over the environment's configuration, so keys the override does not
 mention keep whatever the environment defines.

@@ -146,7 +146,7 @@ export interface LoginBoxCustomization {
    */
   localizations?: Record<string, unknown> | null;
   /**
-   * Content appended below the login box's card, on its login screen only.
+   * Content appended below the login box's card, on its sign-in and password screens only.
    *
    * The React SDK exposes a `boxFooter` render prop for this; a box served into
    * a WebView has no equivalent, and the box's own configuration has no slot
