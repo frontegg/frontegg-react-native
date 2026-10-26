@@ -253,11 +253,15 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   override fun initWithRegion(regionKey: String, promise: Promise) {
     CoroutineScope(Dispatchers.IO).launch {
       try {
+        if (auth.regions.none { it.key == regionKey }) {
+          promise.reject("INVALID_REGION", "Region '$regionKey' is not configured")
+          return@launch
+        }
         reactContext.applicationContext.fronteggApp.initWithRegion(regionKey)
         notifyChanges()
         promise.resolve(null)
       } catch (e: Exception) {
-        promise.reject("INVALID_REGION", e.message, e)
+        promise.reject("INIT_WITH_REGION_ERROR", e.message, e)
       }
     }
   }

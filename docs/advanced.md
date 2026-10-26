@@ -125,7 +125,7 @@ export function RegionPicker() {
 }
 ```
 
-`initWithRegion` rejects with `INVALID_REGION` when the key is not configured.
+`initWithRegion` rejects with `INVALID_REGION` when the key is not configured, and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch to the region.
 
 ### New architecture
 

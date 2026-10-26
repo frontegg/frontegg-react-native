@@ -47,7 +47,10 @@ export function getRegions(): RegionConfig[] {
   return getConstants().regionData ?? [];
 }
 
-/** Selects the region to authenticate against; rejects with `INVALID_REGION` for an unknown key. */
+/**
+ * Selects the region to authenticate against. Rejects with `INVALID_REGION` for an unknown key,
+ * and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch.
+ */
 export async function initWithRegion(regionKey: string): Promise<void> {
   return FronteggRN.initWithRegion(regionKey);
 }
