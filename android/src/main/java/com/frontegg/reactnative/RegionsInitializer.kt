@@ -4,6 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.frontegg.android.FronteggApp
 import com.frontegg.android.regions.RegionConfig
+import com.frontegg.android.utils.FronteggConstantsProvider
+import com.frontegg.android.utils.TenantResolver
+import com.frontegg.android.utils.TenantResolverResult
 import java.util.concurrent.atomic.AtomicBoolean
 import org.json.JSONArray
 import org.json.JSONException
@@ -21,12 +24,35 @@ internal fun initRegionsFromBuildConfig(context: Context, constants: FronteggCon
     Log.e(TAG, "FRONTEGG_REGIONS must be a JSON array of {key, baseUrl, clientId, applicationId?}", e)
     return
   }
+  val sdkConstants = FronteggConstantsProvider.fronteggConstants(context)
   FronteggApp.initWithRegions(
     regions = regions,
     context = context,
     useAssetsLinks = constants.useAssetsLinks,
     useChromeCustomTabs = constants.useChromeCustomTabs,
+    mainActivityClass = findClassOrNull(sdkConstants.mainActivityClass),
+    useDiskCacheWebview = sdkConstants.useDiskCacheWebview,
+    disableAutoRefresh = sdkConstants.disableAutoRefresh,
+    enableOfflineMode = sdkConstants.enableOfflineMode,
+    networkMonitoringIntervalSeconds = sdkConstants.networkMonitoringIntervalSeconds,
+    enableSessionPerTenant = sdkConstants.enableSessionPerTenant,
+    entitlementsEnabled = sdkConstants.entitlementsEnabled,
+    tenantResolver = sdkConstants.fronteggOrganization?.let { organization ->
+      TenantResolver { TenantResolverResult(organization) }
+    },
   )
+}
+
+private fun findClassOrNull(className: String?): Class<*>? {
+  if (className == null) {
+    return null
+  }
+  return try {
+    Class.forName(className)
+  } catch (e: ClassNotFoundException) {
+    Log.e(TAG, "FRONTEGG_MAIN_ACTIVITY_CLASS ($className) not found", e)
+    null
+  }
 }
 
 internal fun parseRegions(regionsJson: String): List<RegionConfig> {
