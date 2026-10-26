@@ -178,7 +178,7 @@ Both getters read the on-device cache, so call `loadEntitlements` first.
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getRegions` | None | `RegionConfig[]` | The regions the native SDK was configured with. Empty when the app is not multi-region. |
-| `initWithRegion` | `regionKey: string` | `Promise<void>` | Selects the region to authenticate against. The choice is persisted and reflected in `selectedRegion`. Rejects with `INVALID_REGION` when the key is not configured, and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch to the region. |
+| `initWithRegion` | `regionKey: string` | `Promise<void>` | Selects the region to authenticate against. The choice is persisted; `selectedRegion` updates with the next auth state event, shortly after the promise resolves. Rejects with `INVALID_REGION` when the key is not configured, and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch to the region. |
 
 See [Multi-region support](advanced.md#multi-region-support) for the native configuration.
 
