@@ -32,6 +32,19 @@ internal fun initRegionsFromBuildConfig(context: Context, constants: FronteggCon
     Log.e(TAG, "FRONTEGG_REGIONS must be a JSON array of {key, baseUrl, clientId, applicationId?}", e)
     return
   }
+  try {
+    initSdkWithRegions(context, constants, regions)
+  } catch (e: Exception) {
+    regionsInitialized.set(false)
+    Log.e(TAG, "Could not initialize the Frontegg SDK with FRONTEGG_REGIONS, will retry on the next call", e)
+  }
+}
+
+private fun initSdkWithRegions(
+  context: Context,
+  constants: FronteggConstants,
+  regions: List<RegionConfig>,
+) {
   val sdkConstants = FronteggConstantsProvider.fronteggConstants(context)
   FronteggApp.initWithRegions(
     regions = regions,
