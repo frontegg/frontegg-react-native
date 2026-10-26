@@ -214,9 +214,14 @@ AppState.addEventListener('change', async (state) => {
 });
 ```
 
-- Resolves `null` when there is no session or the refresh token was rejected.
-- Rejects with `GET_OR_REFRESH_ACCESS_TOKEN_ERROR` when the refresh fails for another reason; the session is kept so you can retry.
-- iOS uses the native `getOrRefreshAccessTokenAsync()`. Android implements the same behavior on top of the native SDK's `refreshTokenAndWait()`.
+- Resolves `null` when there is no session, when the refresh token was rejected, or in a multi-region app before a region is selected.
+- Waits up to 20 seconds for the SDK to initialize and for an in-flight refresh to finish, and rejects if they don't. On iOS it also waits for any other auth operation in progress.
+- Without a network connection:
+  - Android checks connectivity before refreshing. With offline mode enabled (`FRONTEGG_ENABLE_OFFLINE_MODE`), it resolves the cached token, which may be expired. Without offline mode, it rejects right away.
+  - iOS attempts the refresh up to five times, one second apart. With offline mode enabled (`enableOfflineMode` in `Frontegg.plist`), a connectivity error resolves the cached token. Without offline mode, it rejects once the attempts run out.
+- On Android, if the refresh reports success but the token is still not valid for 15 seconds (another refresh was already running), it waits up to 10 seconds for that refresh, then refreshes once more before giving up.
+- Rejects with `GET_OR_REFRESH_ACCESS_TOKEN_ERROR` when the refresh fails for any other reason; the session is kept so you can retry.
+- iOS uses the native SDK's `getOrRefreshAccessTokenAsync()`. Android builds on the native SDK's `refreshTokenAndWait()`.
 
 ## Check user authentication state
 

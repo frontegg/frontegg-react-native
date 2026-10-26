@@ -43,7 +43,7 @@ const { isAuthenticated, user, isLoading } = useAuth();
 | `loginWithPasskeys` | None | `Promise<void>` | Signs in with a passkey. Needs iOS 15+ or Android API 26+. |
 | `registerPasskeys` | None | `Promise<void>` | Registers a passkey for the signed-in user. |
 | `refreshToken` | None | `Promise<void>` | Forces a token refresh. The SDK also refreshes on its own in the background. |
-| `getOrRefreshAccessToken` | None | `Promise<string \| null>` | Returns an access token valid for at least 15 more seconds, refreshing it first when needed. Resolves `null` when there is no session or the refresh token was rejected; rejects when the refresh fails for another reason (for example, no network). The recommended way to get a token after the app resumes. See [Get a valid access token](usage.md#get-a-valid-access-token). |
+| `getOrRefreshAccessToken` | None | `Promise<string \| null>` | Returns an access token valid for at least 15 more seconds, refreshing it first when needed. Resolves `null` when there is no session, when the refresh token was rejected, or before a region is selected in a multi-region app. Rejects when the refresh fails for another reason, such as no network while offline mode is off; with offline mode on it resolves the cached token instead. The recommended way to get a token after the app resumes. See [Get a valid access token](usage.md#get-a-valid-access-token). |
 | `requestAuthorize` | `refreshToken: string`<br>`deviceTokenCookie?: string` | `Promise<void>` | Establishes a session from an existing refresh token, without opening the login flow. |
 
 ### Social and direct login

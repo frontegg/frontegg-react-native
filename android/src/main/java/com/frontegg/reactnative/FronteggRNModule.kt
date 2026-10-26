@@ -242,7 +242,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   override fun getOrRefreshAccessToken(promise: Promise) {
     CoroutineScope(Dispatchers.IO).launch {
       try {
-        promise.resolve(fetchValidAccessToken(auth))
+        promise.resolve(fetchValidAccessToken(auth, reactContext.applicationContext))
       } catch (e: Exception) {
         promise.reject("GET_OR_REFRESH_ACCESS_TOKEN_ERROR", e.message, e)
       }
