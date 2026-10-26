@@ -6,7 +6,8 @@ data class FronteggConstants(
     val applicationId: String?,
     val useAssetsLinks: Boolean,
     val useChromeCustomTabs: Boolean,
-    val bundleId: String
+    val bundleId: String,
+    val regionsJson: String? = null,
 ) {
     fun toMap(): MutableMap<String, Any?> {
         return mutableMapOf(

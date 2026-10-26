@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		41E63BA12A52D42F00BF6DE4 /* FronteggRN.m in Sources */ = {isa = PBXBuildFile; fileRef = 41E63BA02A52D42F00BF6DE4 /* FronteggRN.m */; };
+		41E63BA12A52D42F00BF6DE4 /* FronteggRN.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41E63BA02A52D42F00BF6DE4 /* FronteggRN.mm */; };
 		41E63BA42A52D91300BF6DE4 /* FronteggRN.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E63BA32A52D91300BF6DE4 /* FronteggRN.swift */; };
 /* End PBXBuildFile section */
 
@@ -25,7 +25,7 @@
 
 /* Begin PBXFileReference section */
 		41E63B9F2A52D35700BF6DE4 /* libFronteggRN.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFronteggRN.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		41E63BA02A52D42F00BF6DE4 /* FronteggRN.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FronteggRN.m; sourceTree = "<group>"; };
+		41E63BA02A52D42F00BF6DE4 /* FronteggRN.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FronteggRN.mm; sourceTree = "<group>"; };
 		41E63BA32A52D91300BF6DE4 /* FronteggRN.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FronteggRN.swift; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* FronteggRN-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FronteggRN-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -45,7 +45,7 @@
 			isa = PBXGroup;
 			children = (
 				41E63BA32A52D91300BF6DE4 /* FronteggRN.swift */,
-				41E63BA02A52D42F00BF6DE4 /* FronteggRN.m */,
+				41E63BA02A52D42F00BF6DE4 /* FronteggRN.mm */,
 				F4FF95D5245B92E700C19C63 /* FronteggRN-Bridging-Header.h */,
 				41E63B9F2A52D35700BF6DE4 /* libFronteggRN.a */,
 			);
@@ -108,7 +108,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41E63BA12A52D42F00BF6DE4 /* FronteggRN.m in Sources */,
+				41E63BA12A52D42F00BF6DE4 /* FronteggRN.mm in Sources */,
 				41E63BA42A52D91300BF6DE4 /* FronteggRN.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -33,6 +33,8 @@ val Context.fronteggConstants: FronteggConstants
             val useChromeCustomTabs = safeGetValueFromBuildConfig(
                 buildConfigClass, "FRONTEGG_USE_CHROME_CUSTOM_TABS", true
             )
+            val regionsJson =
+                safeGetNullableValueFromBuildConfig(buildConfigClass, "FRONTEGG_REGIONS", "")
 
             return FronteggConstants(
                 baseUrl = baseUrl,
@@ -41,6 +43,7 @@ val Context.fronteggConstants: FronteggConstants
                 useAssetsLinks = useAssetsLinks,
                 useChromeCustomTabs = useChromeCustomTabs,
                 bundleId = this.packageName,
+                regionsJson = regionsJson,
             )
         } catch (e: ClassNotFoundException) {
             throw e

@@ -187,6 +187,37 @@ console.log(permission.isEntitled, permission.justification);
 
 Each call resolves to an `Entitlement` — `{ isEntitled: boolean; justification?: string | null }`. When `isEntitled` is `false`, `justification` explains why (e.g. `"NOT_AUTHENTICATED"`, `"ENTITLEMENTS_NOT_LOADED"`, `"MISSING_FEATURE"`, `"MISSING_PERMISSION"`).
 
+## Get a valid access token
+
+Use `getOrRefreshAccessToken()` whenever you need a token to call your API, and especially after the app returns from the background. While the app is suspended the cached token in `useAuth().accessToken` can expire before the SDK's background refresh runs; `getOrRefreshAccessToken()` waits for any in-flight refresh, returns the current token when it is valid for at least 15 more seconds, and refreshes it first otherwise.
+
+```tsx
+import { AppState } from 'react-native';
+import { getOrRefreshAccessToken } from '@frontegg/react-native';
+
+AppState.addEventListener('change', async (state) => {
+  if (state !== 'active') {
+    return;
+  }
+  try {
+    const accessToken = await getOrRefreshAccessToken();
+    if (accessToken === null) {
+      // No session, or the refresh token was rejected: send the user to login.
+      return;
+    }
+    await fetch('https://api.example.com/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch (error) {
+    // The refresh failed for another reason, such as no network. The session is kept.
+  }
+});
+```
+
+- Resolves `null` when there is no session or the refresh token was rejected.
+- Rejects with `GET_OR_REFRESH_ACCESS_TOKEN_ERROR` when the refresh fails for another reason; the session is kept so you can retry.
+- iOS uses the native `getOrRefreshAccessTokenAsync()`. Android implements the same behavior on top of the native SDK's `refreshTokenAndWait()`.
+
 ## Check user authentication state
 
 Use the `useAuth` hook with `showLoader` and `isLoading` to conditionally display your app:

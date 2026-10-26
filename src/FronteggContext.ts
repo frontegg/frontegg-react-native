@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { IUserProfile, ITenantsResponse } from '@frontegg/rest-api';
+import type { RegionConfig } from './NativeFronteggRN';
 
 export type User = IUserProfile & {
   tenants: ITenantsResponse[];
@@ -15,6 +16,7 @@ export interface FronteggState {
   user: User | null;
   initializing: boolean;
   showLoader: boolean;
+  selectedRegion: RegionConfig | null;
 }
 
 export const defaultFronteggState: FronteggState = {
@@ -26,6 +28,7 @@ export const defaultFronteggState: FronteggState = {
   user: null,
   initializing: true,
   showLoader: true,
+  selectedRegion: null,
 };
 const FronteggContext = createContext<FronteggState>(defaultFronteggState);
 

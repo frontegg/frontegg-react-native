@@ -19,7 +19,23 @@ class FronteggRN: RCTEventEmitter {
             "clientId": fronteggApp.clientId,
             "applicationId": fronteggApp.applicationId as Any,
             "bundleId": Bundle.main.bundleIdentifier as Any,
-            "useAssetLinks": Self.plistUseAssetLinks() as Any
+            "useAssetLinks": Self.plistUseAssetLinks() as Any,
+            "isRegional": fronteggApp.auth.isRegional,
+            "regionData": fronteggApp.regionData.map(Self.regionToDict)
+        ]
+    }
+
+    @objc
+    func getConstants() -> [AnyHashable : Any]! {
+        return constantsToExport()
+    }
+
+    private static func regionToDict(_ region: RegionConfig) -> [String: Any] {
+        return [
+            "key": region.key,
+            "baseUrl": region.baseUrl,
+            "clientId": region.clientId,
+            "applicationId": region.applicationId ?? NSNull(),
         ]
     }
 
@@ -58,7 +74,7 @@ class FronteggRN: RCTEventEmitter {
         self.hasListeners = false
     }
     @objc
-    func subscribe() -> [AnyHashable : Any]! {
+    func subscribe() {
 
         // FR-25940: cancel any prior subscriptions before re-subscribing. Each FronteggWrapper mount
         // calls subscribe(), and without clearing, the two sinks below accumulated on `cancellables`
@@ -114,8 +130,6 @@ class FronteggRN: RCTEventEmitter {
             }
             
         }).store(in: &cancellables)
-        
-        return ["status": "OK"]
     }
     
     func sendEventToJS() {
@@ -135,13 +149,14 @@ class FronteggRN: RCTEventEmitter {
             "isLoading": auth.isLoading,
             "initializing": auth.initializing,
             "showLoader": auth.showLoader,
-            "appLink": auth.appLink
+            "appLink": auth.appLink,
+            "selectedRegion": auth.selectedRegion.map(Self.regionToDict)
         ]
         self.sendEvent(withName: "onFronteggAuthEvent", body: body)
     }
     
     @objc
-    func logout(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
+    func logout(_ resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
             // Use the completion overload so JS can await the actual end of
             // the session, and push the final state when it lands. The
@@ -178,9 +193,9 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func login(
         _ loginHint: String?,
-        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        performLogin(loginHint, customization: nil, applyCustomization: false, resolver: resolver, rejecter: rejecter)
+        performLogin(loginHint, customization: nil, applyCustomization: false, resolver: resolve, rejecter: reject)
     }
 
     /// Login with runtime login-box overrides. Kept separate from ``login`` so a JS bundle
@@ -190,14 +205,14 @@ class FronteggRN: RCTEventEmitter {
     func loginWithOptions(
         _ loginHint: String?,
         customization: NSDictionary?,
-        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        performLogin(loginHint, customization: customization, applyCustomization: true, resolver: resolver, rejecter: rejecter)
+        performLogin(loginHint, customization: customization, applyCustomization: true, resolver: resolve, rejecter: reject)
     }
 
     @objc
     func isLoginBoxCustomizationSupported(
-        _ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+        _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         resolve(true)
     }
@@ -284,16 +299,16 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func switchTenant(
         _ tenantId: String,
-        resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         fronteggApp.auth.switchTenant(tenantId: tenantId) { result in
             switch result {
             case .success(_):
-                resolver(tenantId)
+                resolve(tenantId)
             case .failure(let error):
                 // FR-25938: previously ignored the result and always resolved, so a failed switch
                 // looked like success.
-                rejecter(error.failureReason, error.localizedDescription, error)
+                reject(error.failureReason, error.localizedDescription, error)
             }
         }
     }
@@ -305,8 +320,8 @@ class FronteggRN: RCTEventEmitter {
       data: String,
       ephemeralSession: Bool,
       additionalQueryParams: [String: String]? = nil,
-      resolver: @escaping RCTPromiseResolveBlock,
-      rejecter: @escaping RCTPromiseRejectBlock
+      resolve: @escaping RCTPromiseResolveBlock,
+      reject: @escaping RCTPromiseRejectBlock
   ) -> Void {
       
       fronteggApp.auth.directLoginAction(
@@ -315,7 +330,7 @@ class FronteggRN: RCTEventEmitter {
           data: data,
           ephemeralSession: ephemeralSession,
           _completion: { _ in
-            resolver("Success")
+            resolve("Success")
           },
           additionalQueryParams: additionalQueryParams
       )
@@ -323,7 +338,7 @@ class FronteggRN: RCTEventEmitter {
 
     
     @objc
-    func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) -> Void {
+    func refreshToken(_ resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         
         DispatchQueue.global(qos: .userInteractive).async {
             Task {
@@ -334,47 +349,69 @@ class FronteggRN: RCTEventEmitter {
     }
     
     @objc
-    func loginWithPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
+    func getOrRefreshAccessToken(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        Task {
+            do {
+                resolve(try await fronteggApp.auth.getOrRefreshAccessTokenAsync())
+            } catch {
+                reject("GET_OR_REFRESH_ACCESS_TOKEN_ERROR", error.localizedDescription, error)
+            }
+        }
+    }
+
+    @objc
+    func initWithRegion(_ regionKey: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        DispatchQueue.main.async {
+            guard self.fronteggApp.regionData.contains(where: { $0.key == regionKey }) else {
+                reject("INVALID_REGION", "Region '\(regionKey)' is not configured in Frontegg.plist", nil)
+                return
+            }
+            self.fronteggApp.initWithRegion(regionKey: regionKey)
+            resolve(nil)
+        }
+    }
+
+    @objc
+    func loginWithPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         
         let completion: FronteggAuth.CompletionHandler = { result in
             switch(result) {
             case .success(_):
                 resolve("Success")
             case .failure(let error):
-                rejecter(error.failureReason, error.localizedDescription, error)
+                reject(error.failureReason, error.localizedDescription, error)
                 
             }
         }
         fronteggApp.auth.loginWithPasskeys(completion)
     }
 
-    /// React Native bridge requires nonnull NSNumber; pass -1 from JS when maxAge is omitted.
-    private func maxAgeInterval(from maxAgeSeconds: NSNumber) -> TimeInterval? {
-        let seconds = maxAgeSeconds.doubleValue
-        return seconds < 0 ? nil : seconds
+    /// JS passes -1 when maxAge is omitted.
+    private func maxAgeInterval(from maxAgeSeconds: Double) -> TimeInterval? {
+        return maxAgeSeconds < 0 ? nil : maxAgeSeconds
     }
 
     @objc
     func isSteppedUp(
-        _ maxAgeSeconds: NSNumber,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        _ maxAgeSeconds: Double,
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
-        resolver(fronteggApp.auth.isSteppedUp(maxAge: maxAgeInterval(from: maxAgeSeconds)))
+        resolve(fronteggApp.auth.isSteppedUp(maxAge: maxAgeInterval(from: maxAgeSeconds)))
     }
 
     @objc
     func stepUp(
-        _ maxAgeSeconds: NSNumber,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        _ maxAgeSeconds: Double,
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         let completion: FronteggAuth.CompletionHandler = { result in
             switch result {
             case .success:
-                resolver(nil)
+                resolve(nil)
             case .failure(let error):
-                rejecter(error.failureReason, error.localizedDescription, error)
+                reject(error.failureReason, error.localizedDescription, error)
             }
         }
 
@@ -387,31 +424,31 @@ class FronteggRN: RCTEventEmitter {
   func requestAuthorize(
       _ refreshToken: String,
       deviceTokenCookie: String?,
-      resolver: @escaping RCTPromiseResolveBlock,
-      rejecter: @escaping RCTPromiseRejectBlock
+      resolve: @escaping RCTPromiseResolveBlock,
+      reject: @escaping RCTPromiseRejectBlock
   ) {
       fronteggApp.auth.requestAuthorize(refreshToken: refreshToken, deviceTokenCookie: deviceTokenCookie) { result in
           switch result {
           case .success(let user):
               if let userData = try? JSONEncoder().encode(user),
                  let jsonUser = try? JSONSerialization.jsonObject(with: userData, options: .allowFragments) as? [String: Any] {
-                  resolver(jsonUser)
+                  resolve(jsonUser)
               } else {
-                  resolver(nil)
+                  resolve(nil)
               }
           case .failure(let error):
-              rejecter("AUTHORIZATION_ERROR", error.localizedDescription, error)
+              reject("AUTHORIZATION_ERROR", error.localizedDescription, error)
           }
       }
   }
 
     
     @objc
-    func registerPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) -> Void {
+    func registerPasskeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         
         let completion: FronteggAuth.ConditionCompletionHandler = { error in
             if let fronteggError = error {
-                rejecter(fronteggError.failureReason, fronteggError.localizedDescription, fronteggError)
+                reject(fronteggError.failureReason, fronteggError.localizedDescription, fronteggError)
             } else {
                 resolve("Success")
             }
@@ -422,11 +459,11 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func openAdminPortal(
         _ resolve: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         DispatchQueue.main.async {
             guard let viewController = Self.topViewController() else {
-                rejecter(
+                reject(
                     "NO_VIEW_CONTROLLER",
                     "Cannot open Admin Portal without an active view controller",
                     nil
@@ -440,7 +477,7 @@ class FronteggRN: RCTEventEmitter {
                 viewController.present(host, animated: true)
                 resolve(nil)
             } else {
-                rejecter("UNSUPPORTED", "Admin Portal requires iOS 14+", nil)
+                reject("UNSUPPORTED", "Admin Portal requires iOS 14+", nil)
             }
         }
     }
@@ -448,30 +485,30 @@ class FronteggRN: RCTEventEmitter {
     @objc
     func loadEntitlements(
         _ forceRefresh: Bool,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
         fronteggApp.auth.loadEntitlements(forceRefresh: forceRefresh) { success in
-            resolver(success)
+            resolve(success)
         }
     }
 
     @objc
     func getFeatureEntitlement(
         _ key: String,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
-        resolver(Self.entitlementToDict(fronteggApp.auth.getFeatureEntitlements(featureKey: key)))
+        resolve(Self.entitlementToDict(fronteggApp.auth.getFeatureEntitlements(featureKey: key)))
     }
 
     @objc
     func getPermissionEntitlement(
         _ key: String,
-        resolver: @escaping RCTPromiseResolveBlock,
-        rejecter: @escaping RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
     ) {
-        resolver(Self.entitlementToDict(fronteggApp.auth.getPermissionEntitlements(permissionKey: key)))
+        resolve(Self.entitlementToDict(fronteggApp.auth.getPermissionEntitlements(permissionKey: key)))
     }
 
     private static func entitlementToDict(_ entitlement: Entitlement) -> [String: Any] {

@@ -8,6 +8,9 @@ export {
   directLoginAction,
   switchTenant,
   refreshToken,
+  getOrRefreshAccessToken,
+  getRegions,
+  initWithRegion,
   loginWithPasskeys,
   registerPasskeys,
   requestAuthorize,
@@ -27,3 +30,4 @@ export type {
   LoginBoxCustomization,
   LoginOptions,
 } from './FronteggNative';
+export type { RegionConfig } from './NativeFronteggRN';
