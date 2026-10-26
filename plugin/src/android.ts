@@ -5,6 +5,7 @@ import {
   withAndroidManifest,
   withAppBuildGradle,
   withGradleProperties,
+  withMainApplication,
   type ConfigPlugin,
 } from 'expo/config-plugins';
 
@@ -35,6 +36,12 @@ const EMBEDDED_AUTH_PATH_PREFIXES = [
   '/oauth/account/unlock',
 ];
 const PACKAGE_NAME_PLACEHOLDER = '${package_name}';
+const REGIONS_INIT_TAG = `${PLUGIN_NAME}-regions`;
+const SUPER_ON_CREATE = /^\s*super\.onCreate\(\)/m;
+const REGIONS_INIT_CALL =
+  '    com.frontegg.reactnative.FronteggRegions.initFromBuildConfig(this)';
+
+type MainApplicationSource = { language: string; contents: string };
 
 function toGroovyString(text: string): string {
   const escapedText = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -219,6 +226,36 @@ export function addRegionIntentFilters(
   return manifest;
 }
 
+export function addRegionsInitToMainApplication(
+  mainApplication: MainApplicationSource,
+  props: FronteggPluginProps
+): string {
+  if (!isMultiRegion(props)) {
+    return CodeGenerator.removeContents({
+      src: mainApplication.contents,
+      tag: REGIONS_INIT_TAG,
+    }).contents;
+  }
+  const canPatch =
+    mainApplication.language === 'kt' &&
+    SUPER_ON_CREATE.test(mainApplication.contents);
+  if (!canPatch) {
+    WarningAggregator.addWarningAndroid(
+      PLUGIN_NAME,
+      'Only a Kotlin MainApplication that calls super.onCreate() can be patched. Call FronteggRegions.initFromBuildConfig(this) in MainApplication.onCreate manually (see docs/advanced.md).'
+    );
+    return mainApplication.contents;
+  }
+  return CodeGenerator.mergeContents({
+    src: mainApplication.contents,
+    newSrc: REGIONS_INIT_CALL,
+    tag: REGIONS_INIT_TAG,
+    anchor: SUPER_ON_CREATE,
+    offset: 1,
+    comment: '//',
+  }).contents;
+}
+
 export const withFronteggAndroid: ConfigPlugin<FronteggPluginProps> = (
   config,
   props
@@ -233,6 +270,13 @@ export const withFronteggAndroid: ConfigPlugin<FronteggPluginProps> = (
     }
     modConfig.modResults.contents = addFronteggToAppBuildGradle(
       modConfig.modResults.contents,
+      props
+    );
+    return modConfig;
+  });
+  config = withMainApplication(config, (modConfig) => {
+    modConfig.modResults.contents = addRegionsInitToMainApplication(
+      modConfig.modResults,
       props
     );
     return modConfig;

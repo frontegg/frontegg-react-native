@@ -13,6 +13,14 @@ import org.json.JSONException
 
 private val regionsInitialized = AtomicBoolean(false)
 
+object FronteggRegions {
+  @JvmStatic
+  fun initFromBuildConfig(context: Context) {
+    val applicationContext = context.applicationContext
+    initRegionsFromBuildConfig(applicationContext, applicationContext.fronteggConstants)
+  }
+}
+
 internal fun initRegionsFromBuildConfig(context: Context, constants: FronteggConstants) {
   val regionsJson = constants.regionsJson?.takeIf { it.isNotBlank() } ?: return
   if (!regionsInitialized.compareAndSet(false, true)) {

@@ -83,7 +83,8 @@ Multi-region example:
 
 - `manifestPlaceholders` (`package_name`, `frontegg_domain`, `frontegg_client_id`) and the `FRONTEGG_*` `buildConfigField`s in `android/app/build.gradle`.
 - `android.minSdkVersion=26` in `gradle.properties` (a higher value is kept).
-- For multi-region apps, a `FRONTEGG_REGIONS` `buildConfigField` (a JSON array of the regions) instead of `FRONTEGG_DOMAIN`/`FRONTEGG_CLIENT_ID`, plus the App Link and redirect intent filters for every region after the first. The SDK reads `FRONTEGG_REGIONS` and calls `FronteggApp.initWithRegions` for you — do not also call `initWithRegions` in `MainApplication`, because a second call replaces the SDK instance.
+- For multi-region apps, a `FRONTEGG_REGIONS` `buildConfigField` (a JSON array of the regions) instead of `FRONTEGG_DOMAIN`/`FRONTEGG_CLIENT_ID`, plus the App Link and redirect intent filters for every region after the first.
+- For multi-region apps, a `FronteggRegions.initFromBuildConfig(this)` call right after `super.onCreate()` in `MainApplication.kt`. It initializes the SDK with `FRONTEGG_REGIONS` before React Native starts, so a login redirect that relaunches the app finds the regions configured. Do not also call `FronteggApp.initWithRegions` in `MainApplication`, because a second call replaces the SDK instance. A Java `MainApplication` is not patched; prebuild prints a warning and you add the call yourself.
 
 ### Still manual
 

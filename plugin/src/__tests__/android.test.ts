@@ -1,11 +1,20 @@
-import type { AndroidConfig } from 'expo/config-plugins';
+import { WarningAggregator, type AndroidConfig } from 'expo/config-plugins';
 
 import {
   addFronteggToAppBuildGradle,
   addRegionIntentFilters,
+  addRegionsInitToMainApplication,
   buildGradleDefaultConfig,
   ensureMinSdkVersion,
 } from '../android';
+
+jest.mock('expo/config-plugins', () => {
+  const configPlugins = jest.requireActual('expo/config-plugins');
+  return {
+    ...configPlugins,
+    WarningAggregator: { addWarningAndroid: jest.fn() },
+  };
+});
 
 const APP_BUILD_GRADLE = `android {
     defaultConfig {
@@ -14,6 +23,38 @@ const APP_BUILD_GRADLE = `android {
     }
 }
 `;
+
+const SDK_53_MAIN_APPLICATION = `class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+    SoLoader.init(this, OpenSourceMergedSoMapping)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+  }
+}
+`;
+
+const SDK_58_MAIN_APPLICATION = `class MainApplication : Application(), ReactApplication {
+  override fun onCreate() {
+    super.onCreate()
+    loadReactNative(this)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
+  }
+}
+`;
+
+const REGIONS_INIT_CALL =
+  '    com.frontegg.reactnative.FronteggRegions.initFromBuildConfig(this)';
+
+const MULTI_REGION_PROPS = {
+  regions: [
+    { key: 'eu', baseUrl: 'https://eu.example.com', clientId: 'eu-client' },
+    { key: 'us', baseUrl: 'https://us.example.com', clientId: 'us-client' },
+  ],
+};
 
 function createManifest(): AndroidConfig.Manifest.AndroidManifest {
   return {
@@ -161,5 +202,79 @@ describe('addRegionIntentFilters', () => {
       addRegionIntentFilters(manifest, hosts).manifest.application?.[0]
         ?.activity
     ).toHaveLength(3);
+  });
+});
+
+describe('addRegionsInitToMainApplication', () => {
+  it.each([
+    ['SDK 53', SDK_53_MAIN_APPLICATION, 'SoLoader.init'],
+    ['SDK 58', SDK_58_MAIN_APPLICATION, 'loadReactNative'],
+  ])(
+    'initializes the regions right after super.onCreate() (%s)',
+    (_, contents, reactNativeStart) => {
+      const mainApplication = addRegionsInitToMainApplication(
+        { language: 'kt', contents },
+        MULTI_REGION_PROPS
+      );
+      const lines = mainApplication.split('\n');
+      const superOnCreateIndex = lines.indexOf('    super.onCreate()');
+
+      expect(lines[superOnCreateIndex + 2]).toBe(REGIONS_INIT_CALL);
+      expect(mainApplication.split(REGIONS_INIT_CALL)).toHaveLength(2);
+      expect(mainApplication.indexOf(REGIONS_INIT_CALL)).toBeLessThan(
+        mainApplication.indexOf(reactNativeStart)
+      );
+    }
+  );
+
+  it('is idempotent', () => {
+    const mainApplication = addRegionsInitToMainApplication(
+      { language: 'kt', contents: SDK_58_MAIN_APPLICATION },
+      MULTI_REGION_PROPS
+    );
+
+    expect(
+      addRegionsInitToMainApplication(
+        { language: 'kt', contents: mainApplication },
+        MULTI_REGION_PROPS
+      )
+    ).toBe(mainApplication);
+  });
+
+  it('leaves a single-region app unchanged and removes a previous region init', () => {
+    const singleRegionProps = { baseUrl: 'app-x.frontegg.com', clientId: 'id' };
+    const multiRegionApplication = addRegionsInitToMainApplication(
+      { language: 'kt', contents: SDK_58_MAIN_APPLICATION },
+      MULTI_REGION_PROPS
+    );
+
+    expect(
+      addRegionsInitToMainApplication(
+        { language: 'kt', contents: SDK_58_MAIN_APPLICATION },
+        singleRegionProps
+      )
+    ).toBe(SDK_58_MAIN_APPLICATION);
+    expect(
+      addRegionsInitToMainApplication(
+        { language: 'kt', contents: multiRegionApplication },
+        singleRegionProps
+      )
+    ).toBe(SDK_58_MAIN_APPLICATION);
+  });
+
+  it('warns and skips a Java MainApplication', () => {
+    const javaMainApplication =
+      'public class MainApplication extends Application {}';
+
+    expect(
+      addRegionsInitToMainApplication(
+        { language: 'java', contents: javaMainApplication },
+        MULTI_REGION_PROPS
+      )
+    ).toBe(javaMainApplication);
+    expect(WarningAggregator.addWarningAndroid).toHaveBeenCalledWith(
+      '@frontegg/react-native',
+      expect.stringContaining('FronteggRegions.initFromBuildConfig')
+    );
   });
 });

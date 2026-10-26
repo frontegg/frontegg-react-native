@@ -91,6 +91,20 @@ android {
 }
 ```
 
+Then initialize the regions when the app process starts, so a login redirect that relaunches the app finds them configured before React Native loads. Call the helper right after `super.onCreate()` in `MainApplication`:
+
+```kotlin
+import com.frontegg.reactnative.FronteggRegions
+
+override fun onCreate() {
+  super.onCreate()
+  FronteggRegions.initFromBuildConfig(this)
+  // ...
+}
+```
+
+From a Java `MainApplication`, call `FronteggRegions.initFromBuildConfig(this);`. The Expo config plugin adds this call for you. Without it the module still initializes the regions when React Native first loads it, but a process restarted straight into the login redirect would start without them.
+
 Alternatively, call `FronteggApp.initWithRegions(...)` yourself in `MainApplication.onCreate()` and omit the field; do not do both. Add intent filters (and asset links, when used) for every region's domain, as described in the [Android SDK multi-region guide](https://github.com/frontegg/frontegg-android-kotlin#multi-region-support).
 
 #### Select a region
