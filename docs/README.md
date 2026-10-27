@@ -71,6 +71,19 @@ client ID from `build.gradle`. Both are covered step by step in the
 [Setup guide](https://react-native-guide.frontegg.com/#/setup) — this is the one part that is not
 JavaScript, and it differs per platform.
 
+On Expo, add the config plugin to `app.json` instead and run `npx expo prebuild` — it generates both
+native configurations for you ([Expo setup](https://react-native-guide.frontegg.com/#/setup?id=expo)):
+
+```json
+{
+  "expo": {
+    "plugins": [
+      ["@frontegg/react-native", { "baseUrl": "https://{{FRONTEGG_BASE_URL}}", "clientId": "{{FRONTEGG_CLIENT_ID}}" }]
+    ]
+  }
+}
+```
+
 **3 · Wrap your app.**
 
 ```tsx

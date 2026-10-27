@@ -32,6 +32,7 @@ const { isAuthenticated, user, isLoading } = useAuth();
 | `isLoading` | `boolean` | An auth operation is in progress. |
 | `initializing` | `boolean` | The SDK has not finished starting up. |
 | `showLoader` | `boolean` | Convenience flag for whether to render a loading state. |
+| `selectedRegion` | `RegionConfig \| null` | The active region in a multi-region setup; `null` otherwise or before one is chosen. |
 
 ## Authentication
 
@@ -42,6 +43,7 @@ const { isAuthenticated, user, isLoading } = useAuth();
 | `loginWithPasskeys` | None | `Promise<void>` | Signs in with a passkey. Needs iOS 15+ or Android API 26+. |
 | `registerPasskeys` | None | `Promise<void>` | Registers a passkey for the signed-in user. |
 | `refreshToken` | None | `Promise<void>` | Forces a token refresh. The SDK also refreshes on its own in the background. |
+| `getOrRefreshAccessToken` | None | `Promise<string \| null>` | Returns an access token valid for at least 15 more seconds, refreshing it first when needed. Resolves `null` when there is no session, when the refresh token was rejected, or before a region is selected in a multi-region app. Rejects when the refresh fails for another reason, such as no network while offline mode is off; with offline mode on it resolves the cached token instead. The recommended way to get a token after the app resumes. See [Get a valid access token](usage.md#get-a-valid-access-token). |
 | `requestAuthorize` | `refreshToken: string`<br>`deviceTokenCookie?: string` | `Promise<void>` | Establishes a session from an existing refresh token, without opening the login flow. |
 
 ### Social and direct login
@@ -171,6 +173,15 @@ await login({
 
 Both getters read the on-device cache, so call `loadEntitlements` first.
 
+## Regions
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getRegions` | None | `RegionConfig[]` | The regions the native SDK was configured with. Empty when the app is not multi-region. |
+| `initWithRegion` | `regionKey: string` | `Promise<void>` | Selects the region to authenticate against. The choice is persisted; `selectedRegion` updates with the next auth state event, shortly after the promise resolves. Rejects with `INVALID_REGION` when the key is not configured, and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch to the region. |
+
+See [Multi-region support](advanced.md#multi-region-support) for the native configuration.
+
 ## Admin portal
 
 | Method | Parameters | Returns | Description |
@@ -203,6 +214,17 @@ Both getters read the on-device cache, so call `loadEntitlements` first.
 | `useAssetLinks` | `boolean \| null` | iOS only — the `useAssetLinks` key from `Frontegg.plist`. |
 | `useAssetsLinks` | `boolean` | Android only — `FRONTEGG_USE_ASSETS_LINKS` from BuildConfig. |
 | `useChromeCustomTabs` | `boolean` | Android only — `FRONTEGG_USE_CHROME_CUSTOM_TABS` from BuildConfig. |
+| `isRegional` | `boolean` | Whether the native SDK was configured with multiple regions. |
+| `regionData` | `RegionConfig[]` | The configured regions; empty when not multi-region. |
+
+### `RegionConfig`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | `string` | Region identifier, passed to `initWithRegion`. |
+| `baseUrl` | `string` | Frontegg domain for the region. |
+| `clientId` | `string` | Frontegg client ID for the region. |
+| `applicationId` | `string \| null` | Application ID for the region, when configured. |
 
 ### `FronteggLoginError`
 

@@ -6,13 +6,13 @@ import android.os.Looper
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.frontegg.android.AdminPortalActivity
+import com.frontegg.android.fronteggApp
 import com.frontegg.android.exceptions.CanceledByUserException
 import com.frontegg.android.exceptions.FailedToAuthenticateException
 import com.frontegg.android.fronteggAuth
@@ -31,7 +31,7 @@ import kotlin.time.toDuration
 
 
 class FronteggRNModule(val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+  FronteggRNSpec(reactContext) {
   private val fronteggConstants: FronteggConstants
   private var disposable: Disposable? = null
 
@@ -43,6 +43,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   init {
     fronteggConstants = reactContext.fronteggConstants
+    initRegionsFromBuildConfig(reactContext.applicationContext, fronteggConstants)
     // SDK 1.3+ auto-initializes from BuildConfig when first accessing context.fronteggAuth
   }
 
@@ -60,7 +61,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   // https://reactnative.dev/docs/native-modules-android
 
   @ReactMethod
-  fun subscribe() {
+  override fun subscribe() {
     if (this.disposable != null) {
       this.disposable!!.dispose()
     }
@@ -111,6 +112,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       putBoolean("isLoading", isLoading)
       putBoolean("initializing", initializing)
       putBoolean("showLoader", showLoader)
+      putMap("selectedRegion", auth.selectedRegion?.toWritableMap())
     }
 
 
@@ -118,7 +120,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun logout(promise: Promise) {
+  override fun logout(promise: Promise) {
     // Resolve only after the SDK reports the logout finished, so JS can
     // await the actual end of the session (parity with the iOS bridge).
     //
@@ -142,17 +144,17 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun addListener(eventName: String?) {
+  override fun addListener(eventName: String?) {
 
   }
 
   @ReactMethod
-  fun removeListeners(count: Int) {
+  override fun removeListeners(count: Double) {
 
   }
 
   @ReactMethod
-  fun login(loginHint: String?, promise: Promise) {
+  override fun login(loginHint: String?, promise: Promise) {
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       auth.login(activity, loginHint) { error ->
         resolveOrRejectLogin(error, promise)
@@ -166,7 +168,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
    * [login] when this method is absent, losing the theming rather than the sign-in.
    */
   @ReactMethod
-  fun loginWithOptions(loginHint: String?, customization: ReadableMap?, promise: Promise) {
+  override fun loginWithOptions(loginHint: String?, customization: ReadableMap?, promise: Promise) {
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       applyLoginBoxCustomization(customization)
       auth.login(activity, loginHint) { error ->
@@ -176,7 +178,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun isLoginBoxCustomizationSupported(promise: Promise) {
+  override fun isLoginBoxCustomizationSupported(promise: Promise) {
     promise.resolve(LoginBoxCustomization.isSupported())
   }
 
@@ -193,14 +195,14 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun switchTenant(tenantId: String, promise: Promise) {
+  override fun switchTenant(tenantId: String, promise: Promise) {
     auth.switchTenant(tenantId) { success ->
       resolveTenantSwitch(success, tenantId, promise)
     }
   }
 
   @ReactMethod
-  fun directLoginAction(
+  override fun directLoginAction(
     type: String,
     data: String,
     ephemeralSession: Boolean,
@@ -222,7 +224,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun refreshToken(promise: Promise) {
+  override fun refreshToken(promise: Promise) {
     // FR-25937: refreshTokenIfNeeded() starts the refresh in the background and returns
     // immediately, so resolving here handed JS a stale token. refreshTokenAndWait() suspends
     // until the refresh finishes; resolve its Boolean result to match iOS (which awaits a Bool).
@@ -237,7 +239,35 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun loginWithPasskeys(promise: Promise) {
+  override fun getOrRefreshAccessToken(promise: Promise) {
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        promise.resolve(fetchValidAccessToken(auth, reactContext.applicationContext))
+      } catch (e: Exception) {
+        promise.reject("GET_OR_REFRESH_ACCESS_TOKEN_ERROR", e.message, e)
+      }
+    }
+  }
+
+  @ReactMethod
+  override fun initWithRegion(regionKey: String, promise: Promise) {
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        if (auth.regions.none { it.key == regionKey }) {
+          promise.reject("INVALID_REGION", "Region '$regionKey' is not configured")
+          return@launch
+        }
+        reactContext.applicationContext.fronteggApp.initWithRegion(regionKey)
+        notifyChanges()
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("INIT_WITH_REGION_ERROR", e.message, e)
+      }
+    }
+  }
+
+  @ReactMethod
+  override fun loginWithPasskeys(promise: Promise) {
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       auth.loginWithPasskeys(activity) { error ->
         if (error != null) {
@@ -250,14 +280,14 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun isSteppedUp(maxAgeSeconds: Double, promise: Promise) {
+  override fun isSteppedUp(maxAgeSeconds: Double, promise: Promise) {
     val maxAge =
       if (maxAgeSeconds < 0) null else maxAgeSeconds.toDuration(DurationUnit.SECONDS)
     promise.resolve(auth.isSteppedUp(maxAge))
   }
 
   @ReactMethod
-  fun stepUp(maxAgeSeconds: Double, promise: Promise) {
+  override fun stepUp(maxAgeSeconds: Double, promise: Promise) {
     val activity = reactApplicationContext.currentActivity
     if (activity == null) {
       promise.reject("NO_ACTIVITY", "Current activity is null")
@@ -275,7 +305,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun requestAuthorize(refreshToken: String, deviceTokenCookie: String?, promise: Promise) {
+  override fun requestAuthorize(refreshToken: String, deviceTokenCookie: String?, promise: Promise) {
     try {
       auth.requestAuthorize(refreshToken, deviceTokenCookie) { result ->
         result.fold(
@@ -295,7 +325,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
 
   @ReactMethod
-  fun registerPasskeys(promise: Promise) {
+  override fun registerPasskeys(promise: Promise) {
     withActivityOrReject(reactApplicationContext.currentActivity, promise) { activity ->
       auth.registerPasskeys(activity) { error ->
         if (error != null) {
@@ -308,7 +338,7 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun openAdminPortal(promise: Promise) {
+  override fun openAdminPortal(promise: Promise) {
     val activity = reactApplicationContext.currentActivity
     if (activity == null) {
       promise.reject("NO_ACTIVITY", "Cannot open Admin Portal without an active Activity")
@@ -320,19 +350,19 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun loadEntitlements(forceRefresh: Boolean, promise: Promise) {
+  override fun loadEntitlements(forceRefresh: Boolean, promise: Promise) {
     auth.loadEntitlements(forceRefresh) { success ->
       promise.resolve(success)
     }
   }
 
   @ReactMethod
-  fun getFeatureEntitlement(key: String, promise: Promise) {
+  override fun getFeatureEntitlement(key: String, promise: Promise) {
     promise.resolve(entitlementToMap(auth.getFeatureEntitlements(key)))
   }
 
   @ReactMethod
-  fun getPermissionEntitlement(key: String, promise: Promise) {
+  override fun getPermissionEntitlement(key: String, promise: Promise) {
     promise.resolve(entitlementToMap(auth.getPermissionEntitlements(key)))
   }
 
@@ -342,7 +372,11 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
       putString("justification", entitlement.justification)
     }
 
-  override fun getConstants(): MutableMap<String, Any?> = fronteggConstants.toMap()
+  override fun getTypedExportedConstants(): Map<String, Any?> =
+    fronteggConstants.toMap().apply {
+      put("isRegional", auth.isMultiRegion)
+      put("regionData", auth.regions.map { it.toMap() })
+    }
 
   companion object {
     const val NAME = "FronteggRN"

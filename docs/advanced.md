@@ -45,6 +45,92 @@ buildConfigField "String", "FRONTEGG_APPLICATION_ID", "\"$fronteggApplicationId\
 ```
 
 
+### Multi-region support
+
+Configure every region natively, then let the user pick one from JavaScript. The selection is persisted, so the SDK starts in the same region on the next launch.
+
+#### iOS setup
+
+Replace `baseUrl`/`clientId` in `Frontegg.plist` with a `regions` array:
+
+```xml
+<key>regions</key>
+<array>
+  <dict>
+    <key>key</key>
+    <string>eu</string>
+    <key>baseUrl</key>
+    <string>https://{{FRONTEGG_EU_DOMAIN}}</string>
+    <key>clientId</key>
+    <string>{{FRONTEGG_EU_CLIENT_ID}}</string>
+  </dict>
+  <dict>
+    <key>key</key>
+    <string>us</string>
+    <key>baseUrl</key>
+    <string>https://{{FRONTEGG_US_DOMAIN}}</string>
+    <key>clientId</key>
+    <string>{{FRONTEGG_US_CLIENT_ID}}</string>
+  </dict>
+</array>
+```
+
+Each entry also accepts an optional `applicationId`. Add an associated domain for every region's domain.
+
+#### Android setup
+
+Add a `FRONTEGG_REGIONS` BuildConfig field to `android/app/build.gradle`, holding a JSON array of `{ key, baseUrl, clientId, applicationId? }`. The SDK then initializes with these regions instead of `FRONTEGG_DOMAIN`/`FRONTEGG_CLIENT_ID`:
+
+```groovy
+def fronteggRegions = '[{"key":"eu","baseUrl":"{{FRONTEGG_EU_DOMAIN}}","clientId":"{{FRONTEGG_EU_CLIENT_ID}}"},{"key":"us","baseUrl":"{{FRONTEGG_US_DOMAIN}}","clientId":"{{FRONTEGG_US_CLIENT_ID}}"}]'
+
+android {
+  defaultConfig {
+    buildConfigField "String", "FRONTEGG_REGIONS", "\"${fronteggRegions.replace('"', '\\"')}\""
+  }
+}
+```
+
+Then initialize the regions when the app process starts, so a login redirect that relaunches the app finds them configured before React Native loads. Call the helper right after `super.onCreate()` in `MainApplication`:
+
+```kotlin
+import com.frontegg.reactnative.FronteggRegions
+
+override fun onCreate() {
+  super.onCreate()
+  FronteggRegions.initFromBuildConfig(this)
+  // ...
+}
+```
+
+From a Java `MainApplication`, call `FronteggRegions.initFromBuildConfig(this);`. The Expo config plugin adds this call for you. Without it the module still initializes the regions when React Native first loads it, but a process restarted straight into the login redirect would start without them.
+
+Alternatively, call `FronteggApp.initWithRegions(...)` yourself in `MainApplication.onCreate()` and omit the field; do not do both. Add intent filters (and asset links, when used) for every region's domain, as described in the [Android SDK multi-region guide](https://github.com/frontegg/frontegg-android-kotlin#multi-region-support).
+
+#### Select a region
+
+```tsx
+import { Button } from 'react-native';
+import { getRegions, initWithRegion, useAuth } from '@frontegg/react-native';
+
+export function RegionPicker() {
+  const { selectedRegion } = useAuth();
+
+  if (selectedRegion) {
+    return null;
+  }
+  return getRegions().map((region) => (
+    <Button key={region.key} title={region.key} onPress={() => initWithRegion(region.key)} />
+  ));
+}
+```
+
+`initWithRegion` rejects with `INVALID_REGION` when the key is not configured, and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch to the region.
+
+### New architecture
+
+The module is a TurboModule with a typed codegen spec (`src/NativeFronteggRN.ts`) and also keeps working on the legacy bridge, so no configuration is needed on either architecture. Enable the new architecture in your app as usual (`newArchEnabled=true` in `android/gradle.properties`, `RCT_NEW_ARCH_ENABLED=1 pod install` on iOS); React Native 0.71 or later is required for it.
+
 ### Passkeys authentication
 
 Passkeys provide a seamless, passwordless login experience using WebAuthn and platform-level biometric authentication.

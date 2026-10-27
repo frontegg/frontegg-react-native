@@ -1,4 +1,6 @@
-import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import { NativeEventEmitter, Platform } from 'react-native';
+import NativeFronteggRN from './NativeFronteggRN';
+import type { RegionConfig, Spec } from './NativeFronteggRN';
 
 const LINKING_ERROR =
   `The package '@frontegg/react-native' doesn't seem to be linked. Make sure: \n\n` +
@@ -6,16 +8,13 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-const FronteggRN = NativeModules.FronteggRN
-  ? NativeModules.FronteggRN
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+const FronteggRN: Spec = NativeFronteggRN
+  ? NativeFronteggRN
+  : new Proxy({} as Spec, {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    });
 
 export interface FronteggConstants {
   baseUrl: string;
@@ -33,10 +32,27 @@ export interface FronteggConstants {
   useAssetsLinks?: boolean;
   /** Android only: `FRONTEGG_USE_CHROME_CUSTOM_TABS` from the host app's BuildConfig. */
   useChromeCustomTabs?: boolean;
+  /** Whether the native SDK was initialized with multiple regions. */
+  isRegional: boolean;
+  /** The configured regions; empty when the app is not multi-region. */
+  regionData: RegionConfig[];
 }
 
 export function getConstants(): FronteggConstants {
   return FronteggRN.getConstants();
+}
+
+/** Returns the regions the native SDK was configured with (empty when not multi-region). */
+export function getRegions(): RegionConfig[] {
+  return getConstants().regionData ?? [];
+}
+
+/**
+ * Selects the region to authenticate against. Rejects with `INVALID_REGION` for an unknown key,
+ * and on Android with `INIT_WITH_REGION_ERROR` when the native SDK fails to switch.
+ */
+export async function initWithRegion(regionKey: string): Promise<void> {
+  return FronteggRN.initWithRegion(regionKey);
 }
 
 /**
@@ -272,6 +288,11 @@ export async function switchTenant(tenantId: string) {
 
 export async function refreshToken() {
   return FronteggRN.refreshToken();
+}
+
+/** Returns a token valid for 15+ seconds, refreshing it if needed; `null` when there is no session. */
+export async function getOrRefreshAccessToken(): Promise<string | null> {
+  return FronteggRN.getOrRefreshAccessToken();
 }
 
 /**

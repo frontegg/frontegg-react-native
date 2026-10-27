@@ -3,11 +3,22 @@ package com.frontegg.reactnative
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableArray
+import com.facebook.react.bridge.WritableMap
 import com.frontegg.android.models.User
+import com.frontegg.android.regions.RegionConfig
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import com.google.gson.Gson
+
+fun RegionConfig.toMap(): Map<String, String?> = mapOf(
+  "key" to key,
+  "baseUrl" to baseUrl,
+  "clientId" to clientId,
+  "applicationId" to applicationId,
+)
+
+fun RegionConfig.toWritableMap(): WritableMap = Arguments.makeNativeMap(toMap())
 
 fun User.toReadableMap(): ReadableMap? {
   val jsonStr = Gson().toJson(this, User::class.java)

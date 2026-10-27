@@ -2,6 +2,97 @@
 
 This section guides you through configuring the Frontegg React Native SDK for both iOS and Android, including required project files, authentication callbacks, and platform-specific settings.
 
+> **Using Expo?** Skip the manual iOS and Android steps below — the bundled config plugin generates them on `npx expo prebuild`. See [Expo](#expo).
+
+## Expo
+
+The package ships an [Expo config plugin](https://docs.expo.dev/config-plugins/introduction/) that applies the native setup from this guide every time you run `npx expo prebuild`, so you never edit `ios/` or `android/` by hand. It works with [development builds](https://docs.expo.dev/develop/development-builds/introduction/) and EAS Build — not with Expo Go, which can't load custom native code.
+
+### 1. Add the plugin to `app.json`
+
+```json
+{
+  "expo": {
+    "ios": { "bundleIdentifier": "com.your.company.app" },
+    "android": { "package": "com.your.company.app" },
+    "plugins": [
+      [
+        "@frontegg/react-native",
+        {
+          "baseUrl": "https://{{FRONTEGG_BASE_URL}}",
+          "clientId": "{{FRONTEGG_CLIENT_ID}}"
+        }
+      ]
+    ]
+  }
+}
+```
+
+### 2. Generate the native projects and run
+
+```bash
+npx expo prebuild --clean
+npx expo run:ios
+npx expo run:android
+```
+
+Re-run `npx expo prebuild` whenever you change the plugin options.
+
+### Options
+
+| Option | Platform | Effect |
+| --- | --- | --- |
+| `baseUrl` | iOS, Android | Your Frontegg domain, with or without `https://`. Required unless `regions` is set. |
+| `clientId` | iOS, Android | Your Frontegg client ID. Required unless `regions` is set. |
+| `applicationId` | iOS, Android | Application ID for [multi-app](advanced.md#multi-app-support) workspaces. |
+| `regions` | iOS, Android | `[{ "key", "baseUrl", "clientId", "applicationId"? }]` for multi-region apps. Replaces `baseUrl`/`clientId`. |
+| `keychainService` | iOS | `keychainService` in `Frontegg.plist`. |
+| `embeddedMode` | iOS | `embeddedMode` in `Frontegg.plist`. |
+| `logLevel` | iOS | `trace`, `debug`, `info`, `warn`, `error` or `critical`. |
+| `useAssetLinks` | iOS, Android | `useAssetLinks` in `Frontegg.plist`; `FRONTEGG_USE_ASSETS_LINKS` on Android (default `true`). |
+| `useChromeCustomTabs` | Android | `FRONTEGG_USE_CHROME_CUSTOM_TABS` (default `true`). |
+| `associatedDomains` | iOS | Set to `false` to skip the `applinks:`/`webcredentials:` entitlements (default `true`). |
+| `iosPlist` | iOS | Any other `Frontegg.plist` key, e.g. `{ "lateInit": true }`. |
+| `androidBuildConfigFields` | Android | Any other `BuildConfig` field the Android SDK reads, e.g. `{ "FRONTEGG_ENABLE_OFFLINE_MODE": true }`. |
+
+Multi-region example:
+
+```json
+[
+  "@frontegg/react-native",
+  {
+    "regions": [
+      { "key": "eu", "baseUrl": "https://auth-eu.example.com", "clientId": "{{EU_CLIENT_ID}}" },
+      { "key": "us", "baseUrl": "https://auth-us.example.com", "clientId": "{{US_CLIENT_ID}}" }
+    ]
+  }
+]
+```
+
+### What prebuild generates
+
+**iOS**
+
+- `Frontegg.plist` in the app target (bundled as a resource), built from the options above.
+- `applinks:` and `webcredentials:` associated domains for every Frontegg domain.
+- Your bundle identifier as a URL scheme in `Info.plist`.
+- `FronteggAuth.shared.handleOpenUrl` calls in the Swift `AppDelegate` for deep links and universal links.
+- `ios.useFrameworks: "static"` in `Podfile.properties.json` (unless you already set it), plus the `frontegg_spm` `post_integrate` hook for React Native versions without `spm_dependency`.
+
+**Android**
+
+- `manifestPlaceholders` (`package_name`, `frontegg_domain`, `frontegg_client_id`) and the `FRONTEGG_*` `buildConfigField`s in `android/app/build.gradle`.
+- `android.minSdkVersion=26` in `gradle.properties` (a higher value is kept).
+- For multi-region apps, a `FRONTEGG_REGIONS` `buildConfigField` (a JSON array of the regions) instead of `FRONTEGG_DOMAIN`/`FRONTEGG_CLIENT_ID`, plus the App Link and redirect intent filters for every region after the first.
+- For multi-region apps, a `FronteggRegions.initFromBuildConfig(this)` call right after `super.onCreate()` in `MainApplication.kt`. It initializes the SDK with `FRONTEGG_REGIONS` before React Native starts, so a login redirect that relaunches the app finds the regions configured. Do not also call `FronteggApp.initWithRegions` in `MainApplication`, because a second call replaces the SDK instance. A Java `MainApplication` is not patched; prebuild prints a warning and you add the call yourself.
+
+### Still manual
+
+- Allow the redirect URLs in the Frontegg Portal ([Getting started](getting-started.md#prepare-your-frontegg-environment)).
+- Register your app with Frontegg for universal links and App Links: the iOS associated-domains request (see [Handle open app with URL](#handle-open-app-with-url)) and the Android `sha256CertFingerprints` request (see [Enable Android AssetLinks](#enable-android-assetlinks)).
+- Enable the **Associated Domains** capability for your App ID. EAS Build does this for you; for local builds, enable it in the Apple Developer portal or set `associatedDomains: false`.
+- Projects with an Objective-C `AppDelegate` (Expo SDK 52 and older) must add the `handleOpenUrl` calls by hand, as shown in [Handle open app with URL](#handle-open-app-with-url).
+
 ## Setup iOS Project
 
 ### Integrate FronteggSwift via Swift Package Manager

@@ -1,32 +1,80 @@
 import { NativeModules } from 'react-native';
 import {
   directLoginAction,
+  getOrRefreshAccessToken,
+  getRegions,
+  initWithRegion,
   login,
   normalizeLoginError,
   openAdminPortal,
 } from '../FronteggNative';
 
-jest.mock('react-native', () => ({
-  NativeModules: {
-    FronteggRN: {
-      openAdminPortal: jest.fn(() => Promise.resolve(null)),
-      directLoginAction: jest.fn(() => Promise.resolve()),
-      login: jest.fn(() => Promise.resolve('Success')),
-      subscribe: jest.fn(),
+jest.mock('react-native', () => {
+  const FronteggRN = {
+    openAdminPortal: jest.fn(() => Promise.resolve(null)),
+    directLoginAction: jest.fn(() => Promise.resolve()),
+    login: jest.fn(() => Promise.resolve('Success')),
+    subscribe: jest.fn(),
+    getOrRefreshAccessToken: jest.fn(() => Promise.resolve('access-token')),
+    initWithRegion: jest.fn(() => Promise.resolve()),
+    getConstants: jest.fn(() => ({
+      baseUrl: 'https://eu.example.com',
+      clientId: 'eu-client',
+      isRegional: true,
+      regionData: [
+        { key: 'eu', baseUrl: 'https://eu.example.com', clientId: 'eu-client' },
+        { key: 'us', baseUrl: 'https://us.example.com', clientId: 'us-client' },
+      ],
+    })),
+  };
+  return {
+    NativeModules: { FronteggRN },
+    TurboModuleRegistry: { get: jest.fn(() => FronteggRN) },
+    NativeEventEmitter: jest.fn().mockImplementation(() => ({
+      addListener: jest.fn(),
+    })),
+    Platform: {
+      select: jest.fn(),
     },
-  },
-  NativeEventEmitter: jest.fn().mockImplementation(() => ({
-    addListener: jest.fn(),
-  })),
-  Platform: {
-    select: jest.fn(),
-  },
-}));
+  };
+});
 
 describe('openAdminPortal', () => {
   it('calls the native openAdminPortal method', async () => {
     await openAdminPortal();
     expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenCalled();
+  });
+});
+
+describe('getOrRefreshAccessToken', () => {
+  it('resolves the token from the native module', async () => {
+    await expect(getOrRefreshAccessToken()).resolves.toBe('access-token');
+  });
+
+  it('resolves null when there is no session', async () => {
+    (
+      NativeModules.FronteggRN.getOrRefreshAccessToken as jest.Mock
+    ).mockResolvedValueOnce(null);
+    await expect(getOrRefreshAccessToken()).resolves.toBeNull();
+  });
+});
+
+describe('regions', () => {
+  it('returns the configured regions', () => {
+    expect(getRegions().map((region) => region.key)).toEqual(['eu', 'us']);
+  });
+
+  it('returns an empty list when the native constants have no regions', () => {
+    (NativeModules.FronteggRN.getConstants as jest.Mock).mockReturnValueOnce({
+      baseUrl: 'https://example.com',
+      clientId: 'client',
+    });
+    expect(getRegions()).toEqual([]);
+  });
+
+  it('forwards the region key to the native module', async () => {
+    await initWithRegion('us');
+    expect(NativeModules.FronteggRN.initWithRegion).toHaveBeenCalledWith('us');
   });
 });
 
