@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## v1.2.26
 
 Native SDKs: iOS FronteggSwift 1.3.24, Android 1.3.43.
 
