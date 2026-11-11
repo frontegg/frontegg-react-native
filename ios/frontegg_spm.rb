@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-# Links FronteggSwift (SPM 1.3.24) to the FronteggRN CocoaPods target after `pod install`.
+# Links FronteggSwift (SPM 1.3.27) to the FronteggRN CocoaPods target after `pod install`.
 # Patches Pods.xcodeproj/project.pbxproj as text — xcodeproj gem save() breaks Xcode 26.
 module FronteggSPM
   PACKAGE_URL = 'https://github.com/frontegg/frontegg-ios-swift.git'
-  PACKAGE_VERSION = '1.3.24'
+  PACKAGE_VERSION = '1.3.27'
   PRODUCT_NAME = 'FronteggSwift'
 
   PACKAGE_REF_ID = '2F0A5C48A15A74750BE517A0'
@@ -114,7 +114,7 @@ module FronteggSPM
   # Project-level Swift package resolution: one XCRemoteSwiftPackageReference + one
   # XCSwiftPackageProductDependency per linking target.
   def ensure_app_package_reference(content, product_dep_count)
-    return content if content.include?('XCRemoteSwiftPackageReference "frontegg-ios-swift.git"')
+    return pin_package_version(content) if content.include?('XCRemoteSwiftPackageReference "frontegg-ios-swift.git"')
 
     content = content.sub(
       /(mainGroup = [A-F0-9]+;\n)(\t\t\tproductRefGroup)/,
@@ -145,6 +145,14 @@ module FronteggSPM
       "/* End XCSwiftPackageProductDependency section */\n"
 
     content.sub(/\n\t\};\n\trootObject = /, "#{package_sections}\n\t};\n\trootObject = ")
+  end
+
+  # An existing reference keeps the exact version it was added with, so move it to PACKAGE_VERSION on upgrade.
+  def pin_package_version(content)
+    content.sub(
+      /(XCRemoteSwiftPackageReference "frontegg-ios-swift\.git" \*\/ = \{[^}]*?kind = exactVersion;\n\t+version = )[^;\n]+;/,
+      "\\1#{PACKAGE_VERSION};"
+    )
   end
 
   # Attach a FronteggSwift product dependency to a specific target so Xcode links it into that binary.
@@ -218,7 +226,7 @@ module FronteggSPM
     unless content.include?('XCRemoteSwiftPackageReference "frontegg-ios-swift.git"')
       content = add_package_reference(content)
     else
-      content = ensure_package_product_dependencies(content)
+      content = ensure_package_product_dependencies(pin_package_version(content))
     end
 
     content = add_spm_target_dependency(content)
