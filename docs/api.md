@@ -186,7 +186,7 @@ See [Multi-region support](advanced.md#multi-region-support) for the native conf
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `openAdminPortal` | None | `Promise<void>` | Opens the Frontegg admin portal. |
+| `openAdminPortal` | `options?: { layout?: 'desktop' \| 'responsive' }` | `Promise<void>` | Opens the Frontegg admin portal. `layout` defaults to `'desktop'`; `'responsive'` fits it to the device's width. |
 
 ## Configuration
 

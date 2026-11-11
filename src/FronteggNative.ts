@@ -345,8 +345,18 @@ export async function registerPasskeys(): Promise<void> {
   return FronteggRN.registerPasskeys();
 }
 
-export async function openAdminPortal(): Promise<void> {
-  return FronteggRN.openAdminPortal();
+/** `desktop` renders the portal at 1024px scaled to fit; `responsive` uses the device's width. */
+export type AdminPortalLayout = 'desktop' | 'responsive';
+
+export interface AdminPortalOptions {
+  /** Defaults to `desktop`. */
+  layout?: AdminPortalLayout;
+}
+
+export async function openAdminPortal(
+  options?: AdminPortalOptions
+): Promise<void> {
+  return FronteggRN.openAdminPortal(options?.layout ?? 'desktop');
 }
 
 export interface Entitlement {

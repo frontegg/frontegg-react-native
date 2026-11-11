@@ -23,6 +23,8 @@ export {
   isLoginBoxCustomizationSupported,
 } from './FronteggNative';
 export type {
+  AdminPortalLayout,
+  AdminPortalOptions,
   Entitlement,
   FronteggConstants,
   FronteggLoginError,

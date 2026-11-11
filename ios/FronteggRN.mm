@@ -75,7 +75,8 @@ RCT_EXTERN_METHOD(
                   reject: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(
-                  openAdminPortal: (RCTPromiseResolveBlock)resolve
+                  openAdminPortal: (NSString *)layout
+                  resolve: (RCTPromiseResolveBlock)resolve
                   reject: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(

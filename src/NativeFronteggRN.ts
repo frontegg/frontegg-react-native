@@ -54,7 +54,7 @@ export interface Spec extends TurboModule {
   ): Promise<Object>;
   isSteppedUp(maxAgeSeconds: number): Promise<boolean>;
   stepUp(maxAgeSeconds: number): Promise<void>;
-  openAdminPortal(): Promise<void>;
+  openAdminPortal(layout: string): Promise<void>;
   loadEntitlements(forceRefresh: boolean): Promise<boolean>;
   getFeatureEntitlement(key: string): Promise<NativeEntitlement>;
   getPermissionEntitlement(key: string): Promise<NativeEntitlement>;

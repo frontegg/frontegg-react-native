@@ -4,6 +4,10 @@
 
 Native SDKs: iOS FronteggSwift 1.3.27, Android 1.3.45.
 
+Features:
+
+- `openAdminPortal({ layout: 'responsive' })` opens the Admin Portal at the device's real width, so on phones the sidebar collapses into a menu button, as it does in a mobile browser. The default, `'desktop'`, keeps the current layout: the portal renders at 1024px and is scaled to fit. Apps that don't pass a layout are unaffected.
+
 Bug fixes:
 
 - Android: users are no longer signed out when a token refresh is rate-limited (HTTP 429) or times out (408). The SDK keeps the session and retries the refresh with backoff.
@@ -11,6 +15,7 @@ Bug fixes:
 Notes:
 
 - iOS: since FronteggSwift 1.3.25, some token exchange failures are reported as `other`, so `login()` rejects them with code `unknown` and `nativeCode` `other`.
+- An over-the-air JS update running on an older native binary fails on `openAdminPortal()`.
 
 ## v1.2.26
 

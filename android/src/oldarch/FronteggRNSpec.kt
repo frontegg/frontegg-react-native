@@ -34,7 +34,7 @@ abstract class FronteggRNSpec internal constructor(context: ReactApplicationCont
   abstract fun requestAuthorize(refreshToken: String, deviceTokenCookie: String?, promise: Promise)
   abstract fun isSteppedUp(maxAgeSeconds: Double, promise: Promise)
   abstract fun stepUp(maxAgeSeconds: Double, promise: Promise)
-  abstract fun openAdminPortal(promise: Promise)
+  abstract fun openAdminPortal(layout: String, promise: Promise)
   abstract fun loadEntitlements(forceRefresh: Boolean, promise: Promise)
   abstract fun getFeatureEntitlement(key: String, promise: Promise)
   abstract fun getPermissionEntitlement(key: String, promise: Promise)

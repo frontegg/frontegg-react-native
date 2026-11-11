@@ -40,9 +40,18 @@ jest.mock('react-native', () => {
 });
 
 describe('openAdminPortal', () => {
-  it('calls the native openAdminPortal method', async () => {
+  it('opens the desktop layout by default', async () => {
     await openAdminPortal();
-    expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenCalled();
+    expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenLastCalledWith(
+      'desktop'
+    );
+  });
+
+  it('passes the responsive layout to the native module', async () => {
+    await openAdminPortal({ layout: 'responsive' });
+    expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenLastCalledWith(
+      'responsive'
+    );
   });
 });
 
