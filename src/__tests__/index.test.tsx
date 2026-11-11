@@ -12,6 +12,7 @@ import {
 jest.mock('react-native', () => {
   const FronteggRN = {
     openAdminPortal: jest.fn(() => Promise.resolve(null)),
+    openAdminPortalWithLayout: jest.fn(() => Promise.resolve(null)),
     directLoginAction: jest.fn(() => Promise.resolve()),
     login: jest.fn(() => Promise.resolve('Success')),
     subscribe: jest.fn(),
@@ -42,16 +43,31 @@ jest.mock('react-native', () => {
 describe('openAdminPortal', () => {
   it('opens the desktop layout by default', async () => {
     await openAdminPortal();
-    expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenLastCalledWith(
-      'desktop'
-    );
+    expect(
+      NativeModules.FronteggRN.openAdminPortalWithLayout
+    ).toHaveBeenLastCalledWith('desktop');
   });
 
   it('passes the responsive layout to the native module', async () => {
     await openAdminPortal({ layout: 'responsive' });
-    expect(NativeModules.FronteggRN.openAdminPortal).toHaveBeenLastCalledWith(
-      'responsive'
-    );
+    expect(
+      NativeModules.FronteggRN.openAdminPortalWithLayout
+    ).toHaveBeenLastCalledWith('responsive');
+  });
+
+  it('falls back to the desktop layout on an older native binary', async () => {
+    const nativeModule = NativeModules.FronteggRN;
+    const withLayout = nativeModule.openAdminPortalWithLayout;
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    delete nativeModule.openAdminPortalWithLayout;
+    try {
+      await openAdminPortal({ layout: 'responsive' });
+      expect(nativeModule.openAdminPortal).toHaveBeenCalledWith();
+      expect(warn).toHaveBeenCalled();
+    } finally {
+      nativeModule.openAdminPortalWithLayout = withLayout;
+      warn.mockRestore();
+    }
   });
 });
 

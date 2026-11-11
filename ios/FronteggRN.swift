@@ -458,6 +458,14 @@ class FronteggRN: RCTEventEmitter {
 
     @objc
     func openAdminPortal(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        openAdminPortalWithLayout("desktop", resolve: resolve, reject: reject)
+    }
+
+    @objc
+    func openAdminPortalWithLayout(
         _ layout: String,
         resolve: @escaping RCTPromiseResolveBlock,
         reject: @escaping RCTPromiseRejectBlock

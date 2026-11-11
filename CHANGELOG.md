@@ -15,7 +15,7 @@ Bug fixes:
 Notes:
 
 - iOS: since FronteggSwift 1.3.25, some token exchange failures are reported as `other`, so `login()` rejects them with code `unknown` and `nativeCode` `other`.
-- An over-the-air JS update running on an older native binary fails on `openAdminPortal()`.
+- On an older native binary (an over-the-air JS update), `openAdminPortal({ layout: 'responsive' })` opens the desktop layout and logs a warning.
 
 ## v1.2.26
 

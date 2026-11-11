@@ -266,4 +266,4 @@ await openAdminPortal({ layout: 'responsive' });
 | `'desktop'` (default) | 1024px desktop layout scaled to fit, desktop user agent. |
 | `'responsive'` | Device width and the system user agent. On iPad the portal lays itself out as it does in Safari. |
 
-The `layout` option needs a native build of this SDK version. An over-the-air JS update running on an older native binary fails to open the portal.
+The `layout` option needs a native build of this SDK version. On an older native binary, for example after an over-the-air JS update, the portal opens in the desktop layout and a warning is logged.

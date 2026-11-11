@@ -356,7 +356,18 @@ export interface AdminPortalOptions {
 export async function openAdminPortal(
   options?: AdminPortalOptions
 ): Promise<void> {
-  return FronteggRN.openAdminPortal(options?.layout ?? 'desktop');
+  const layout = options?.layout ?? 'desktop';
+  if (typeof FronteggRN.openAdminPortalWithLayout === 'function') {
+    return FronteggRN.openAdminPortalWithLayout(layout);
+  }
+
+  // Older native binary (a JS-only update): the portal still opens, in the desktop layout.
+  if (layout !== 'desktop') {
+    console.warn(
+      '[frontegg] the responsive Admin Portal layout needs a newer native SDK; opening the desktop layout'
+    );
+  }
+  return FronteggRN.openAdminPortal();
 }
 
 export interface Entitlement {

@@ -339,7 +339,12 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun openAdminPortal(layout: String, promise: Promise) {
+  override fun openAdminPortal(promise: Promise) {
+    openAdminPortalWithLayout("desktop", promise)
+  }
+
+  @ReactMethod
+  override fun openAdminPortalWithLayout(layout: String, promise: Promise) {
     val activity = reactApplicationContext.currentActivity
     if (activity == null) {
       promise.reject("NO_ACTIVITY", "Cannot open Admin Portal without an active Activity")
