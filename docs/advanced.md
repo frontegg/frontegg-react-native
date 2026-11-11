@@ -149,7 +149,7 @@ Passkeys provide a seamless, passwordless login experience using WebAuthn and pl
    ```groovy
       dependencies {
        implementation 'androidx.browser:browser:1.8.0'
-       implementation 'com.frontegg.sdk:android:1.3.43'
+       implementation 'com.frontegg.sdk:android:1.3.45'
    }
    ```
 

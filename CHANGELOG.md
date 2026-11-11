@@ -1,5 +1,17 @@
 # Change Log
 
+## Unreleased
+
+Native SDKs: iOS FronteggSwift 1.3.27, Android 1.3.45.
+
+Bug fixes:
+
+- Android: users are no longer signed out when a token refresh is rate-limited (HTTP 429) or times out (408). The SDK keeps the session and retries the refresh with backoff.
+
+Notes:
+
+- iOS: since FronteggSwift 1.3.25, some token exchange failures are reported as `other`, so `login()` rejects them with code `unknown` and `nativeCode` `other`.
+
 ## v1.2.26
 
 Native SDKs: iOS FronteggSwift 1.3.24, Android 1.3.43.
