@@ -345,7 +345,28 @@ export async function registerPasskeys(): Promise<void> {
   return FronteggRN.registerPasskeys();
 }
 
-export async function openAdminPortal(): Promise<void> {
+/** `desktop` renders the portal at 1024px scaled to fit; `responsive` uses the device's width. */
+export type AdminPortalLayout = 'desktop' | 'responsive';
+
+export interface AdminPortalOptions {
+  /** Defaults to `desktop`. */
+  layout?: AdminPortalLayout;
+}
+
+export async function openAdminPortal(
+  options?: AdminPortalOptions
+): Promise<void> {
+  const layout = options?.layout ?? 'desktop';
+  if (typeof FronteggRN.openAdminPortalWithLayout === 'function') {
+    return FronteggRN.openAdminPortalWithLayout(layout);
+  }
+
+  // Older native binary (a JS-only update): the portal still opens, in the desktop layout.
+  if (layout !== 'desktop') {
+    console.warn(
+      '[frontegg] the responsive Admin Portal layout needs a newer native SDK; opening the desktop layout'
+    );
+  }
   return FronteggRN.openAdminPortal();
 }
 

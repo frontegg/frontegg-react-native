@@ -252,3 +252,18 @@ async function handleOpenAdminPortal() {
 ```
 
 The portal is dismissed when the user swipes down (iOS) or taps the built-in close button. On Android, `window.close()` finishes the activity automatically.
+
+### Layout
+
+By default the portal uses the desktop layout: it renders at 1024px and is scaled to fit, with the sidebar always visible. On phones this makes the text small. Pass `layout: 'responsive'` to use the device's real width instead, so on phones the sidebar collapses into a menu button, as it does in a mobile browser:
+
+```tsx
+await openAdminPortal({ layout: 'responsive' });
+```
+
+| Layout | Behaviour |
+|--------|-----------|
+| `'desktop'` (default) | 1024px desktop layout scaled to fit, desktop user agent. |
+| `'responsive'` | Device width and the system user agent. On iPad the portal lays itself out as it does in Safari. |
+
+The `layout` option needs a native build of this SDK version. On an older native binary, for example after an over-the-air JS update, the portal opens in the desktop layout and a warning is logged.

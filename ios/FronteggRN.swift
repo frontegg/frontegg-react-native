@@ -461,6 +461,16 @@ class FronteggRN: RCTEventEmitter {
         _ resolve: @escaping RCTPromiseResolveBlock,
         reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
+        openAdminPortalWithLayout("desktop", resolve: resolve, reject: reject)
+    }
+
+    @objc
+    func openAdminPortalWithLayout(
+        _ layout: String,
+        resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        let portalLayout: AdminPortalLayout = layout == "responsive" ? .responsive : .desktop
         DispatchQueue.main.async {
             guard let viewController = Self.topViewController() else {
                 reject(
@@ -472,7 +482,7 @@ class FronteggRN: RCTEventEmitter {
             }
 
             if #available(iOS 14.0, *) {
-                let host = UIHostingController(rootView: AdminPortalView())
+                let host = UIHostingController(rootView: AdminPortalView(layout: portalLayout))
                 host.modalPresentationStyle = .pageSheet
                 viewController.present(host, animated: true)
                 resolve(nil)

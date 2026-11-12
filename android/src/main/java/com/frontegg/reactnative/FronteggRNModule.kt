@@ -12,6 +12,7 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.common.LifecycleState
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.frontegg.android.AdminPortalActivity
+import com.frontegg.android.AdminPortalLayout
 import com.frontegg.android.fronteggApp
 import com.frontegg.android.exceptions.CanceledByUserException
 import com.frontegg.android.exceptions.FailedToAuthenticateException
@@ -339,13 +340,18 @@ class FronteggRNModule(val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun openAdminPortal(promise: Promise) {
+    openAdminPortalWithLayout("desktop", promise)
+  }
+
+  @ReactMethod
+  override fun openAdminPortalWithLayout(layout: String, promise: Promise) {
     val activity = reactApplicationContext.currentActivity
     if (activity == null) {
       promise.reject("NO_ACTIVITY", "Cannot open Admin Portal without an active Activity")
       return
     }
 
-    AdminPortalActivity.open(activity)
+    AdminPortalActivity.open(activity, adminPortalLayoutFrom(layout))
     promise.resolve(null)
   }
 
@@ -419,6 +425,9 @@ internal inline fun withActivityOrReject(
  * [createMap] is injectable so JVM unit tests can substitute [Arguments.createMap], which
  * requires the native RN libraries.
  */
+internal fun adminPortalLayoutFrom(value: String?): AdminPortalLayout =
+  if (value == "responsive") AdminPortalLayout.RESPONSIVE else AdminPortalLayout.DESKTOP
+
 internal fun resolveOrRejectLogin(
   error: Exception?,
   promise: Promise,
